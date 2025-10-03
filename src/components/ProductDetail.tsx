@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, ShoppingCart, Star, Shield, Truck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 import { Product } from '@/types'
 
@@ -104,11 +104,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
           <div className="flex items-center space-x-2 space-x-reverse mb-4">
-            <div className="flex text-yellow-400">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-5 w-5 fill-current" />
-              ))}
-            </div>
+            <Image src="/warranty.png" alt="امتیاز و ضمانت" width={20} height={20} className="h-5 w-5" />
             <span className="text-gray-600 text-sm">(4.8) - 124 نظر</span>
           </div>
         </div>
@@ -216,7 +212,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
         {/* Features */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t">
           <div className="flex items-center space-x-2 space-x-reverse">
-            <Shield className="h-6 w-6 text-green-600" />
+            <Image src="/warranty.png" alt="ضمانت کیفیت" width={24} height={24} className="h-6 w-6" />
             <div>
               <p className="font-semibold text-sm">ضمانت کیفیت</p>
               <p className="text-xs text-gray-500">2 سال ضمانت</p>
@@ -224,7 +220,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
           </div>
           
           <div className="flex items-center space-x-2 space-x-reverse">
-            <Truck className="h-6 w-6 text-blue-600" />
+            <Image src="/globe.svg" alt="ارسال سریع" width={24} height={24} className="h-6 w-6" />
             <div>
               <p className="font-semibold text-sm">ارسال سریع</p>
               <p className="text-xs text-gray-500">1-2 روز کاری</p>
@@ -232,10 +228,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
           </div>
           
           <div className="flex items-center space-x-2 space-x-reverse">
-            <Star className="h-6 w-6 text-yellow-600" />
+            <Image src="/tap1.png" alt="کیفیت برتر" width={24} height={24} className="h-6 w-6" />
             <div>
               <p className="font-semibold text-sm">کیفیت برتر</p>
-              <p className="text-xs text-gray-500">استاندارد اروپا</p>
+              <p className="text-xs text-gray-500">استاندارد</p>
             </div>
           </div>
         </div>

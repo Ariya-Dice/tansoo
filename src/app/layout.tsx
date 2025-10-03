@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+
 export const metadata: Metadata = {
   title: "تانسو - فروشگاه شیرآلات ساختمانی",
   description: "فروشگاه آنلاین شیرآلات ساختمانی با کیفیت بالا و قیمت مناسب",
@@ -27,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900`}
       >
         <CartProvider>
           <Navigation />

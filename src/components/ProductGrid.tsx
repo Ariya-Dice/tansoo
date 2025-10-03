@@ -19,7 +19,7 @@ function ProductGridContent() {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const { addToCart } = useCart()
 
-  const colors = ['کروم', 'سفید', 'سفید طلایی', 'مشکی طلایی']
+  const colors = ['کروم', 'سفید', 'مشکی', 'سفید طلایی', 'مشکی طلایی']
   const categories = ['سینک', 'روشویی', 'دوش', 'آفتابه']
 
   useEffect(() => {
@@ -71,8 +71,12 @@ function ProductGridContent() {
   const fetchProducts = async () => {
     try {
       const response = await fetch('/api/products')
+      if (!response.ok) {
+        setProducts([])
+        return
+      }
       const data = await response.json()
-      setProducts(data)
+      setProducts(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching products:', error)
     } finally {
@@ -194,7 +198,13 @@ function ProductGridContent() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-gray-500 text-sm">تصویر محصول</span>
+                      <Image
+                        src="/faucet.png"
+                        alt="تصویر پیش‌فرض محصول"
+                        width={120}
+                        height={90}
+                        className="object-contain"
+                      />
                     )}
                   </div>
                   {product.stock === 0 && (

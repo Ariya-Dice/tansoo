@@ -6,7 +6,7 @@ export default function AboutPage() {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">درباره تانسو</h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          فروشگاه آنلاین شیرآلات ساختمانی با بیش از 10 سال تجربه در زمینه تامین و فروش محصولات باکیفیت
+          فروشگاه آنلاین شیرآلات ساختمانی با بیش از 5 سال تجربه در زمینه تامین و فروش محصولات باکیفیت
         </p>
       </div>
 
@@ -15,7 +15,7 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">داستان ما</h2>
           <div className="space-y-4 text-gray-600 leading-relaxed">
             <p>
-              تانسو در سال 1393 با هدف ارائه بهترین شیرآلات ساختمانی به مشتریان ایرانی تاسیس شد. 
+              تانسو در سال 1399 با هدف ارائه بهترین شیرآلات ساختمانی به مشتریان ایرانی تاسیس شد. 
               ما معتقدیم که کیفیت و رضایت مشتری اولویت اول ماست.
             </p>
             <p>
@@ -36,7 +36,7 @@ export default function AboutPage() {
               <Star className="h-6 w-6 text-yellow-500 mt-1 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-gray-900">کیفیت برتر</h4>
-                <p className="text-gray-600 text-sm">محصولات با کیفیت بالا و استانداردهای بین‌المللی</p>
+                <p className="text-gray-600 text-sm">محصولات با کیفیت بالا و استاندارد</p>
               </div>
             </div>
             
@@ -44,7 +44,7 @@ export default function AboutPage() {
               <Shield className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-gray-900">ضمانت کیفیت</h4>
-                <p className="text-gray-600 text-sm">ضمانت 2 ساله برای تمام محصولات</p>
+                <p className="text-gray-600 text-sm">ضمانت 5 ساله برای تمام محصولات</p>
               </div>
             </div>
             
@@ -52,7 +52,7 @@ export default function AboutPage() {
               <Truck className="h-6 w-6 text-blue-500 mt-1 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-gray-900">ارسال سریع</h4>
-                <p className="text-gray-600 text-sm">ارسال رایگان در تهران و ارسال سریع به سراسر کشور</p>
+                <p className="text-gray-600 text-sm">ارسال سریع به سراسر کشور</p>
               </div>
             </div>
             
@@ -60,7 +60,7 @@ export default function AboutPage() {
               <Award className="h-6 w-6 text-purple-500 mt-1 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-gray-900">پشتیبانی 24/7</h4>
-                <p className="text-gray-600 text-sm">پشتیبانی کامل قبل و بعد از خرید</p>
+                <p className="text-gray-600 text-sm">پشتیبانی کامل بعد از خرید</p>
               </div>
             </div>
           </div>
@@ -68,10 +68,10 @@ export default function AboutPage() {
       </div>
 
       <div className="bg-blue-50 rounded-lg p-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">ماموریت ما</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">خدمات ما</h2>
         <p className="text-gray-600 text-lg max-w-3xl mx-auto">
           ارائه بهترین شیرآلات ساختمانی با کیفیت بالا، قیمت مناسب و خدمات عالی 
-          به مشتریان عزیزمان در سراسر ایران
+          به مصرف کنندگان در سراسر ایران
         </p>
       </div>
     </div>

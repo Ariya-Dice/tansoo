@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { ArrowLeft, Star, Shield, Truck } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowLeft } from 'lucide-react'
 
 export function Hero() {
   return (
@@ -7,7 +8,7 @@ export function Hero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            فروشگاه شیرآلات ساختمانی تانسو
+             شیرآلات ساختمانی تانسو
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-blue-100">
             بهترین کیفیت، مناسب‌ترین قیمت، سریع‌ترین ارسال
@@ -33,26 +34,26 @@ export function Hero() {
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center">
             <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Star className="h-8 w-8" />
+              <Image src="/tap.png" alt="کیفیت شیرآلات" width={32} height={32} className="h-8 w-8" />
             </div>
             <h3 className="text-xl font-semibold mb-2">کیفیت برتر</h3>
-            <p className="text-blue-100">محصولات با کیفیت بالا و استانداردهای بین‌المللی</p>
+            <p className="text-blue-100"> محصولات با کیفیت بالا و استاندارد</p>
           </div>
           
           <div className="text-center">
             <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Shield className="h-8 w-8" />
+              <Image src="/warranty.png" alt="ضمانت" width={32} height={32} className="h-8 w-8" />
             </div>
             <h3 className="text-xl font-semibold mb-2">ضمانت کیفیت</h3>
-            <p className="text-blue-100">ضمانت 2 ساله برای تمام محصولات</p>
+            <p className="text-blue-100">ضمانت 5 ساله برای تمام محصولات</p>
           </div>
           
           <div className="text-center">
             <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Truck className="h-8 w-8" />
+              <Image src="/globe.svg" alt="ارسال سریع" width={32} height={32} className="h-8 w-8" />
             </div>
             <h3 className="text-xl font-semibold mb-2">ارسال سریع</h3>
-            <p className="text-blue-100">ارسال رایگان در تهران و ارسال سریع به سراسر کشور</p>
+            <p className="text-blue-100">ارسال سریع به سراسر کشور</p>
           </div>
         </div>
       </div>

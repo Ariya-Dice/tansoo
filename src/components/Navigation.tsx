@@ -2,29 +2,22 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ShoppingCart, Search, Menu, X, Settings } from 'lucide-react'
+// router removed
+import { ShoppingCart, Menu, X, Settings } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  // removed search field
   const { cart, getTotalItems } = useCart()
-  const router = useRouter()
 
   const totalItems = getTotalItems()
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
-      setSearchQuery('')
-    }
-  }
+  // removed handler
 
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
+    <nav className="bg-white/80 backdrop-blur shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -32,11 +25,11 @@ export function Navigation() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">ت</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">تانسو</span>
+            <span className="text-xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-vazirmatn)' }}>تانسو</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8 space-x-reverse">
+          <div className="hidden md:flex items-center gap-x-8">
             <Link href="/" className="text-gray-700 hover:text-blue-600 transition-colors">
               صفحه اصلی
             </Link>
@@ -51,21 +44,7 @@ export function Navigation() {
             </Link>
           </div>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
-            <form onSubmit={handleSearch} className="relative w-full">
-              <input
-                type="text"
-                placeholder="جستجو در محصولات..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <button type="submit" className="absolute right-3 top-2.5 h-5 w-5 text-gray-400 hover:text-gray-600">
-                <Search className="h-5 w-5" />
-              </button>
-            </form>
-          </div>
+      {/* Search Bar removed */}
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4 space-x-reverse">
@@ -118,19 +97,7 @@ export function Navigation() {
                 مدیریت
               </Link>
               
-              {/* Mobile Search */}
-              <form onSubmit={handleSearch} className="relative">
-                <input
-                  type="text"
-                  placeholder="جستجو در محصولات..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <button type="submit" className="absolute right-3 top-2.5 h-5 w-5 text-gray-400 hover:text-gray-600">
-                  <Search className="h-5 w-5" />
-                </button>
-              </form>
+            {/* Mobile Search removed */}
             </div>
           </div>
         )}

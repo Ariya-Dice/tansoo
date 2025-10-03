@@ -78,9 +78,16 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-semibold text-gray-900">آدرس</h3>
                 <p className="text-gray-600">
-                  تهران، خیابان ولیعصر، پلاک 123<br />
-                  طبقه دوم، واحد 5
+                  استان اردبیل. شهرک کشاورزی. کوچه طلاییه چهارم شرقی
                 </p>
+                <a
+                  href="https://maps.app.goo.gl/uGSsaZ4MwHGWSwCh8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-2 text-blue-600 hover:text-blue-700 underline"
+                >
+                  مشاهده در نقشه گوگل
+                </a>
               </div>
             </div>
 
@@ -215,17 +222,26 @@ export default function ContactPage() {
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">موقعیت فروشگاه</h2>
         <div className="bg-white rounded-lg shadow-md p-6">
           <GoogleMap
-            center={{ lat: 35.7219, lng: 51.3347 }} // Tehran coordinates
+            center={{ lat: 35.7219, lng: 51.3347 }}
             zoom={15}
             className="w-full h-96"
+            address="استان اردبیل. شهرک کشاورزی. کوچه طلاییه چهارم شرقی"
           />
           <div className="mt-4 text-center">
             <p className="text-gray-600">
-              <strong>آدرس دقیق:</strong> تهران، خیابان ولیعصر، پلاک 123، طبقه دوم، واحد 5
+              <strong>آدرس دقیق:</strong> استان اردبیل. شهرک کشاورزی. کوچه طلاییه چهارم شرقی
             </p>
             <p className="text-sm text-gray-500 mt-2">
               برای دسترسی آسان‌تر، می‌توانید از نقشه بالا استفاده کنید
             </p>
+            <a
+              href="https://maps.app.goo.gl/uGSsaZ4MwHGWSwCh8"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center mt-3 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              باز کردن مسیر در Google Maps
+            </a>
           </div>
         </div>
       </div>
