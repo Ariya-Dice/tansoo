@@ -224,7 +224,7 @@ function ProductGridContent() {
                 
                 <div className="mb-3">
                   <p className="text-lg font-bold text-blue-600">
-                    {product.price.toLocaleString('fa-IR')} تومان
+                    {(product.price || 0).toLocaleString('fa-IR')} تومان
                   </p>
                 </div>
 

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { ProductDetail } from '@/components/ProductDetail'
 import { prisma } from '@/lib/db'
+import { mockProducts } from '@/lib/mock'
 
 interface ProductPageProps {
   params: Promise<{
@@ -8,8 +9,15 @@ interface ProductPageProps {
   }>
 }
 
+const useMock = !process.env.DATABASE_URL || process.env.USE_MOCK_DATA === '1'
+
+// mockProducts imported
+
 async function getProduct(id: string) {
   try {
+    if (useMock) {
+      return mockProducts.find(p => p.id === id) ?? null
+    }
     const product = await prisma.product.findUnique({
       where: { id }
     })
@@ -36,11 +44,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
 }
 
 export async function generateStaticParams() {
-  const products = await prisma.product.findMany({
-    select: { id: true }
-  })
-
-  return products.map((product) => ({
-    id: product.id,
-  }))
+  if (useMock) {
+    return mockProducts.map((p) => ({ id: p.id }))
+  }
+  try {
+    const products = await prisma.product.findMany({
+      select: { id: true }
+    })
+    return products.map((product) => ({ id: product.id }))
+  } catch {
+    // Fallback to mock IDs if DB is unreachable during build
+    return mockProducts.map((p) => ({ id: p.id }))
+  }
 }
