@@ -1,12 +1,12 @@
 :root {
-  --neon-color: #c55800;
-  --neon-shadow: rgba(197, 88, 0, 0.6);
+  --neon-color: #0094c5;
+  --neon-shadow: rgba(197, 187, 0, 0.511);
 }
 
 .header {
   position: sticky;
   top: 0;
-  background-color: rgba(197, 89, 0, 0.442) !important; /* رنگ نارنجی تیره با شفافیت */
+  background-color: rgb(197, 89, 0) !important; /* رنگ نارنجی تیره با شفافیت */
   backdrop-filter: blur(5px);
   border-bottom: 1px solid var(--neon-color);
   z-index: 50;
