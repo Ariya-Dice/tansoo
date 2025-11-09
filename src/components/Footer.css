@@ -5,10 +5,22 @@
   padding: 2rem 0;
 }
 
+@media (max-width: 768px) {
+  .footer {
+    padding: 1.5rem 0;
+  }
+}
+
 .footer-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 1rem;
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    padding: 0 0.5rem;
+  }
 }
 
 .footer-content {
@@ -26,6 +38,18 @@
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .footer-title {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-title {
+    font-size: 1rem;
+  }
 }
 
 .footer-description {

@@ -46,5 +46,22 @@
   @media (max-width: 640px) {
     .products-grid {
       grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .products-page {
+      padding-top: 2rem;
+    }
+
+    .products-title {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding: 0 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .products-title {
+      font-size: 1.25rem;
     }
   }

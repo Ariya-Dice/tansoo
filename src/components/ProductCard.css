@@ -66,3 +66,44 @@
 .product-btn:hover {
   background-color: rgba(0, 229, 255, 0.8);
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .product-card {
+    margin: 0.5rem;
+  }
+
+  .product-image-container {
+    height: 180px;
+  }
+
+  .product-content {
+    padding: 0.75rem;
+  }
+
+  .product-title {
+    font-size: 1rem;
+  }
+
+  .product-price {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-image-container {
+    height: 200px;
+  }
+
+  .product-title {
+    font-size: 0.875rem;
+  }
+
+  .product-category {
+    font-size: 0.75rem;
+  }
+
+  .product-price {
+    font-size: 0.875rem;
+  }
+}
