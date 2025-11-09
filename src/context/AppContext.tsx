@@ -1,152 +1,224 @@
+// src/context/AppContext.tsx
+import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
+import { Product, CartItem } from "../types";
+import { initialImages } from "../db/ImageDB";
+import { ADMIN_PASSWORD } from "../constants";
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { Product, CartItem, Order } from '../types';
-import { MOCK_PRODUCTS } from '../constants';
-import { initialImages } from '../db/ImageDB';
-
-// --- LocalStorage Helper Functions ---
-
-const getFromStorage = <T,>(key: string, defaultValue: T): T => {
-  try {
-    const savedItem = localStorage.getItem(key);
-    if (savedItem !== null) {
-      // Special handling for orders to restore Date objects
-      if (key === 'tanso_orders') {
-        const parsedOrders = JSON.parse(savedItem) as Order[];
-        return parsedOrders.map(order => ({ ...order, date: new Date(order.date) })) as T;
-      }
-      return JSON.parse(savedItem);
-    }
-    return defaultValue;
-  } catch (error) {
-    console.error(`Error reading from localStorage key “${key}”:`, error);
-    return defaultValue;
-  }
-};
-
-const saveToStorage = <T,>(key: string, value: T) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error(`Error saving to localStorage key “${key}”:`, error);
-  }
-};
-
+const API_BASE = "http://localhost:4020";
 
 interface AppContextType {
   products: Product[];
-  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   cart: CartItem[];
+  cartTotal: number;
+  fetchProducts: () => Promise<void>;
+  addProduct: (product: Omit<Product, "id">) => Promise<Product | void>;
+  updateProduct: (id: number, updates: Partial<Product>) => Promise<Product | void>;
+  deleteProduct: (id: number) => Promise<void>;
   addToCart: (product: Product, color: string, quantity: number) => void;
   updateQuantity: (productId: number, color: string, quantity: number) => void;
   removeFromCart: (productId: number, color: string) => void;
   clearCart: () => void;
-  cartTotal: number;
-  cartCount: number;
-  orders: Order[];
-  addOrder: (order: Order) => void;
-  updateOrderStatus: (orderId: string, status: Order['status']) => void;
-  isAdminLoggedIn: boolean;
-  loginAdmin: () => void;
+  showToast: (msg: string) => void;
+  getImage: (filename: string) => string;
+
+  // مدیریت ادمین
+  isAdmin: boolean;
+  loginAdmin: (password: string) => boolean;
   logoutAdmin: () => void;
-  getImage: (id: string) => string;
-  addImage: (id: string, base64: string) => void;
-  showToast: (message: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>(() => getFromStorage<Product[]>('tanso_products', MOCK_PRODUCTS));
-  const [cart, setCart] = useState<CartItem[]>(() => getFromStorage<CartItem[]>('tanso_cart', []));
-  const [orders, setOrders] = useState<Order[]>(() => getFromStorage<Order[]>('tanso_orders', []));
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => getFromStorage<boolean>('tanso_isAdminLoggedIn', false));
-  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
-  const [imageStore, setImageStore] = useState<Record<string, string>>(() => getFromStorage<Record<string, string>>('tanso_imageStore', initialImages));
+  const [products, setProducts] = useState<Product[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
+    message: "",
+    visible: false,
+  });
 
-  // --- Effects to sync state with localStorage ---
-  useEffect(() => { saveToStorage('tanso_products', products); }, [products]);
-  useEffect(() => { saveToStorage('tanso_cart', cart); }, [cart]);
-  useEffect(() => { saveToStorage('tanso_orders', orders); }, [orders]);
-  useEffect(() => { saveToStorage('tanso_isAdminLoggedIn', isAdminLoggedIn); }, [isAdminLoggedIn]);
-  useEffect(() => { saveToStorage('tanso_imageStore', imageStore); }, [imageStore]);
+  // 🛡️ مدیریت ادمین
+  const [isAdmin, setIsAdmin] = useState(false);
+  const loginAdmin = (password: string): boolean => {
+    // در تولید بهتر است از environment variable استفاده شود
+    if (password === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+      return true;
+    }
+    return false;
+  };
+  const logoutAdmin = () => setIsAdmin(false);
 
+  // 🛒 مجموع سبد خرید
+  const cartTotal = cart.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
 
-  const getImage = (id: string): string => {
-    return imageStore[id] || initialImages['default-placeholder'];
+  // 🧩 ====== API HANDLERS ======
+  // تابع برای تبدیل کلید 'سبک' به 'تنه' در specs (برای سازگاری با داده‌های قدیمی)
+  const normalizeProductSpecs = (product: Product): Product => {
+    if (product.specs && product.specs['سبک'] !== undefined) {
+      const { 'سبک': value, ...restSpecs } = product.specs;
+      // تبدیل کلید 'سبک' به 'تنه' (مقادیر بدون تغییر باقی می‌مانند)
+      return {
+        ...product,
+        specs: {
+          ...restSpecs,
+          'تنه': value
+        }
+      };
+    }
+    return product;
   };
 
-  const addImage = (id: string, base64: string) => {
-    setImageStore(prev => ({ ...prev, [id]: base64 }));
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/products`);
+      const data = await res.json();
+      // تبدیل داده‌های قدیمی که ممکن است 'سبک' داشته باشند
+      const normalizedData = data.map((product: Product) => normalizeProductSpecs(product));
+      setProducts(normalizedData);
+    } catch (err) {
+      console.error("❌ Error fetching products:", err);
+      showToast("خطا در دریافت محصولات از سرور");
+    }
   };
 
+  const addProduct = async (product: Omit<Product, "id">) => {
+    try {
+      const res = await fetch(`${API_BASE}/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product),
+      });
+      const newProduct = await res.json();
+      setProducts((prev) => [...prev, newProduct]);
+      showToast(`محصول "${product.name}" اضافه شد`);
+      return newProduct;
+    } catch (err) {
+      console.error("❌ Error adding product:", err);
+      showToast("خطا در افزودن محصول");
+    }
+  };
+
+  const updateProduct = async (id: number, updates: Partial<Product>) => {
+    try {
+      const res = await fetch(`${API_BASE}/products/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      const updated = await res.json();
+      setProducts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
+      );
+      showToast("محصول ویرایش شد");
+      return updated;
+    } catch (err) {
+      console.error("❌ Error updating product:", err);
+      showToast("خطا در ویرایش محصول");
+    }
+  };
+
+  const deleteProduct = async (id: number) => {
+    try {
+      await fetch(`${API_BASE}/products/${id}`, { method: "DELETE" });
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      showToast("محصول حذف شد");
+    } catch (err) {
+      console.error("❌ Error deleting product:", err);
+      showToast("خطا در حذف محصول");
+    }
+  };
+
+  // 🛒 ====== CART HANDLERS ======
   const addToCart = (product: Product, color: string, quantity: number) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.product.id === product.id && item.color === color);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.product.id === product.id && item.color === color
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
+    setCart((prev) => {
+      const existing = prev.find(
+        (i) => i.product.id === product.id && i.color === color
+      );
+      if (existing) {
+        return prev.map((i) =>
+          i.product.id === product.id && i.color === color
+            ? { ...i, quantity: i.quantity + quantity }
+            : i
         );
+      } else {
+        return [...prev, { product, color, quantity }];
       }
-      return [...prevCart, { product, color, quantity }];
     });
-    showToast(`${product.name} به سبد خرید اضافه شد`);
+    showToast(`${product.name} (${color}) به سبد خرید افزوده شد`);
   };
 
   const updateQuantity = (productId: number, color: string, quantity: number) => {
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.product.id === productId && item.color === color
-          ? { ...item, quantity }
-          : item
+    setCart((prev) =>
+      prev.map((i) =>
+        i.product.id === productId && i.color === color
+          ? { ...i, quantity }
+          : i
       )
     );
   };
 
   const removeFromCart = (productId: number, color: string) => {
-    setCart(prevCart => prevCart.filter(item => !(item.product.id === productId && item.color === color)));
-    showToast('محصول از سبد خرید حذف شد');
+    setCart((prev) =>
+      prev.filter((i) => !(i.product.id === productId && i.color === color))
+    );
+    showToast("محصول از سبد حذف شد");
   };
 
   const clearCart = () => {
     setCart([]);
+    showToast("سبد خرید خالی شد");
   };
 
-  const cartTotal = cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
-  const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
-
-  const addOrder = (order: Order) => {
-    setOrders(prevOrders => [order, ...prevOrders]);
+  // 🖼️ ====== IMAGE ======
+  const getImage = (filenameOrUrl: string) => {
+    if (!filenameOrUrl) return initialImages["default-placeholder"];
+    // اگر URL کامل Cloudinary است، مستقیماً برگردان
+    if (filenameOrUrl.startsWith("http://") || filenameOrUrl.startsWith("https://")) {
+      return filenameOrUrl;
+    }
+    // در غیر این صورت، URL محلی را برگردان
+    return `${API_BASE}/product-images/${filenameOrUrl}`;
   };
-  
-  const updateOrderStatus = (orderId: string, status: Order['status']) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? {...o, status} : o));
-    showToast(`وضعیت سفارش #${orderId.substring(0, 5)} به ${status} تغییر کرد`);
-  };
 
-  const loginAdmin = () => setIsAdminLoggedIn(true);
-  const logoutAdmin = () => setIsAdminLoggedIn(false);
-
+  // 🔔 ====== TOAST ======
   const showToast = (message: string) => {
     setToast({ message, visible: true });
+    setTimeout(() => setToast({ message: "", visible: false }), 3000);
   };
 
+  // 🚀 Load products on start
   useEffect(() => {
-    if (toast.visible) {
-      const timer = setTimeout(() => setToast({ message: '', visible: false }), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
+    fetchProducts();
+  }, []);
 
   return (
-    <AppContext.Provider value={{
-      products, setProducts, cart, addToCart, updateQuantity, removeFromCart, clearCart, cartTotal, cartCount, orders, addOrder, updateOrderStatus, isAdminLoggedIn, loginAdmin, logoutAdmin, getImage, addImage, showToast
-    }}>
+    <AppContext.Provider
+      value={{
+        products,
+        cart,
+        cartTotal,
+        fetchProducts,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        addToCart,
+        updateQuantity,
+        removeFromCart,
+        clearCart,
+        showToast,
+        getImage,
+        isAdmin,
+        loginAdmin,
+        logoutAdmin,
+      }}
+    >
       {children}
       {toast.visible && (
-        <div className="fixed bottom-5 left-5 bg-brand-neon-blue text-brand-dark-blue font-semibold py-2 px-4 rounded-lg shadow-lg animate-fade-in-out z-50">
+        <div className="fixed bottom-5 left-5 bg-blue-600 text-white py-2 px-4 rounded-lg shadow-lg z-50">
           {toast.message}
         </div>
       )}
@@ -154,10 +226,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   );
 };
 
+// ✅ Hook استفاده ساده
 export const useAppContext = () => {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
-  return context;
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useAppContext باید داخل AppProvider استفاده شود");
+  return ctx;
 };

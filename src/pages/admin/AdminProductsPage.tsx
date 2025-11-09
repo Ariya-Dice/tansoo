@@ -1,226 +1,354 @@
-import React, { useState } from 'react';
-import { useAppContext } from '../../context/AppContext';
-import { Product } from '../../types';
-import { CATEGORIES, COLORS, PRODUCT_TYPES, STYLES } from '../../constants';
-import { fileToBase64 } from '../../db/ImageDB';
+import React, { useState, useEffect } from "react";
+import { useAppContext } from "../../context/AppContext";
+import { Product } from "../../types";
+import "./AdminProductsPage.css";
 
 const AdminProductsPage: React.FC = () => {
-    const { products, setProducts, showToast } = useAppContext();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const {
+    products,
+    fetchProducts,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    getImage,
+    showToast,
+  } = useAppContext();
 
-    const openModalForNew = () => {
-        setEditingProduct(null);
-        setIsModalOpen(true);
-    };
+  const [newProduct, setNewProduct] = useState<Omit<Product, "id">>({
+    name: "",
+    category: "",
+    price: 0,
+    description: "",
+    specs: { جنس: "", پوشش: "", گارانتی: "", تنه: "" },
+    images: {
+      کروم: "",
+      سفید: "",
+      مشکی: "",
+      "سفید–طلایی": "",
+      "مشکی–طلایی": "",
+    },
+  });
 
-    const openModalForEdit = (product: Product) => {
-        setEditingProduct(product);
-        setIsModalOpen(true);
-    };
+  const [loading, setLoading] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [uploadingImages, setUploadingImages] = useState<{ [color: string]: boolean }>({});
 
-    const handleDelete = (productId: number) => {
-        if (window.confirm('آیا از حذف این محصول اطمینان دارید؟')) {
-            setProducts(prev => prev.filter(p => p.id !== productId));
-            showToast('محصول با موفقیت حذف شد.');
-        }
-    };
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-brand-light-text">مدیریت محصولات</h1>
-                <button onClick={openModalForNew} className="px-4 py-2 bg-brand-neon-blue text-brand-dark-blue font-semibold rounded-md hover:bg-opacity-80 transition-colors">
-                    افزودن محصول جدید
-                </button>
-            </div>
-            <div className="bg-brand-surface shadow-md rounded-lg overflow-x-auto">
-                <table className="w-full text-sm text-right text-brand-muted-text">
-                    <thead className="text-xs text-brand-muted-text uppercase bg-brand-dark-blue">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">شناسه</th>
-                            <th scope="col" className="px-6 py-3">نام</th>
-                            <th scope="col" className="px-6 py-3">دسته بندی</th>
-                            <th scope="col" className="px-6 py-3">قیمت</th>
-                            <th scope="col" className="px-6 py-3 text-left">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.map(product => (
-                            <tr key={product.id} className="bg-brand-surface border-b border-brand-neon-blue/20 hover:bg-brand-dark-blue">
-                                <td className="px-6 py-4 font-medium text-brand-light-text">{product.id}</td>
-                                <td className="px-6 py-4 text-brand-light-text">{product.name}</td>
-                                <td className="px-6 py-4">{product.category}</td>
-                                <td className="px-6 py-4">{product.price.toLocaleString('fa-IR')} تومان</td>
-                                <td className="px-6 py-4 text-left space-x-2">
-                                    <button onClick={() => openModalForEdit(product)} className="font-medium text-blue-400 hover:underline">ویرایش</button>
-                                    <button onClick={() => handleDelete(product.id)} className="font-medium text-red-400 hover:underline">حذف</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+  // آپلود تصویر به Cloudinary
+  const handleImageUpload = async (file: File, color: string) => {
+    setUploadingImages((prev) => ({ ...prev, [color]: true }));
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
 
-            {isModalOpen && (
-                <ProductFormModal
-                    product={editingProduct}
-                    onClose={() => setIsModalOpen(false)}
-                />
-            )}
-        </div>
-    );
-};
+      const res = await fetch("http://localhost:4020/upload-image", {
+        method: "POST",
+        body: formData,
+      });
 
-// --- ProductFormModal Component ---
-interface ProductFormModalProps {
-    product: Product | null;
-    onClose: () => void;
-}
+      if (!res.ok) {
+        throw new Error("Upload failed");
+      }
 
-const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, onClose }) => {
-    const { products, setProducts, showToast, addImage, getImage } = useAppContext();
-    const initialProductState: Product = product || {
-        id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,
-        name: '', 
-        category: CATEGORIES[0].name, 
-        type: PRODUCT_TYPES[0].name, 
-        price: 0, 
-        description: '', 
-        specs: { 'جنس': '', 'پوشش': '', 'گارانتی': '', 'سبک': STYLES[0] }, 
-        images: COLORS.reduce((acc, color) => ({...acc, [color.name]: ''}), {}),
-    };
-    const [formData, setFormData] = useState<Product>(initialProductState);
+      const data = await res.json();
+      setNewProduct({
+        ...newProduct,
+        images: { ...newProduct.images, [color]: data.url },
+      });
+      showToast(`تصویر ${color} با موفقیت آپلود شد ✅`);
+    } catch (err) {
+      console.error("❌ Image upload error:", err);
+      showToast("خطا در آپلود تصویر ❌");
+    } finally {
+      setUploadingImages((prev) => ({ ...prev, [color]: false }));
+    }
+  };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: name === 'price' ? Number(value) : value }));
-    };
+  // ذخیره (افزودن یا ویرایش)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (editId) {
+        await updateProduct(editId, newProduct);
+        showToast("محصول ویرایش شد ✅");
+      } else {
+        await addProduct(newProduct);
+        showToast("محصول اضافه شد ✅");
+      }
+      setNewProduct({
+        name: "",
+        category: "",
+        price: 0,
+        description: "",
+        specs: { جنس: "", پوشش: "", گارانتی: "", تنه: "" },
+        images: {
+          کروم: "",
+          سفید: "",
+          مشکی: "",
+          "سفید–طلایی": "",
+          "مشکی–طلایی": "",
+        },
+      });
+      setEditId(null);
+    } catch {
+      showToast("خطا در ذخیره محصول ❌");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleSpecChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({...prev, specs: {...prev.specs, [name]: value }}));
-    };
-    
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, color: string) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            try {
-                const base64 = await fileToBase64(file);
-                const sanitizedName = formData.name.toLowerCase().replace(/\s+/g, '-');
-                if(!sanitizedName) {
-                    showToast('لطفا ابتدا نام محصول را وارد کنید.');
-                    e.target.value = ''; // Reset file input
-                    return;
+  const handleDelete = async (id: number) => {
+    if (window.confirm("آیا از حذف محصول مطمئن هستید؟")) {
+      setLoading(true);
+      await deleteProduct(id);
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (p: Product) => {
+    setNewProduct({ ...p });
+    setEditId(p.id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <div className="admin-products">
+      {/* هدر */}
+      <div className="admin-products-header">
+        <h1 className="admin-products-title">مدیریت محصولات</h1>
+        <button
+          className="admin-products-add-btn"
+          onClick={() => {
+            setEditId(null);
+            setNewProduct({
+              name: "",
+              category: "",
+              price: 0,
+              description: "",
+              specs: { جنس: "", پوشش: "", گارانتی: "", تنه: "" },
+              images: {
+                کروم: "",
+                سفید: "",
+                مشکی: "",
+                "سفید–طلایی": "",
+                "مشکی–طلایی": "",
+              },
+            });
+          }}
+        >
+          افزودن محصول جدید
+        </button>
+      </div>
+
+      {/* فرم */}
+      <div className="admin-products-modal-content">
+        <form onSubmit={handleSubmit} className="admin-products-modal-body">
+          <div className="admin-products-form-grid">
+            <div className="admin-products-form-group">
+              <label className="admin-products-form-label">نام محصول</label>
+              <input
+                type="text"
+                value={newProduct.name}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, name: e.target.value })
                 }
-                const newImageId = `${sanitizedName}-${color}-${Date.now()}`;
-                addImage(newImageId, base64);
-                
-                setFormData(prev => ({
-                    ...prev,
-                    images: { ...prev.images, [color]: newImageId, }
-                }));
-                showToast(`تصویر برای رنگ ${color} آپلود شد.`);
-            } catch (error) {
-                console.error("Error converting file to base64", error);
-                showToast('خطا در آپلود تصویر.');
-            }
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (product) {
-            setProducts(prev => prev.map(p => p.id === product.id ? formData : p));
-            showToast('محصول با موفقیت به‌روزرسانی شد.');
-        } else {
-            setProducts(prev => [...prev, formData]);
-            showToast('محصول با موفقیت اضافه شد.');
-        }
-        onClose();
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-brand-surface rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-                <form onSubmit={handleSubmit}>
-                    <div className="p-6 text-right">
-                        <h2 className="text-2xl font-bold mb-4 text-brand-light-text">{product ? 'ویرایش محصول' : 'افزودن محصول جدید'}</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InputField label="نام" name="name" value={formData.name} onChange={handleChange} required />
-                            <InputField label="قیمت (تومان)" name="price" type="number" value={String(formData.price)} onChange={handleChange} required />
-                            <SelectField label="دسته بندی" name="category" value={formData.category} onChange={handleChange} options={CATEGORIES.map(c => c.name)} />
-                            <SelectField label="نوع" name="type" value={formData.type} onChange={handleChange} options={PRODUCT_TYPES.map(t => t.name)} />
-                        </div>
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium text-brand-muted-text">توضیحات</label>
-                            <textarea name="description" value={formData.description} onChange={handleChange} rows={4} className="mt-1 block w-full rounded-md border-brand-neon-blue/30 bg-brand-dark-blue shadow-sm focus:border-brand-neon-blue focus:ring-brand-neon-blue sm:text-sm text-brand-light-text" required />
-                        </div>
-
-                        <h3 className="text-lg font-semibold mt-6 mb-2 text-brand-light-text">مشخصات فنی</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           {Object.entries(formData.specs).map(([key, value]) => {
-                               if (key === 'سبک') {
-                                   return <SelectField key={key} label={key} name={key} value={value} onChange={handleSpecChange} options={STYLES} />;
-                               }
-                               return <InputField key={key} label={key} name={key} value={value} onChange={handleSpecChange} />;
-                           })}
-                        </div>
-                        
-                        <h3 className="text-lg font-semibold mt-6 mb-2 text-brand-light-text">تصاویر محصول</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
-                           {Object.keys(formData.images).map(color => {
-                                const imageId = formData.images[color];
-                                return (
-                                    <div key={color}>
-                                        <label className="block text-sm font-medium text-brand-muted-text mb-1">{color}</label>
-                                        <div className="flex items-center gap-3">
-                                            <img src={getImage(imageId)} alt={color} className="w-16 h-16 object-cover rounded-md border border-brand-neon-blue/20 bg-brand-dark-blue" />
-                                            <input 
-                                                type="file" 
-                                                accept="image/*"
-                                                onChange={(e) => handleImageUpload(e, color)}
-                                                className="block w-full text-xs text-brand-muted-text file:mr-2 file:py-1 file:px-3 file:rounded-full file:border file:border-brand-neon-blue/20 file:text-xs file:font-semibold file:bg-brand-dark-blue file:text-brand-neon-blue hover:file:bg-brand-neon-blue/10"
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                           })}
-                        </div>
-                    </div>
-                    <div className="bg-brand-dark-blue px-6 py-3 flex justify-end space-x-3 space-x-reverse border-t border-brand-neon-blue/20">
-                        <button type="button" onClick={onClose} className="px-4 py-2 border border-brand-neon-blue/50 text-brand-neon-blue rounded-md hover:bg-brand-neon-blue/10">انصراف</button>
-                        <button type="submit" className="px-4 py-2 bg-brand-neon-blue text-brand-dark-blue font-semibold rounded-md hover:bg-opacity-80">ذخیره محصول</button>
-                    </div>
-                </form>
+                className="admin-products-form-input"
+                required
+              />
             </div>
-        </div>
-    );
+
+            <div className="admin-products-form-group">
+              <label className="admin-products-form-label">دسته‌بندی</label>
+              <input
+                type="text"
+                value={newProduct.category}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, category: e.target.value })
+                }
+                className="admin-products-form-input"
+                required
+              />
+            </div>
+
+            <div className="admin-products-form-group">
+              <label className="admin-products-form-label">تنه</label>
+              <input
+                type="text"
+                value={newProduct.specs.تنه}
+                onChange={(e) =>
+                  setNewProduct({
+                    ...newProduct,
+                    specs: { ...newProduct.specs, تنه: e.target.value },
+                  })
+                }
+                className="admin-products-form-input"
+              />
+            </div>
+
+            <div className="admin-products-form-group">
+              <label className="admin-products-form-label">قیمت (تومان)</label>
+              <input
+                type="number"
+                value={newProduct.price}
+                onChange={(e) =>
+                  setNewProduct({
+                    ...newProduct,
+                    price: parseFloat(e.target.value),
+                  })
+                }
+                className="admin-products-form-input"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="admin-products-form-group">
+            <label className="admin-products-form-label">توضیحات</label>
+            <textarea
+              value={newProduct.description}
+              onChange={(e) =>
+                setNewProduct({ ...newProduct, description: e.target.value })
+              }
+              className="admin-products-form-textarea"
+            />
+          </div>
+
+          {/* آپلود تصاویر برای رنگ‌های مختلف */}
+          <div className="admin-products-form-group">
+            <label className="admin-products-form-label">تصاویر محصول</label>
+            <div className="admin-products-images-grid">
+              {Object.keys(newProduct.images).map((color) => (
+                <div key={color} className="admin-products-image-upload">
+                  <label className="admin-products-image-label">
+                    {color}
+                    {uploadingImages[color] && (
+                      <span className="admin-products-uploading">در حال آپلود...</span>
+                    )}
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleImageUpload(file, color);
+                      }
+                    }}
+                    className="admin-products-file-input"
+                    disabled={uploadingImages[color]}
+                  />
+                  {newProduct.images[color] && (
+                    <div className="admin-products-image-preview-wrapper">
+                      <img
+                        src={newProduct.images[color].startsWith("http") 
+                          ? newProduct.images[color] 
+                          : getImage(newProduct.images[color])}
+                        alt={color}
+                        className="admin-products-image-preview-small"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewProduct({
+                            ...newProduct,
+                            images: { ...newProduct.images, [color]: "" },
+                          });
+                        }}
+                        className="admin-products-remove-image"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="admin-products-modal-footer">
+            <button
+              type="submit"
+              className="admin-products-add-btn"
+              disabled={loading}
+            >
+              {loading
+                ? "در حال ذخیره..."
+                : editId
+                ? "ویرایش محصول"
+                : "افزودن محصول"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* جدول */}
+      <div className="admin-products-table-container">
+        <table className="admin-products-table">
+          <thead>
+            <tr>
+              <th>شناسه</th>
+              <th>نام</th>
+              <th>دسته‌بندی</th>
+              <th>قیمت</th>
+              <th>تنه</th>
+              <th>تصویر</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.length > 0 ? (
+              products.map((p) => (
+                <tr key={p.id}>
+                  <td>{p.id}</td>
+                  <td>{p.name}</td>
+                  <td>{p.category}</td>
+                  <td>{p.price.toLocaleString()} تومان</td>
+                  <td>{p.specs.تنه || "—"}</td>
+                  <td>
+                    {p.images?.کروم ? (
+                      <img
+                        src={getImage(p.images.کروم)}
+                        alt={p.name}
+                        className="admin-products-image-preview"
+                      />
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td>
+                    <div className="admin-products-actions">
+                      <button
+                        className="admin-products-edit-btn admin-products-action-btn"
+                        onClick={() => handleEdit(p)}
+                      >
+                        ویرایش
+                      </button>
+                      <button
+                        className="admin-products-delete-btn admin-products-action-btn"
+                        onClick={() => handleDelete(p.id)}
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} style={{ textAlign: "center", padding: "1rem" }}>
+                  محصولی یافت نشد.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 };
-
-
-// --- Reusable Form Field Components ---
-interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-    label: string;
-}
-const InputField: React.FC<InputFieldProps> = ({ label, ...props }) => (
-    <div>
-        <label htmlFor={props.name} className="block text-sm font-medium text-brand-muted-text">{label}</label>
-        <input id={props.name} {...props} className="mt-1 block w-full rounded-md border-brand-neon-blue/30 bg-brand-dark-blue shadow-sm focus:border-brand-neon-blue focus:ring-brand-neon-blue sm:text-sm text-brand-light-text" />
-    </div>
-);
-
-interface SelectFieldProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-    label: string;
-    options: string[];
-}
-const SelectField: React.FC<SelectFieldProps> = ({ label, options, ...props }) => (
-    <div>
-        <label htmlFor={props.name} className="block text-sm font-medium text-brand-muted-text">{label}</label>
-        <select id={props.name} {...props} className="mt-1 block w-full rounded-md border-brand-neon-blue/30 bg-brand-dark-blue shadow-sm focus:border-brand-neon-blue focus:ring-brand-neon-blue sm:text-sm text-brand-light-text">
-            {options.map(opt => <option key={opt} value={opt} className="bg-brand-dark-blue text-brand-light-text">{opt}</option>)}
-        </select>
-    </div>
-);
 
 export default AdminProductsPage;

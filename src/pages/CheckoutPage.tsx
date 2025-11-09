@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { Order } from '../types';
-
+import './CheckoutPage.css';
 const CheckoutPage: React.FC = () => {
   const { cart, cartTotal, addOrder, clearCart, showToast, getImage } = useAppContext();
   const navigate = useNavigate();

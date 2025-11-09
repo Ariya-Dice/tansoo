@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
@@ -15,13 +14,13 @@ import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import { useAppContext } from './context/AppContext';
 
 const App: React.FC = () => {
-  const { isAdminLoggedIn } = useAppContext();
+  const { isAdmin } = useAppContext();
 
   return (
     <HashRouter>
-      <div className="flex flex-col min-h-screen font-sans text-brand-light-text">
+      <div className="app">
         <Routes>
-          <Route path="/admin/*" element={<AdminRoutes isAdminLoggedIn={isAdminLoggedIn} />} />
+          <Route path="/admin/*" element={<AdminRoutes isAdminLoggedIn={isAdmin} />} />
           <Route path="/*" element={<StorefrontRoutes />} />
         </Routes>
       </div>
@@ -32,7 +31,7 @@ const App: React.FC = () => {
 const StorefrontRoutes: React.FC = () => (
   <>
     <Header />
-    <main className="flex-grow">
+    <main className="main-content">
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
@@ -72,6 +71,5 @@ const AdminRoutes: React.FC<AdminRoutesProps> = ({ isAdminLoggedIn }) => (
     />
   </Routes>
 );
-
 
 export default App;
