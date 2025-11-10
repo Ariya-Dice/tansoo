@@ -1,15 +1,15 @@
-
 export interface Product {
   id: number;
-  name: string;
-  category: string;
-  type: string;
-  price: number;
+  model: string; // اردکی، لاله، تالیا، قاصدک، قاجاری، بامبو
+  type: string; // آفتابه، دوش حمام، روشویی، سینک
+  color: string; // کروم، سفید، سفید طلایی، مشکی طلایی، سفید کروم، مشکی کروم
+  bodyWeight: string; // سبک، نیمه‌سنگین، سنگین
+  hoseMaterial?: string; // آلومینیوم، استیل (فقط برای سینک و روشویی)
+  valveMaterial?: string; // چدنی، برنجی (فقط برای آفتابه و دوش)
+  tags: string[]; // اقتصادی، پرفروش، جدید
+  price: number; // قیمت به تومان
   description: string;
-  specs: { [key: string]: string };
-  images: { [color: string]: string };
-  isNew?: boolean;
-  isBestSeller?: boolean;
+  image: string; // URL تصویر اصلی
 }
 
 export interface Category {
@@ -30,7 +30,6 @@ export interface Color {
 
 export interface CartItem {
   product: Product;
-  color: string;
   quantity: number;
 }
 

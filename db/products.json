@@ -4,7 +4,7 @@
     "name": "1",
     "category": "شیرآلات اردکی",
     "type": "روشویی",
-    "price": 1,
+    "price": 1332,
     "description": "1",
     "specs": {
       "جنس": "",
@@ -18,14 +18,23 @@
       "مشکی": "",
       "سفید–طلایی": "",
       "مشکی–طلایی": ""
-    }
+    },
+    "model": "اردکی",
+    "color": "کروم",
+    "bodyWeight": "سبک",
+    "hoseMaterial": "آلومینیوم",
+    "tags": [
+      "پرفروش",
+      "جدید"
+    ],
+    "image": "prod-1762541406407-295899967.png"
   },
   {
     "id": 2,
     "name": "2",
     "category": "شیرآلات لاله",
     "type": "روشویی",
-    "price": 2,
+    "price": 24444444,
     "description": "2",
     "specs": {
       "جنس": "",
@@ -39,12 +48,20 @@
       "مشکی": "",
       "سفید–طلایی": "",
       "مشکی–طلایی": ""
-    }
+    },
+    "model": "تالیا",
+    "color": "کروم",
+    "bodyWeight": "سنگین",
+    "hoseMaterial": "استیل",
+    "tags": [
+      "جدید"
+    ],
+    "image": "prod-1762802805728-207401028.jpg"
   },
   {
     "name": "3",
     "category": "3",
-    "price": 3,
+    "price": 32222,
     "description": "3",
     "specs": {
       "جنس": "",
@@ -59,6 +76,32 @@
       "سفید–طلایی": "",
       "مشکی–طلایی": ""
     },
-    "id": 3
+    "id": 3,
+    "model": "لاله",
+    "type": "دوش حمام",
+    "color": "کروم",
+    "bodyWeight": "نیمه‌سنگین",
+    "hoseMaterial": "",
+    "valveMaterial": "چدنی",
+    "tags": [
+      "پرفروش"
+    ],
+    "image": "prod-1762802850917-577865637.jpg"
+  },
+  {
+    "model": "اردکی",
+    "type": "آفتابه",
+    "color": "کروم",
+    "bodyWeight": "سبک",
+    "hoseMaterial": "",
+    "valveMaterial": "برنجی",
+    "tags": [
+      "اقتصادی",
+      "پرفروش"
+    ],
+    "price": 4544444,
+    "description": "",
+    "image": "/ordak.jpg",
+    "id": 4
   }
 ]

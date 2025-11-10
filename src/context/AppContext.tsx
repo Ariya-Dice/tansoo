@@ -4,19 +4,26 @@ import { Product, CartItem } from "../types";
 import { initialImages } from "../db/ImageDB";
 import { ADMIN_PASSWORD } from "../constants";
 
-const API_BASE = "http://localhost:4020";
+// تشخیص محیط: local development یا production (Vercel)
+const isDevelopment = import.meta.env.DEV;
+const API_BASE = isDevelopment 
+  ? "http://localhost:4020" 
+  : window.location.origin;
 
 interface AppContextType {
   products: Product[];
   cart: CartItem[];
   cartTotal: number;
+  cartCount: number;
+  loading: boolean;
+  error: string | null;
   fetchProducts: () => Promise<void>;
   addProduct: (product: Omit<Product, "id">) => Promise<Product | void>;
   updateProduct: (id: number, updates: Partial<Product>) => Promise<Product | void>;
   deleteProduct: (id: number) => Promise<void>;
-  addToCart: (product: Product, color: string, quantity: number) => void;
-  updateQuantity: (productId: number, color: string, quantity: number) => void;
-  removeFromCart: (productId: number, color: string) => void;
+  addToCart: (product: Product, quantity: number) => void;
+  updateQuantity: (productId: number, quantity: number) => void;
+  removeFromCart: (productId: number) => void;
   clearCart: () => void;
   showToast: (msg: string) => void;
   getImage: (filename: string) => string;
@@ -32,6 +39,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({
     message: "",
     visible: false,
@@ -55,60 +64,130 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     0
   );
 
+  // 🛒 تعداد کل آیتم‌های سبد خرید
+  const cartCount = cart.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
   // 🧩 ====== API HANDLERS ======
-  // تابع برای تبدیل کلید 'سبک' به 'تنه' در specs (برای سازگاری با داده‌های قدیمی)
-  const normalizeProductSpecs = (product: Product): Product => {
-    if (product.specs && product.specs['سبک'] !== undefined) {
-      const { 'سبک': value, ...restSpecs } = product.specs;
-      // تبدیل کلید 'سبک' به 'تنه' (مقادیر بدون تغییر باقی می‌مانند)
+  // تابع برای نرمال‌سازی محصولات (تبدیل ساختار قدیمی به جدید)
+  const normalizeProduct = (product: any): Product => {
+    // اگر محصول ساختار قدیمی دارد، تبدیل می‌کنیم
+    if (product.name && !product.model) {
       return {
-        ...product,
-        specs: {
-          ...restSpecs,
-          'تنه': value
-        }
+        id: product.id,
+        model: product.category || 'سایر',
+        type: product.type || 'روشویی',
+        color: Object.keys(product.images || {})[0] || 'کروم',
+        bodyWeight: product.specs?.تنه || product.specs?.سبک || 'سبک',
+        hoseMaterial: product.type === 'روشویی' || product.type === 'سینک' ? 'آلومینیوم' : undefined,
+        valveMaterial: product.type === 'آفتابه' || product.type === 'دوش' ? 'برنجی' : undefined,
+        tags: [
+          ...(product.isNew ? ['جدید'] : []),
+          ...(product.isBestSeller ? ['پرفروش'] : []),
+        ],
+        price: product.price || 0,
+        description: product.description || '',
+        image: product.images ? Object.values(product.images)[0] as string : '/loading.gif',
       };
     }
     return product;
   };
 
   const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`${API_BASE}/products`);
+      // استفاده از API جدید یا local
+      const apiUrl = isDevelopment 
+        ? `${API_BASE}/products`
+        : `${API_BASE}/api/products`;
+      
+      const res = await fetch(apiUrl);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
-      // تبدیل داده‌های قدیمی که ممکن است 'سبک' داشته باشند
-      const normalizedData = data.map((product: Product) => normalizeProductSpecs(product));
+      // تبدیل داده‌های قدیمی به ساختار جدید
+      const normalizedData = data.map((product: any) => normalizeProduct(product));
       setProducts(normalizedData);
     } catch (err) {
+      let errorMessage = "خطا در دریافت محصولات";
+      
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        errorMessage = "سرور backend در دسترس نیست. لطفاً مطمئن شوید که سرور در localhost:4020 در حال اجرا است.";
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
       console.error("❌ Error fetching products:", err);
-      showToast("خطا در دریافت محصولات از سرور");
+      setError(errorMessage);
+      
+      // فقط در حالت development پیام toast نمایش بده
+      if (isDevelopment) {
+        showToast("⚠️ سرور backend در دسترس نیست");
+      }
+      
+      // در صورت خطا، لیست خالی بگذار تا برنامه crash نکند
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const addProduct = async (product: Omit<Product, "id">) => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`${API_BASE}/products`, {
+      const apiUrl = isDevelopment 
+        ? `${API_BASE}/products`
+        : `${API_BASE}/api/products`;
+      
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
       });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const newProduct = await res.json();
       setProducts((prev) => [...prev, newProduct]);
-      showToast(`محصول "${product.name}" اضافه شد`);
+      showToast(`محصول "${product.model} ${product.type}" اضافه شد ✅`);
       return newProduct;
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "خطا در افزودن محصول";
       console.error("❌ Error adding product:", err);
+      setError(errorMessage);
       showToast("خطا در افزودن محصول");
+    } finally {
+      setLoading(false);
     }
   };
 
   const updateProduct = async (id: number, updates: Partial<Product>) => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`${API_BASE}/products/${id}`, {
+      const apiUrl = isDevelopment 
+        ? `${API_BASE}/products/${id}`
+        : `${API_BASE}/api/products?id=${id}`;
+      
+      const res = await fetch(apiUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
       });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const updated = await res.json();
       setProducts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
@@ -116,54 +195,71 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       showToast("محصول ویرایش شد");
       return updated;
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "خطا در ویرایش محصول";
       console.error("❌ Error updating product:", err);
+      setError(errorMessage);
       showToast("خطا در ویرایش محصول");
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteProduct = async (id: number) => {
+    setLoading(true);
+    setError(null);
     try {
-      await fetch(`${API_BASE}/products/${id}`, { method: "DELETE" });
+      const apiUrl = isDevelopment 
+        ? `${API_BASE}/products/${id}`
+        : `${API_BASE}/api/products?id=${id}`;
+      
+      const res = await fetch(apiUrl, { method: "DELETE" });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       setProducts((prev) => prev.filter((p) => p.id !== id));
       showToast("محصول حذف شد");
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "خطا در حذف محصول";
       console.error("❌ Error deleting product:", err);
+      setError(errorMessage);
       showToast("خطا در حذف محصول");
+    } finally {
+      setLoading(false);
     }
   };
 
   // 🛒 ====== CART HANDLERS ======
-  const addToCart = (product: Product, color: string, quantity: number) => {
+  const addToCart = (product: Product, quantity: number) => {
     setCart((prev) => {
-      const existing = prev.find(
-        (i) => i.product.id === product.id && i.color === color
-      );
+      const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
         return prev.map((i) =>
-          i.product.id === product.id && i.color === color
+          i.product.id === product.id
             ? { ...i, quantity: i.quantity + quantity }
             : i
         );
       } else {
-        return [...prev, { product, color, quantity }];
+        return [...prev, { product, quantity }];
       }
     });
-    showToast(`${product.name} (${color}) به سبد خرید افزوده شد`);
+    showToast(`${product.model} ${product.type} (${product.color}) به سبد خرید افزوده شد`);
   };
 
-  const updateQuantity = (productId: number, color: string, quantity: number) => {
+  const updateQuantity = (productId: number, quantity: number) => {
     setCart((prev) =>
       prev.map((i) =>
-        i.product.id === productId && i.color === color
+        i.product.id === productId
           ? { ...i, quantity }
           : i
       )
     );
   };
 
-  const removeFromCart = (productId: number, color: string) => {
+  const removeFromCart = (productId: number) => {
     setCart((prev) =>
-      prev.filter((i) => !(i.product.id === productId && i.color === color))
+      prev.filter((i) => i.product.id !== productId)
     );
     showToast("محصول از سبد حذف شد");
   };
@@ -176,12 +272,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // 🖼️ ====== IMAGE ======
   const getImage = (filenameOrUrl: string) => {
     if (!filenameOrUrl) return initialImages["default-placeholder"];
-    // اگر URL کامل Cloudinary است، مستقیماً برگردان
+    // اگر URL کامل (Cloudinary یا Filestack) است، مستقیماً برگردان
     if (filenameOrUrl.startsWith("http://") || filenameOrUrl.startsWith("https://")) {
       return filenameOrUrl;
     }
-    // در غیر این صورت، URL محلی را برگردان
-    return `${API_BASE}/product-images/${filenameOrUrl}`;
+    // اگر با / شروع می‌شود (URL نسبی)، مستقیماً برگردان
+    if (filenameOrUrl.startsWith("/")) {
+      return filenameOrUrl;
+    }
+    // در غیر این صورت، URL محلی یا API را برگردان
+    if (isDevelopment) {
+      return `${API_BASE}/product-images/${filenameOrUrl}`;
+    } else {
+      return `/product-images/${filenameOrUrl}`;
+    }
   };
 
   // 🔔 ====== TOAST ======
@@ -201,6 +305,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         products,
         cart,
         cartTotal,
+        cartCount,
+        loading,
+        error,
         fetchProducts,
         addProduct,
         updateProduct,

@@ -1,9 +1,6 @@
 .products-page {
     padding-top: 4rem;
-  }
-  
-  .products-header {
-    margin-bottom: 2rem;
+    min-height: 100vh;
   }
   
   .products-title {
@@ -12,6 +9,66 @@
     margin-bottom: 2rem;
     color: #e2e8f0;
     text-align: center;
+  }
+  
+  /* فیلترها */
+  .products-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #0f172a;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .filter-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #94a3b8;
+    text-align: right;
+  }
+  
+  .filter-group select {
+    padding: 0.5rem;
+    background-color: #020617;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: 0.375rem;
+    color: #e2e8f0;
+    font-size: 0.875rem;
+    text-align: right;
+    direction: rtl;
+  }
+  
+  .filter-group select:focus {
+    outline: none;
+    border-color: #00e5ff;
+    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1);
+  }
+  
+  .custom-input {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: #020617;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: 0.375rem;
+    color: #e2e8f0;
+    font-size: 0.875rem;
+    text-align: right;
+    direction: rtl;
+  }
+  
+  .custom-input:focus {
+    outline: none;
+    border-color: #00e5ff;
+    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1);
   }
   
   .products-grid {
@@ -34,6 +91,20 @@
   
   .products-empty-text {
     font-size: 1.125rem;
+  }
+  
+  .loading-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    gap: 1rem;
+  }
+  
+  .loading-gif {
+    width: 64px;
+    height: 64px;
   }
   
   @media (max-width: 768px) {

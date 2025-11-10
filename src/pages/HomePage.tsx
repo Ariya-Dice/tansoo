@@ -5,10 +5,12 @@ import { useAppContext } from '../context/AppContext';
 import './HomePage.css';
 
 const HomePage: React.FC = () => {
-  const { products, loading } = useAppContext();
+  const { products, loading, error } = useAppContext();
 
-  const newProducts = products.filter(p => p.isNew).slice(0, 4);
-  const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
+  // فیلتر محصولات بر اساس تگ‌ها
+  const newProducts = products.filter(p => p.tags && p.tags.includes('جدید')).slice(0, 4);
+  const bestSellers = products.filter(p => p.tags && p.tags.includes('پرفروش')).slice(0, 4);
+  const economicalProducts = products.filter(p => p.tags && p.tags.includes('اقتصادی')).slice(0, 4);
 
   return (
     <div className="home-page">
@@ -20,32 +22,60 @@ const HomePage: React.FC = () => {
       </section>
 
       {loading ? (
-        <div className="loading-center">در حال بارگذاری...</div>
+        <div className="loading-center">
+          <img src="/loading.gif" alt="در حال بارگذاری..." className="loading-gif" />
+          <p>در حال بارگذاری...</p>
+        </div>
+      ) : error ? (
+        <div className="loading-center">
+          <p style={{ color: '#ef4444', marginBottom: '1rem' }}>⚠️ {error}</p>
+          <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+            لطفاً مطمئن شوید که سرور backend در localhost:4020 در حال اجرا است.
+          </p>
+        </div>
       ) : (
         <>
           {/* محصولات جدید */}
-          <section className="home-section">
-            <div className="container">
-              <h2 className="section-title">محصولات جدید</h2>
-              <div className="products-grid">
-                {newProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+          {newProducts.length > 0 && (
+            <section className="home-section">
+              <div className="container">
+                <h2 className="section-title">محصولات جدید</h2>
+                <div className="products-grid">
+                  {newProducts.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           {/* پرفروش‌ترین‌ها */}
-          <section className="home-section home-section-dark">
-            <div className="container">
-              <h2 className="section-title">پرفروش‌ترین‌ها</h2>
-              <div className="products-grid">
-                {bestSellers.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+          {bestSellers.length > 0 && (
+            <section className="home-section home-section-dark">
+              <div className="container">
+                <h2 className="section-title">پرفروش‌ترین‌ها</h2>
+                <div className="products-grid">
+                  {bestSellers.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
+
+          {/* محصولات اقتصادی */}
+          {economicalProducts.length > 0 && (
+            <section className="home-section">
+              <div className="container">
+                <h2 className="section-title">محصولات اقتصادی</h2>
+                <div className="products-grid">
+                  {economicalProducts.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
         </>
       )}
     </div>

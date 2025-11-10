@@ -11,7 +11,7 @@
   /* سایر لایه‌ها */
   background-image: 
     url('/back.png'),      /* لایه اول */
-    url('/back5.png'),    /* لایه سوم */
+    url('/back4.png'),    /* لایه سوم */
     linear-gradient(rgba(2,6,23,0.5), rgba(2,6,23,0.5)); /* لایه چهارم */
 
   background-position: 

@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { Order } from '../types';
+import { getDefaultImage } from '../constants';
 import './CheckoutPage.css';
+
 const CheckoutPage: React.FC = () => {
-  const { cart, cartTotal, addOrder, clearCart, showToast, getImage } = useAppContext();
+  const { cart, cartTotal, clearCart, showToast, getImage } = useAppContext();
   const navigate = useNavigate();
   const [customerDetails, setCustomerDetails] = useState({ name: '', email: '', address: '' });
   const [isProcessing, setIsProcessing] = useState(false);
@@ -23,22 +24,13 @@ const CheckoutPage: React.FC = () => {
     }
 
     setIsProcessing(true);
-
-    const newOrder: Order = {
-      id: new Date().getTime().toString(),
-      customerDetails,
-      items: cart,
-      total: cartTotal,
-      status: 'Paid',
-      date: new Date(),
-    };
     
     // Simulate payment gateway processing
     setTimeout(() => {
-        addOrder(newOrder);
         clearCart();
         setIsProcessing(false);
-        showToast('پرداخت موفق بود! سفارش شما ثبت شد.');
+        alert('✅ سفارش شما با موفقیت ثبت شد!');
+        showToast('✅ سفارش شما با موفقیت ثبت شد!');
         navigate('/');
     }, 2000);
   };
@@ -87,18 +79,37 @@ const CheckoutPage: React.FC = () => {
           <div className="bg-brand-surface p-8 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-6 text-brand-light-text">سفارش شما</h2>
             <div className="space-y-4 max-h-80 overflow-y-auto pl-2">
-              {cart.map(item => (
-                <div key={`${item.product.id}-${item.color}`} className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <img src={getImage(item.product.images[item.color])} alt={item.product.name} className="w-16 h-16 rounded-md object-cover bg-brand-dark-blue" />
-                    <div>
-                      <p className="font-semibold text-brand-light-text">{item.product.name}</p>
-                      <p className="text-sm text-brand-muted-text">{item.color} x {item.quantity}</p>
+              {cart.map(item => {
+                const imageSrc = item.product.image 
+                  ? getImage(item.product.image) 
+                  : getDefaultImage(item.product.model);
+                
+                return (
+                  <div key={item.product.id} className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <img 
+                        src={imageSrc} 
+                        alt={`${item.product.model} ${item.product.type}`} 
+                        className="w-16 h-16 rounded-md object-cover bg-brand-dark-blue"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = getDefaultImage(item.product.model);
+                        }}
+                      />
+                      <div>
+                        <p className="font-semibold text-brand-light-text">
+                          {item.product.model} {item.product.type}
+                        </p>
+                        <p className="text-sm text-brand-muted-text">
+                          {item.product.color} x {item.quantity}
+                        </p>
+                      </div>
                     </div>
+                    <p className="font-semibold text-brand-light-text">
+                      {(item.product.price * item.quantity).toLocaleString('fa-IR')} تومان
+                    </p>
                   </div>
-                  <p className="font-semibold text-brand-light-text">{(item.product.price * item.quantity).toLocaleString('fa-IR')} تومان</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="border-t border-brand-neon-blue/20 mt-6 pt-6 space-y-2">
                 <div className="flex justify-between text-brand-muted-text">

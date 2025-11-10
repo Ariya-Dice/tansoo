@@ -1,34 +1,80 @@
-import { Product, Category, ProductType, Color } from './types';
+import { Product } from './types';
 
 export const STORE_NAME = "شیرآلات ساختمانی تانسو";
 
 // پسورد ادمین (در تولید باید از environment variable استفاده شود)
 export const ADMIN_PASSWORD = "admin123";
 
-export const CATEGORIES: Category[] = [
-  { id: 'ardaki', name: 'شیرآلات اردکی' },
-  { id: 'talia', name: 'شیرآلات تالیا' },
-  { id: 'laleh', name: 'شیرآلات لاله' },
-  { id: 'bamboo', name: 'شیرآلات بامبو' },
-  { id: 'qajari', name: 'شیرآلات قاجاری' },
+// مدل‌های محصول
+export const MODELS = [
+  'اردکی',
+  'لاله',
+  'تالیا',
+  'قاصدک',
+  'قاجاری',
+  'بامبو',
+  'سایر...'
 ];
 
-export const PRODUCT_TYPES: ProductType[] = [
-  { id: 'washbasin', name: 'روشویی' },
-  { id: 'bidet', name: 'توالت' },
-  { id: 'shower', name: 'دوش' },
-  { id: 'kitchen', name: 'آشپزخانه' },
+// انواع محصول
+export const TYPES = [
+  'آفتابه',
+  'دوش حمام',
+  'روشویی',
+  'سینک',
+  'سایر...'
 ];
 
-export const COLORS: Color[] = [
-  { id: 'chrome', name: 'کروم', tailwindClass: 'bg-gray-300' },
-  { id: 'white', name: 'سفید', tailwindClass: 'bg-white' },
-  { id: 'black', name: 'مشکی', tailwindClass: 'bg-black' },
-  { id: 'white-gold', name: 'سفید–طلایی', tailwindClass: 'bg-gradient-to-br from-white to-yellow-200' },
-  { id: 'black-gold', name: 'مشکی–طلایی', tailwindClass: 'bg-gradient-to-br from-black to-yellow-600' },
+// رنگ‌های محصول
+export const COLORS = [
+  'کروم',
+  'سفید',
+  'سفید طلایی',
+  'مشکی طلایی',
+  'سفید کروم',
+  'مشکی کروم',
+  'سایر...'
 ];
 
-export const STYLES = ['سبک', 'نیمه سنگین', 'سنگین'];
+// وزن تنه
+export const BODY_WEIGHTS = [
+  'سبک',
+  'نیمه‌سنگین',
+  'سنگین',
+  'سایر...'
+];
+
+// جنس شیلنگ (فقط برای سینک و روشویی)
+export const HOSE_MATERIALS = [
+  'آلومینیوم',
+  'استیل',
+  'سایر...'
+];
+
+// جنس شیر (فقط برای آفتابه و دوش)
+export const VALVE_MATERIALS = [
+  'چدنی',
+  'برنجی',
+  'سایر...'
+];
+
+// تگ‌های محصول
+export const TAGS = ['اقتصادی', 'پرفروش', 'جدید'];
+
+// تصاویر پیش‌فرض برای هر مدل
+export const DEFAULT_MODEL_IMAGES: { [key: string]: string } = {
+  'اردکی': '/ordak.jpg',
+  'لاله': '/lale.jpg',
+  'بامبو': '/bambo.jpg',
+  'تالیا': '/taliya.jpg',
+  'قاصدک': '/gasedak.jpg',
+  'قاجاری': '/ordak.jpg', // استفاده از تصویر پیش‌فرض تا زمانی که qajari.jpg اضافه شود
+};
+
+// تابع برای دریافت تصویر پیش‌فرض بر اساس مدل
+export function getDefaultImage(model: string): string {
+  return DEFAULT_MODEL_IMAGES[model] || '/loading.gif';
+}
 
 const placeholderImages = {
   'کروم': 'placeholder-chrome',
