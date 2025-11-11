@@ -1,16 +1,30 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "builds": [
+    {
+      "src": "next.config.js",
+      "use": "@vercel/next"
+    }
+  ],
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    },
+    "api/**/*.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
-      "source": "/api/products",
-      "destination": "/api/products.js"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     },
     {
-      "source": "/api/products/:id",
-      "destination": "/api/products.js"
-    },
-    {
-      "source": "/api/upload-image",
-      "destination": "/api/upload-image.js"
+      "source": "/(.*)",
+      "destination": "/"
     }
   ],
   "headers": [
@@ -31,6 +45,8 @@
         }
       ]
     }
-  ]
-}
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
