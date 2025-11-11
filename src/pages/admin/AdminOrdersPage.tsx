@@ -16,7 +16,6 @@ const AdminOrdersPage: React.FC = () => {
     updateOrderStatus(orderId, newStatus);
   };
 
-  // 🩵 چک کن اگر orders هنوز لود نشده باشه:
   if (!orders) {
     return (
       <div className="admin-orders-empty">

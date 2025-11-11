@@ -7,7 +7,6 @@ import './HomePage.css';
 const HomePage: React.FC = () => {
   const { products, loading, error } = useAppContext();
 
-  // فیلتر محصولات بر اساس تگ‌ها
   const newProducts = products.filter(p => p.tags && p.tags.includes('جدید')).slice(0, 4);
   const bestSellers = products.filter(p => p.tags && p.tags.includes('پرفروش')).slice(0, 4);
   const economicalProducts = products.filter(p => p.tags && p.tags.includes('اقتصادی')).slice(0, 4);

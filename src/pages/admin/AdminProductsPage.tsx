@@ -43,10 +43,8 @@ const AdminProductsPage: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // فقط یک بار در mount اجرا شود
 
-  // آپلود تصویر
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true);
     try {
