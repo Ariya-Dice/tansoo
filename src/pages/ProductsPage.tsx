@@ -20,7 +20,8 @@ const ProductsPage: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // فیلتر و مرتب‌سازی محصولات
   const filteredAndSortedProducts = React.useMemo(() => {

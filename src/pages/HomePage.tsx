@@ -1,5 +1,5 @@
 // src/pages/HomePage.tsx
-import React from 'react';
+import React, { useRef } from 'react';
 import ProductCard from '../components/ProductCard';
 import { useAppContext } from '../context/AppContext';
 import './HomePage.css';
@@ -7,9 +7,29 @@ import './HomePage.css';
 const HomePage: React.FC = () => {
   const { products, loading, error } = useAppContext();
 
-  const newProducts = products.filter(p => p.tags && p.tags.includes('جدید')).slice(0, 4);
-  const bestSellers = products.filter(p => p.tags && p.tags.includes('پرفروش')).slice(0, 4);
-  const economicalProducts = products.filter(p => p.tags && p.tags.includes('اقتصادی')).slice(0, 4);
+  const newProducts = products.filter(p => p.tags && p.tags.includes('جدید'));
+  const bestSellers = products.filter(p => p.tags && p.tags.includes('پرفروش'));
+  const economicalProducts = products.filter(p => p.tags && p.tags.includes('اقتصادی'));
+
+  const scrollLeft = (ref: React.RefObject<HTMLDivElement>) => {
+    if (ref.current) {
+      // در RTL، برای اسکرول به راست (شروع) باید scrollLeft را افزایش دهیم
+      const currentScroll = ref.current.scrollLeft;
+      ref.current.scrollTo({ left: currentScroll + 300, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = (ref: React.RefObject<HTMLDivElement>) => {
+    if (ref.current) {
+      // در RTL، برای اسکرول به چپ (پایان) باید scrollLeft را کاهش دهیم
+      const currentScroll = ref.current.scrollLeft;
+      ref.current.scrollTo({ left: currentScroll - 300, behavior: 'smooth' });
+    }
+  };
+
+  const newProductsRef = useRef<HTMLDivElement>(null);
+  const bestSellersRef = useRef<HTMLDivElement>(null);
+  const economicalProductsRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="home-page">
@@ -39,10 +59,26 @@ const HomePage: React.FC = () => {
             <section className="home-section">
               <div className="container">
                 <h2 className="section-title">محصولات جدید</h2>
-                <div className="products-grid">
-                  {newProducts.map(product => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+                <div className="products-slider-wrapper">
+                  <button 
+                    className="slider-button slider-button-left" 
+                    onClick={() => scrollLeft(newProductsRef)}
+                    aria-label="اسکرول به چپ"
+                  >
+                    ‹
+                  </button>
+                  <div className="products-slider" ref={newProductsRef}>
+                    {newProducts.map(product => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                  <button 
+                    className="slider-button slider-button-right" 
+                    onClick={() => scrollRight(newProductsRef)}
+                    aria-label="اسکرول به راست"
+                  >
+                    ›
+                  </button>
                 </div>
               </div>
             </section>
@@ -53,10 +89,26 @@ const HomePage: React.FC = () => {
             <section className="home-section home-section-dark">
               <div className="container">
                 <h2 className="section-title">پرفروش‌ترین‌ها</h2>
-                <div className="products-grid">
-                  {bestSellers.map(product => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+                <div className="products-slider-wrapper">
+                  <button 
+                    className="slider-button slider-button-left" 
+                    onClick={() => scrollLeft(bestSellersRef)}
+                    aria-label="اسکرول به چپ"
+                  >
+                    ‹
+                  </button>
+                  <div className="products-slider" ref={bestSellersRef}>
+                    {bestSellers.map(product => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                  <button 
+                    className="slider-button slider-button-right" 
+                    onClick={() => scrollRight(bestSellersRef)}
+                    aria-label="اسکرول به راست"
+                  >
+                    ›
+                  </button>
                 </div>
               </div>
             </section>
@@ -67,10 +119,26 @@ const HomePage: React.FC = () => {
             <section className="home-section">
               <div className="container">
                 <h2 className="section-title">محصولات اقتصادی</h2>
-                <div className="products-grid">
-                  {economicalProducts.map(product => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+                <div className="products-slider-wrapper">
+                  <button 
+                    className="slider-button slider-button-left" 
+                    onClick={() => scrollLeft(economicalProductsRef)}
+                    aria-label="اسکرول به چپ"
+                  >
+                    ‹
+                  </button>
+                  <div className="products-slider" ref={economicalProductsRef}>
+                    {economicalProducts.map(product => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                  <button 
+                    className="slider-button slider-button-right" 
+                    onClick={() => scrollRight(economicalProductsRef)}
+                    aria-label="اسکرول به راست"
+                  >
+                    ›
+                  </button>
                 </div>
               </div>
             </section>

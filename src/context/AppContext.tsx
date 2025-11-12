@@ -1,5 +1,5 @@
 // src/context/AppContext.tsx
-import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
+import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from "react";
 import { Product, CartItem } from "../types";
 import { initialImages } from "../db/ImageDB";
 import { ADMIN_PASSWORD } from "../constants";
@@ -95,7 +95,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return product;
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -126,17 +126,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.error("❌ Error fetching products:", err);
       setError(errorMessage);
       
-      // فقط در حالت development پیام toast نمایش بده
-      if (isDevelopment) {
-        showToast("⚠️ سرور backend در دسترس نیست");
-      }
-      
       // در صورت خطا، لیست خالی بگذار تا برنامه crash نکند
       setProducts([]);
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addProduct = async (product: Omit<Product, "id">) => {
     setLoading(true);

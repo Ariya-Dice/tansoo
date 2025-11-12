@@ -12,10 +12,6 @@ html {
 
 body {
   background-color: #020617;
-  background-image: linear-gradient(rgba(2, 6, 23, 0.9), rgba(2, 6, 23, 0.9)), url('/back1.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
   color: #e2e8f0;
   line-height: 1.6;
 }

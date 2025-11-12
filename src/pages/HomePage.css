@@ -1,278 +1,258 @@
-:root {
-  --neon-blue: #00f5ff;
-  --neon-glow: #38bdf8;
-  --neon-shadow: #0ea5e9;
-}
+/* ================================
+   🌌 DeviceBound Wallet - Home Page Style
+   ================================ */
 
-.home-page {
-  position: relative; /* ضروری برای ::before */
-  min-height: 100vh;
-
-  /* سایر لایه‌ها */
-  background-image: 
-    url('/back.png'),      /* لایه اول */
-    url('/back4.png'),    /* لایه سوم */
-    linear-gradient(rgba(2,6,23,0.5), rgba(2,6,23,0.5)); /* لایه چهارم */
-
-  background-position: 
-    top right,
-    bottom left,
-    center center;
-
-  background-size: 
-    cover,
-    contain,
-    cover;
-
-  background-repeat: 
-    no-repeat,
-    repeat-x,
-    no-repeat;
-
-  background-attachment: 
-    fixed,
-    scroll,
-    fixed;
-
-  color: var(--neon-blue);
-  text-shadow: 0 0 6px var(--neon-glow), 0 0 16px var(--neon-shadow);
-}
-
-@media (max-width: 768px) {
+   :root {
+    --neon-blue: #00e5ff;
+    --neon-glow: rgba(0, 229, 255, 0.7);
+    --neon-shadow: rgba(0, 229, 255, 0.4);
+  }
+  
   .home-page {
-    background-attachment: scroll, scroll, scroll;
-  }
-}
-
-/* لایه دوم متحرک با چرخش دائمی */
-.home-page::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 30%;
-  height: 30%;
-  background-image: url('/.png'); /* لایه دوم */
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  transform: translate(-50%, -50%) rotate(0deg);
-  transform-origin: center;
-  animation: spinLayer 60s linear infinite;
-  pointer-events: none; /* جلوگیری از تداخل با عناصر داخلی */
-  z-index: 0; /* زیر محتوا */
-}
-
-@media (max-width: 768px) {
-  .home-page::before {
-    display: none; /* در موبایل نمایش داده نشود */
-  }
-}
-
-@keyframes spinLayer {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-.home-banner {
-  width: 100%;
-  height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-image: url('/.png');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  border-radius: 0.375rem;
-  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
-  margin: 0;
-  overflow: hidden;
-}
-
-@media (max-width: 768px) {
-  .home-banner {
-    height: 200px;
-    margin: 1rem 0.5rem;
-    border-radius: 0.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .home-banner {
-    height: 150px;
-    margin: 0.5rem;
-  }
-}
-
-.banner-content {
-  text-align: center;
-  padding: 1rem;
-}
-
-.banner-text {
-  font-size: 5rem;
-  font-weight: 700;
-  color: var(--neon-blue);
-  text-shadow: 0 0 12px var(--neon-glow), 0 0 24px var(--neon-shadow);
-  letter-spacing: 0.05em;
-  animation: neonPulse 2.5s infinite alternate;
-  word-wrap: break-word;
-}
-
-@media (max-width: 768px) {
-  .banner-text {
-    font-size: 2.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .banner-text {
-    font-size: 1.75rem;
-    padding: 0 0.5rem;
-  }
-}
-
-.home-section {
-  padding: 4rem 0;
-  background-color: rgba(2, 6, 23, 0.02);
-  border-radius: 10px;
-  margin: 0;
-  backdrop-filter: blur(5px);
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
-}
-
-@media (max-width: 768px) {
-  .home-section {
-    padding: 2rem 0;
-    margin: 0 0.5rem;
-    border-radius: 0.5rem;
-  }
-}
-
-.home-section-dark {
-  background-color: rgba(2, 6, 23, 0.02);
-  border-radius: 10px;
-  margin: 0;
-  backdrop-filter: blur(5px);
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
-}
-
-.section-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 3rem;
-  color: var(--neon-blue);
-  text-shadow: 0 0 10px var(--neon-glow), 0 0 25px var(--neon-shadow);
-  animation: neonPulse 3s infinite alternate;
-}
-
-@media (max-width: 768px) {
-  .section-title {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    padding: 0 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .section-title {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-  }
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  padding: 0 1rem;
-}
-
-@media (max-width: 768px) {
-  .products-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    padding: 0 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .products-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 0 0.5rem;
-  }
-}
-
-.loading-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  font-size: 1.125rem;
-  color: var(--neon-blue);
-  text-shadow: 0 0 6px var(--neon-glow);
-}
-
-.header {
-  position: sticky;
-  top: 0;
-  background-color: rgba(2, 6, 23, 0.6);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 229, 255, 0.3);
-  z-index: 50;
-  padding: 1rem 0;
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
-}
-
-.header-logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--neon-blue);
-  text-decoration: none;
-  text-shadow: 0 0 10px var(--neon-glow);
-}
-
-.nav-link {
-  position: relative;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #aee9ff;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  bottom: -2px;
-  width: 100%;
-  height: 2px;
-  background-color: var(--neon-blue);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-}
-
-.nav-link.active,
-.nav-link:hover {
-  color: var(--neon-blue);
-  text-shadow: 0 0 8px var(--neon-glow);
-}
-
-.nav-link.active::after,
-.nav-link:hover::after {
-  transform: scaleX(1);
-}
-
-@keyframes neonPulse {
-  0%, 100% {
+    position: relative;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    color: var(--neon-blue);
     text-shadow: 0 0 6px var(--neon-glow), 0 0 16px var(--neon-shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    gap: 1.5rem;
   }
-  50% {
-    text-shadow: 0 0 12px var(--neon-glow), 0 0 32px var(--neon-shadow);
+  
+  /* ================================
+     📱 نسخه موبایل
+     ================================ */
+  @media (max-width: 768px) {
+    .home-page {
+      padding: 1.5rem 1rem;
+      text-align: center;
+    }
   }
-}
+  
+  /* ================================
+     🌠 متن و عنوان‌ها
+     ================================ */
+  .home-page h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  
+  .home-page p {
+    font-size: 1.2rem;
+    max-width: 600px;
+    text-align: center;
+    line-height: 1.8;
+    opacity: 0.9;
+  }
+  
+  /* ================================
+     🚀 دکمه‌ها
+     ================================ */
+  .home-page .btn {
+    background: rgba(0, 229, 255, 0.1);
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    margin-top: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .home-page .btn:hover {
+    background: var(--neon-blue);
+    color: #001015;
+    box-shadow: 0 0 12px var(--neon-glow);
+  }
+
+  /* ================================
+     🎠 بنر اصلی
+     ================================ */
+  .home-banner {
+    width: 100%;
+    padding: 4rem 2rem;
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .banner-content {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .banner-text {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--neon-blue);
+    text-shadow: 0 0 10px var(--neon-glow), 0 0 20px var(--neon-shadow);
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .home-banner {
+      padding: 2rem 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .banner-text {
+      font-size: 2rem;
+    }
+  }
+
+  /* ================================
+     🎠 اسلایدر محصولات
+     ================================ */
+  .home-section {
+    width: 100%;
+    padding: 3rem 0;
+    position: relative;
+  }
+
+  .home-section-dark {
+    background-color: rgba(15, 23, 42, 0.3);
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--neon-blue);
+    text-align: center;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 6px var(--neon-glow);
+  }
+
+  .products-slider-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .products-slider {
+    display: flex;
+    overflow-x: auto;
+    gap: 1.5rem;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 229, 255, 0.3) transparent;
+    padding: 1rem 0;
+    flex: 1;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .products-slider::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .products-slider::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .products-slider::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 229, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  .products-slider::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 229, 255, 0.5);
+  }
+
+  .products-slider > * {
+    flex: 0 0 auto;
+    min-width: 280px;
+    max-width: 280px;
+  }
+
+  .slider-button {
+    background: rgba(0, 229, 255, 0.1);
+    border: 2px solid var(--neon-blue);
+    color: var(--neon-blue);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    z-index: 10;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+  }
+
+  .slider-button:hover {
+    background: var(--neon-blue);
+    color: #020617;
+    box-shadow: 0 0 20px var(--neon-glow);
+    transform: scale(1.1);
+  }
+
+  .slider-button:active {
+    transform: scale(0.95);
+  }
+
+  .slider-button-left {
+    order: 1;
+  }
+
+  .products-slider {
+    order: 2;
+  }
+
+  .slider-button-right {
+    order: 3;
+  }
+
+  /* ================================
+     📱 نسخه موبایل برای اسلایدر
+     ================================ */
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .products-slider-wrapper {
+      gap: 0.5rem;
+    }
+
+    .products-slider {
+      gap: 1rem;
+    }
+
+    .products-slider > * {
+      min-width: 250px;
+      max-width: 250px;
+    }
+
+    .slider-button {
+      width: 40px;
+      height: 40px;
+      font-size: 1.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .products-slider > * {
+      min-width: 220px;
+      max-width: 220px;
+    }
+
+    .slider-button {
+      width: 35px;
+      height: 35px;
+      font-size: 1.25rem;
+    }
+
+    .home-section {
+      padding: 2rem 0;
+    }
+  }
+  

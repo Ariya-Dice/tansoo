@@ -12,6 +12,7 @@ import AdminLayout from './pages/admin/AdminLayout';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import { useAppContext } from './context/AppContext';
+import SparkleParticles from './components/SparkleParticles';
 
 const App: React.FC = () => {
   const { isAdmin } = useAppContext();
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   return (
     <HashRouter>
       <div className="app">
+        <SparkleParticles />
         <Routes>
           <Route path="/admin/*" element={<AdminRoutes isAdminLoggedIn={isAdmin} />} />
           <Route path="/*" element={<StorefrontRoutes />} />

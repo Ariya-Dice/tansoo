@@ -1,0 +1,64 @@
+.particleContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.sparkleParticle {
+  position: absolute;
+  /* انیمیشن سقوط برای همه ذرات اعمال می‌شود */
+  animation-name: fall;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+
+  /* موقعیت اولیه ذره در بالای صفحه و خارج از دید خواهد بود */
+  top: 0;
+  left: var(--start-x);
+  
+  width: var(--size);
+  height: var(--size);
+  background: var(--particle-color, rgba(255, 255, 255, 0.8));
+  border-radius: 50%;
+  filter: blur(var(--blur));
+}
+
+/* تعریف رنگ‌های مختلف برای ذرات (بدون تغییر) */
+.sparkleParticle:nth-child(4n + 1) {
+  --particle-color: rgba(100, 149, 237, 0.7);
+}
+.sparkleParticle:nth-child(4n + 2) {
+  --particle-color: rgba(255, 105, 180, 0.7);
+}
+.sparkleParticle:nth-child(4n + 3) {
+  --particle-color: rgba(50, 205, 50, 0.7);
+}
+.sparkleParticle:nth-child(4n + 4) {
+  --particle-color: rgba(255, 215, 0, 0.7);
+}
+
+/* انیمیشن سقوط که به صورت چرخه‌ای تکرار می‌شود */
+@keyframes fall {
+  from {
+    /* شروع از بالای صفحه و خارج از دید */
+    transform: translateY(-20vh);
+    opacity: 0;
+  }
+
+  10% {
+    /* در 10 درصد اول، ذره ظاهر می‌شود */
+    opacity: 1;
+  }
+  
+  to {
+    /* حرکت تا پایین و خارج شدن از صفحه */
+    transform: translateY(120vh);
+    opacity: 1;
+  }
+  
+  
+}
