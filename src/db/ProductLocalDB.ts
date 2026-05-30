@@ -1,5 +1,5 @@
-const API = 'http://localhost:4020/products';
-const IMG_API = 'http://localhost:4020/upload-image';
+const API = 'http://localhost:4020/api/products';
+const IMG_API = 'http://localhost:4020/api/upload-image';
 const IMG_HOST = 'http://localhost:4020/product-images/';
 
 export async function fetchProducts() {
@@ -15,13 +15,13 @@ export async function addProduct(product: any) {
 }
 
 export async function updateProduct(id: number, product: any) {
-  const res = await fetch(`${API}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(product) });
+  const res = await fetch(`${API}?id=${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(product) });
   if (!res.ok) throw new Error(`خطا در ویرایش محصول: ${res.status}`);
   return await res.json();
 }
 
 export async function deleteProduct(id: number) {
-  const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${API}?id=${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(`خطا در حذف محصول: ${res.status}`);
   return await res.json();
 }

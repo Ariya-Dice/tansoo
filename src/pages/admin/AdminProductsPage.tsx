@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import { Product } from "../../types";
 import { 
@@ -10,7 +10,6 @@ import "./AdminProductsPage.css";
 const AdminProductsPage: React.FC = () => {
   const {
     products,
-    fetchProducts,
     addProduct,
     updateProduct,
     deleteProduct,
@@ -41,24 +40,30 @@ const AdminProductsPage: React.FC = () => {
   const [customType, setCustomType] = useState("");
   const [customColor, setCustomColor] = useState("");
 
-  useEffect(() => {
-    fetchProducts();
-  }, []); // فقط یک بار در mount اجرا شود
-
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true);
     try {
-      const formData = new FormData();
-      formData.append("image", file);
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      const isDevelopment = import.meta.env.DEV;
-      const apiUrl = isDevelopment
-        ? "http://localhost:4020/upload-image"
-        : `${window.location.origin}/api/upload-image`;
+      const uploadHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      const apiSecret = import.meta.env.VITE_PRODUCTS_API_SECRET;
+      if (apiSecret) uploadHeaders["X-Api-Secret"] = apiSecret;
 
-      const res = await fetch(apiUrl, {
+      const res = await fetch("/api/upload-image", {
         method: "POST",
-        body: formData,
+        headers: uploadHeaders,
+        body: JSON.stringify({
+          file: base64,
+          filename: file.name,
+          type: file.type,
+        }),
       });
 
       if (!res.ok) {
@@ -96,10 +101,8 @@ const AdminProductsPage: React.FC = () => {
 
       if (editId) {
         await updateProduct(editId, productToSave);
-        showToast("محصول ویرایش شد ✅");
       } else {
         await addProduct(productToSave);
-        showToast("محصول اضافه شد ✅");
       }
       
       // ریست فرم

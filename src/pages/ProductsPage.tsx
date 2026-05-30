@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import ProductCard from '../components/ProductCard';
 import { Product } from '../types';
 import { useAppContext } from '../context/AppContext';
@@ -6,7 +6,7 @@ import { MODELS, TYPES, COLORS, TAGS } from '../constants';
 import './ProductsPage.css';
 
 const ProductsPage: React.FC = () => {
-  const { products, fetchProducts, loading } = useAppContext();
+  const { products, loading } = useAppContext();
   
   // State برای فیلترها
   const [selectedModel, setSelectedModel] = useState<string>('همه');
@@ -17,11 +17,6 @@ const ProductsPage: React.FC = () => {
   const [customModel, setCustomModel] = useState<string>('');
   const [customType, setCustomType] = useState<string>('');
   const [customColor, setCustomColor] = useState<string>('');
-
-  useEffect(() => {
-    fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // فیلتر و مرتب‌سازی محصولات
   const filteredAndSortedProducts = React.useMemo(() => {

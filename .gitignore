@@ -12,8 +12,11 @@ dist
 dist-ssr
 *.local
 
-# Environment variables
-.env
+# Local SQLite database (dev)
+db/products.db
+db/products.db-wal
+db/products.db-shm
+
 .env.local
 .env.*.local
 

@@ -15,13 +15,13 @@ import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import { useAppContext } from './context/AppContext';
 
 const App: React.FC = () => {
-  const { isAdminLoggedIn } = useAppContext();
+  const { isAdmin } = useAppContext();
 
   return (
     <HashRouter>
       <div className="flex flex-col min-h-screen font-sans text-brand-light-text">
         <Routes>
-          <Route path="/admin/*" element={<AdminRoutes isAdminLoggedIn={isAdminLoggedIn} />} />
+          <Route path="/admin/*" element={<AdminRoutes isAdminLoggedIn={isAdmin} />} />
           <Route path="/*" element={<StorefrontRoutes />} />
         </Routes>
       </div>

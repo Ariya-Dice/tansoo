@@ -4,11 +4,28 @@ import { Product, CartItem } from "../types";
 import { initialImages } from "../db/ImageDB";
 import { ADMIN_PASSWORD } from "../constants";
 
-// تشخیص محیط: local development یا production (Vercel)
-const isDevelopment = import.meta.env.DEV;
-const API_BASE = isDevelopment 
-  ? "http://localhost:4020" 
-  : window.location.origin;
+// همیشه از API یکسان استفاده می‌شود (در dev با Vite proxy به localhost:4020)
+const PRODUCTS_API = "/api/products";
+
+function productsApiHeaders(json = false): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (json) headers["Content-Type"] = "application/json";
+  const secret = import.meta.env.VITE_PRODUCTS_API_SECRET;
+  if (secret) headers["X-Api-Secret"] = secret;
+  return headers;
+}
+
+function warnStorageMode(res: Response) {
+  const mode = res.headers.get("X-Storage-Mode");
+  if (mode === "sqlite" && import.meta.env.DEV) {
+    console.info("ℹ️ Products stored in local SQLite (db/products.db).");
+  }
+  if (mode === "json" && import.meta.env.DEV) {
+    console.warn(
+      "⚠️ Products API is using legacy JSON storage. Restart the API to use SQLite/Supabase.",
+    );
+  }
+}
 
 interface AppContextType {
   products: Product[];
@@ -99,17 +116,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setLoading(true);
     setError(null);
     try {
-      // استفاده از API جدید یا local
-      const apiUrl = isDevelopment 
-        ? `${API_BASE}/products`
-        : `${API_BASE}/api/products`;
-      
-      const res = await fetch(apiUrl);
-      
+      const res = await fetch(PRODUCTS_API);
+      warnStorageMode(res);
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      
+
       const data = await res.json();
       // تبدیل داده‌های قدیمی به ساختار جدید
       const normalizedData = data.map((product: any) => normalizeProduct(product));
@@ -118,7 +131,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       let errorMessage = "خطا در دریافت محصولات";
       
       if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-        errorMessage = "سرور backend در دسترس نیست. لطفاً مطمئن شوید که سرور در localhost:4020 در حال اجرا است.";
+        errorMessage = "سرور API در دسترس نیست. دستور npm run dev را اجرا کنید (هم Vite و هم API روی پورت 4020).";
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
@@ -138,18 +151,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = isDevelopment 
-        ? `${API_BASE}/products`
-        : `${API_BASE}/api/products`;
-      
-      const res = await fetch(apiUrl, {
+      const res = await fetch(PRODUCTS_API, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: productsApiHeaders(true),
         body: JSON.stringify(product),
       });
+      warnStorageMode(res);
       
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || body.message || `HTTP error! status: ${res.status}`);
       }
       
       const newProduct = await res.json();
@@ -161,6 +172,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.error("❌ Error adding product:", err);
       setError(errorMessage);
       showToast("خطا در افزودن محصول");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -170,18 +182,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = isDevelopment 
-        ? `${API_BASE}/products/${id}`
-        : `${API_BASE}/api/products?id=${id}`;
-      
-      const res = await fetch(apiUrl, {
+      const res = await fetch(`${PRODUCTS_API}?id=${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: productsApiHeaders(true),
         body: JSON.stringify(updates),
       });
+      warnStorageMode(res);
       
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || body.message || `HTTP error! status: ${res.status}`);
       }
       
       const updated = await res.json();
@@ -195,6 +205,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.error("❌ Error updating product:", err);
       setError(errorMessage);
       showToast("خطا در ویرایش محصول");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -204,14 +215,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = isDevelopment 
-        ? `${API_BASE}/products/${id}`
-        : `${API_BASE}/api/products?id=${id}`;
-      
-      const res = await fetch(apiUrl, { method: "DELETE" });
+      const res = await fetch(`${PRODUCTS_API}?id=${id}`, {
+        method: "DELETE",
+        headers: productsApiHeaders(),
+      });
       
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || body.message || `HTTP error! status: ${res.status}`);
       }
       
       setProducts((prev) => prev.filter((p) => p.id !== id));
@@ -221,6 +232,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.error("❌ Error deleting product:", err);
       setError(errorMessage);
       showToast("خطا در حذف محصول");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -277,11 +289,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return filenameOrUrl;
     }
     // در غیر این صورت، URL محلی یا API را برگردان
-    if (isDevelopment) {
-      return `${API_BASE}/product-images/${filenameOrUrl}`;
-    } else {
-      return `/product-images/${filenameOrUrl}`;
+    if (import.meta.env.DEV) {
+      return `http://localhost:4020/product-images/${filenameOrUrl}`;
     }
+    return `/product-images/${filenameOrUrl}`;
   };
 
   // 🔔 ====== TOAST ======
@@ -293,7 +304,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // 🚀 Load products on start
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
   return (
     <AppContext.Provider

@@ -2,8 +2,9 @@ import { Product } from './types';
 
 export const STORE_NAME = "شیرآلات ساختمانی تانسو";
 
-// پسورد ادمین (در تولید باید از environment variable استفاده شود)
-export const ADMIN_PASSWORD = "admin123";
+// پسورد ادمین — در .env مقدار VITE_ADMIN_PASSWORD را تنظیم کنید
+export const ADMIN_PASSWORD =
+  import.meta.env.VITE_ADMIN_PASSWORD || "admin123";
 
 // مدل‌های محصول
 export const MODELS = [
