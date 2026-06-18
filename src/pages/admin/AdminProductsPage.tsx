@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import { Product } from "../../types";
-import { 
-  MODELS, TYPES, COLORS, BODY_WEIGHTS, HOSE_MATERIALS, VALVE_MATERIALS, TAGS,
-  getDefaultImage 
-} from "../../constants";
+import { MODELS, TAGS, getDefaultImage } from "../../constants";
+import {
+  PRODUCT_SPEC_FIELDS,
+  emptyProduct,
+  getProductGoodsType,
+} from "../../productSpecs";
 import "./AdminProductsPage.css";
 
 const AdminProductsPage: React.FC = () => {
@@ -18,27 +20,26 @@ const AdminProductsPage: React.FC = () => {
     loading,
   } = useAppContext();
 
-  const [newProduct, setNewProduct] = useState<Omit<Product, "id">>({
-    model: "",
-    type: "",
-    color: "",
-    bodyWeight: "",
-    hoseMaterial: "",
-    valveMaterial: "",
-    tags: [],
-    price: 0,
-    description: "",
-    image: "",
-  });
-
+  const [newProduct, setNewProduct] = useState<Omit<Product, "id">>(emptyProduct());
   const [editId, setEditId] = useState<number | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sortBy, setSortBy] = useState<'model' | 'price' | 'tags'>('model');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [customModel, setCustomModel] = useState("");
-  const [customType, setCustomType] = useState("");
-  const [customColor, setCustomColor] = useState("");
+
+  const resetForm = () => {
+    setNewProduct(emptyProduct());
+    setEditId(null);
+    setCustomModel("");
+  };
+
+  const updateField = <K extends keyof Omit<Product, "id">>(
+    key: K,
+    value: Omit<Product, "id">[K],
+  ) => {
+    setNewProduct((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true);
@@ -66,12 +67,10 @@ const AdminProductsPage: React.FC = () => {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("خطا در آپلود تصویر");
-      }
+      if (!res.ok) throw new Error("خطا در آپلود تصویر");
 
       const data = await res.json();
-      setNewProduct({ ...newProduct, image: data.url || data.filename });
+      updateField("image", data.url || data.filename);
       showToast("تصویر با موفقیت آپلود شد ✅");
     } catch (err) {
       console.error("❌ Upload error:", err);
@@ -81,21 +80,19 @@ const AdminProductsPage: React.FC = () => {
     }
   };
 
-  // ذخیره (افزودن یا ویرایش)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // اعتبارسنجی اولیه
-    if (!newProduct.model || !newProduct.type || !newProduct.color || !newProduct.bodyWeight || !newProduct.price) {
-      showToast("لطفاً تمام فیلدهای الزامی را پر کنید ❌");
+
+    if (!newProduct.model || !newProduct.goodsType || !newProduct.color || !newProduct.bodyWeight || !newProduct.price) {
+      showToast("لطفاً فیلدهای الزامی (مدل، نوع کالا، رنگ، وزن تنه، قیمت) را پر کنید ❌");
       return;
     }
 
     setSaving(true);
     try {
-      // اگر تصویر آپلود نشده، از تصویر پیش‌فرض استفاده کن
       const productToSave = {
         ...newProduct,
+        type: newProduct.goodsType,
         image: newProduct.image || (newProduct.model ? getDefaultImage(newProduct.model) : ''),
       };
 
@@ -104,24 +101,7 @@ const AdminProductsPage: React.FC = () => {
       } else {
         await addProduct(productToSave);
       }
-      
-      // ریست فرم
-      setNewProduct({
-        model: "",
-        type: "",
-        color: "",
-        bodyWeight: "",
-        hoseMaterial: "",
-        valveMaterial: "",
-        tags: [],
-        price: 0,
-        description: "",
-        image: "",
-      });
-      setEditId(null);
-      setCustomModel("");
-      setCustomType("");
-      setCustomColor("");
+      resetForm();
     } catch (err) {
       console.error("❌ Error saving product:", err);
       showToast("خطا در ذخیره محصول ❌");
@@ -137,70 +117,87 @@ const AdminProductsPage: React.FC = () => {
   };
 
   const handleEdit = (p: Product) => {
-    setNewProduct({ ...p });
+    setNewProduct({
+      ...emptyProduct(),
+      ...p,
+      goodsType: getProductGoodsType(p),
+      type: getProductGoodsType(p),
+    });
     setEditId(p.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // تغییر تگ‌ها
   const toggleTag = (tag: string) => {
-    setNewProduct({
-      ...newProduct,
-      tags: newProduct.tags.includes(tag)
-        ? newProduct.tags.filter(t => t !== tag)
-        : [...newProduct.tags, tag],
-    });
+    setNewProduct((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tag)
+        ? prev.tags.filter((t) => t !== tag)
+        : [...prev.tags, tag],
+    }));
   };
 
-  // مرتب‌سازی محصولات
   const sortedProducts = [...products].sort((a, b) => {
     let comparison = 0;
-    if (sortBy === 'model') {
-      comparison = a.model.localeCompare(b.model, 'fa');
-    } else if (sortBy === 'price') {
-      comparison = a.price - b.price;
-    } else if (sortBy === 'tags') {
-      comparison = a.tags.join('').localeCompare(b.tags.join(''), 'fa');
-    }
+    if (sortBy === 'model') comparison = a.model.localeCompare(b.model, 'fa');
+    else if (sortBy === 'price') comparison = a.price - b.price;
+    else if (sortBy === 'tags') comparison = a.tags.join('').localeCompare(b.tags.join(''), 'fa');
     return sortOrder === 'asc' ? comparison : -comparison;
   });
 
-  // نمایش تصویر پیش‌نمایش
-  const previewImage = newProduct.image 
-    ? getImage(newProduct.image) 
+  const previewImage = newProduct.image
+    ? getImage(newProduct.image)
     : (newProduct.model ? getDefaultImage(newProduct.model) : '/loading.gif');
+
+  const renderSpecField = (field: typeof PRODUCT_SPEC_FIELDS[number]) => {
+    const value = String(newProduct[field.key] ?? '');
+
+    if (field.type === 'select' && field.options) {
+      return (
+        <div className="admin-products-form-group" key={field.key}>
+          <label className="admin-products-form-label">
+            {field.label}{field.required ? ' *' : ''}
+          </label>
+          <select
+            value={value}
+            onChange={(e) => updateField(field.key, e.target.value)}
+            className="admin-products-form-input"
+            required={field.required}
+          >
+            <option value="">انتخاب کنید...</option>
+            {field.options.map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    return (
+      <div className="admin-products-form-group" key={field.key}>
+        <label className="admin-products-form-label">
+          {field.label}{field.required ? ' *' : ''}
+        </label>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => updateField(field.key, e.target.value)}
+          className="admin-products-form-input"
+          placeholder={field.placeholder}
+          required={field.required}
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="admin-products">
-      {/* هدر */}
       <div className="admin-products-header">
         <h1 className="admin-products-title">مدیریت محصولات</h1>
-        <button
-          className="admin-products-add-btn"
-          onClick={() => {
-            setEditId(null);
-            setNewProduct({
-              model: "",
-              type: "",
-              color: "",
-              bodyWeight: "",
-              hoseMaterial: "",
-              valveMaterial: "",
-              tags: [],
-              price: 0,
-              description: "",
-              image: "",
-            });
-            setCustomModel("");
-            setCustomType("");
-            setCustomColor("");
-          }}
-        >
+        <button type="button" className="admin-products-add-btn" onClick={resetForm}>
           افزودن محصول جدید
         </button>
       </div>
 
-      {/* فرم */}
       <div className="admin-products-form-container">
         <form onSubmit={handleSubmit} className="admin-products-form">
           <h2 className="admin-products-form-title">
@@ -208,24 +205,22 @@ const AdminProductsPage: React.FC = () => {
           </h2>
 
           <div className="admin-products-form-grid">
-            {/* مدل */}
             <div className="admin-products-form-group">
               <label className="admin-products-form-label">مدل *</label>
               <select
                 value={newProduct.model}
                 onChange={(e) => {
                   const value = e.target.value;
-                  // اگر تصویر آپلود نشده، از پیش‌فرض استفاده کن
-                  const updatedImage = (!newProduct.image && value && value !== 'سایر...') 
-                    ? getDefaultImage(value) 
+                  const updatedImage = (!newProduct.image && value && value !== 'سایر...')
+                    ? getDefaultImage(value)
                     : newProduct.image;
-                  setNewProduct({ ...newProduct, model: value, image: updatedImage });
+                  setNewProduct((prev) => ({ ...prev, model: value, image: updatedImage }));
                 }}
                 className="admin-products-form-input"
                 required
               >
                 <option value="">انتخاب کنید...</option>
-                {MODELS.map(model => (
+                {MODELS.map((model) => (
                   <option key={model} value={model}>{model}</option>
                 ))}
               </select>
@@ -236,7 +231,7 @@ const AdminProductsPage: React.FC = () => {
                   value={customModel}
                   onChange={(e) => {
                     setCustomModel(e.target.value);
-                    setNewProduct({ ...newProduct, model: e.target.value });
+                    updateField("model", e.target.value);
                   }}
                   className="admin-products-form-input custom-input"
                   required
@@ -244,144 +239,28 @@ const AdminProductsPage: React.FC = () => {
               )}
             </div>
 
-            {/* نوع */}
-            <div className="admin-products-form-group">
-              <label className="admin-products-form-label">نوع *</label>
-              <select
-                value={newProduct.type}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setNewProduct({ 
-                    ...newProduct, 
-                    type: value,
-                    // پاک کردن hoseMaterial و valveMaterial در صورت تغییر نوع
-                    hoseMaterial: value === 'سینک' || value === 'روشویی' ? newProduct.hoseMaterial : '',
-                    valveMaterial: value === 'آفتابه' || value === 'دوش حمام' ? newProduct.valveMaterial : '',
-                  });
-                }}
-                className="admin-products-form-input"
-                required
-              >
-                <option value="">انتخاب کنید...</option>
-                {TYPES.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-              {newProduct.type === 'سایر...' && (
-                <input
-                  type="text"
-                  placeholder="نام نوع را وارد کنید"
-                  value={customType}
-                  onChange={(e) => {
-                    setCustomType(e.target.value);
-                    setNewProduct({ ...newProduct, type: e.target.value });
-                  }}
-                  className="admin-products-form-input custom-input"
-                  required
-                />
-              )}
+            <div className="admin-products-form-section-title admin-products-form-group-full">
+              مشخصات فنی محصول
             </div>
 
-            {/* رنگ */}
-            <div className="admin-products-form-group">
-              <label className="admin-products-form-label">رنگ *</label>
-              <select
-                value={newProduct.color}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setNewProduct({ ...newProduct, color: value });
-                }}
-                className="admin-products-form-input"
-                required
-              >
-                <option value="">انتخاب کنید...</option>
-                {COLORS.map(color => (
-                  <option key={color} value={color}>{color}</option>
-                ))}
-              </select>
-              {newProduct.color === 'سایر...' && (
-                <input
-                  type="text"
-                  placeholder="نام رنگ را وارد کنید"
-                  value={customColor}
-                  onChange={(e) => {
-                    setCustomColor(e.target.value);
-                    setNewProduct({ ...newProduct, color: e.target.value });
-                  }}
-                  className="admin-products-form-input custom-input"
-                  required
-                />
-              )}
-            </div>
+            {PRODUCT_SPEC_FIELDS.map(renderSpecField)}
 
-            {/* وزن تنه */}
-            <div className="admin-products-form-group">
-              <label className="admin-products-form-label">وزن تنه *</label>
-              <select
-                value={newProduct.bodyWeight}
-                onChange={(e) => setNewProduct({ ...newProduct, bodyWeight: e.target.value })}
-                className="admin-products-form-input"
-                required
-              >
-                <option value="">انتخاب کنید...</option>
-                {BODY_WEIGHTS.map(weight => (
-                  <option key={weight} value={weight}>{weight}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* جنس شیلنگ (فقط برای سینک و روشویی) */}
-            {(newProduct.type === 'سینک' || newProduct.type === 'روشویی') && (
-              <div className="admin-products-form-group">
-                <label className="admin-products-form-label">جنس شیلنگ</label>
-                <select
-                  value={newProduct.hoseMaterial || ''}
-                  onChange={(e) => setNewProduct({ ...newProduct, hoseMaterial: e.target.value })}
-                  className="admin-products-form-input"
-                >
-                  <option value="">انتخاب کنید...</option>
-                  {HOSE_MATERIALS.map(material => (
-                    <option key={material} value={material}>{material}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* جنس شیر (فقط برای آفتابه و دوش) */}
-            {(newProduct.type === 'آفتابه' || newProduct.type === 'دوش حمام') && (
-              <div className="admin-products-form-group">
-                <label className="admin-products-form-label">جنس شیر</label>
-                <select
-                  value={newProduct.valveMaterial || ''}
-                  onChange={(e) => setNewProduct({ ...newProduct, valveMaterial: e.target.value })}
-                  className="admin-products-form-input"
-                >
-                  <option value="">انتخاب کنید...</option>
-                  {VALVE_MATERIALS.map(material => (
-                    <option key={material} value={material}>{material}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* قیمت */}
             <div className="admin-products-form-group">
               <label className="admin-products-form-label">قیمت (تومان) *</label>
               <input
                 type="number"
                 min="0"
                 value={newProduct.price || ''}
-                onChange={(e) => setNewProduct({ ...newProduct, price: parseInt(e.target.value) || 0 })}
+                onChange={(e) => updateField("price", parseInt(e.target.value, 10) || 0)}
                 className="admin-products-form-input"
                 required
               />
             </div>
 
-            {/* تگ‌ها */}
             <div className="admin-products-form-group admin-products-tags-group">
               <label className="admin-products-form-label">تگ‌ها</label>
               <div className="admin-products-tags">
-                {TAGS.map(tag => (
+                {TAGS.map((tag) => (
                   <label key={tag} className="admin-products-tag-label">
                     <input
                       type="checkbox"
@@ -395,18 +274,16 @@ const AdminProductsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* توضیحات */}
             <div className="admin-products-form-group admin-products-form-group-full">
               <label className="admin-products-form-label">توضیحات</label>
               <textarea
                 value={newProduct.description}
-                onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                onChange={(e) => updateField("description", e.target.value)}
                 className="admin-products-form-textarea"
                 rows={4}
               />
             </div>
 
-            {/* آپلود تصویر */}
             <div className="admin-products-form-group admin-products-form-group-full">
               <label className="admin-products-form-label">تصویر محصول</label>
               <div className="admin-products-image-upload">
@@ -436,7 +313,6 @@ const AdminProductsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* دکمه‌های فرم */}
           <div className="admin-products-form-actions">
             <button type="submit" className="admin-products-form-submit" disabled={saving || loading}>
               {saving ? (
@@ -449,25 +325,7 @@ const AdminProductsPage: React.FC = () => {
               )}
             </button>
             {editId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditId(null);
-                  setNewProduct({
-                    model: "",
-                    type: "",
-                    color: "",
-                    bodyWeight: "",
-                    hoseMaterial: "",
-                    valveMaterial: "",
-                    tags: [],
-                    price: 0,
-                    description: "",
-                    image: "",
-                  });
-                }}
-                className="admin-products-form-cancel"
-              >
+              <button type="button" onClick={resetForm} className="admin-products-form-cancel">
                 لغو
               </button>
             )}
@@ -475,18 +333,18 @@ const AdminProductsPage: React.FC = () => {
         </form>
       </div>
 
-      {/* جدول محصولات */}
       <div className="admin-products-table-container">
         <div className="admin-products-table-header">
           <h2>لیست محصولات ({products.length})</h2>
           <div className="admin-products-sort">
             <label>مرتب‌سازی:</label>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
               <option value="model">مدل</option>
               <option value="price">قیمت</option>
               <option value="tags">تگ</option>
             </select>
             <button
+              type="button"
               onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
               className="admin-products-sort-btn"
             >
@@ -510,7 +368,7 @@ const AdminProductsPage: React.FC = () => {
               <tr>
                 <th>تصویر</th>
                 <th>مدل</th>
-                <th>نوع</th>
+                <th>نوع کالا</th>
                 <th>رنگ</th>
                 <th>قیمت</th>
                 <th>تگ‌ها</th>
@@ -519,38 +377,37 @@ const AdminProductsPage: React.FC = () => {
             </thead>
             <tbody>
               {sortedProducts.map((product) => {
-                const productImage = product.image 
-                  ? getImage(product.image) 
+                const productImage = product.image
+                  ? getImage(product.image)
                   : getDefaultImage(product.model);
-                
+                const goodsType = getProductGoodsType(product);
+
                 return (
                   <tr key={product.id}>
                     <td>
-                      <img src={productImage} alt={`${product.model} ${product.type}`} className="admin-products-table-image" />
+                      <img
+                        src={productImage}
+                        alt={`${product.model} ${goodsType}`}
+                        className="admin-products-table-image"
+                      />
                     </td>
                     <td>{product.model}</td>
-                    <td>{product.type}</td>
+                    <td>{goodsType}</td>
                     <td>{product.color}</td>
                     <td>{product.price.toLocaleString('fa-IR')} تومان</td>
                     <td>
                       <div className="admin-products-table-tags">
-                        {product.tags.map(tag => (
+                        {product.tags.map((tag) => (
                           <span key={tag} className="admin-products-table-tag">{tag}</span>
                         ))}
                       </div>
                     </td>
                     <td>
                       <div className="admin-products-table-actions">
-                        <button
-                          onClick={() => handleEdit(product)}
-                          className="admin-products-table-edit"
-                        >
+                        <button type="button" onClick={() => handleEdit(product)} className="admin-products-table-edit">
                           ویرایش
                         </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="admin-products-table-delete"
-                        >
+                        <button type="button" onClick={() => handleDelete(product.id)} className="admin-products-table-delete">
                           حذف
                         </button>
                       </div>

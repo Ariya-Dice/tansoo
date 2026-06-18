@@ -90,16 +90,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // 🧩 ====== API HANDLERS ======
   // تابع برای نرمال‌سازی محصولات (تبدیل ساختار قدیمی به جدید)
   const normalizeProduct = (product: any): Product => {
-    // اگر محصول ساختار قدیمی دارد، تبدیل می‌کنیم
     if (product.name && !product.model) {
+      const legacyType = product.type || 'شیر روشویی';
       return {
         id: product.id,
         model: product.category || 'سایر',
-        type: product.type || 'روشویی',
+        goodsType: legacyType,
+        type: legacyType,
         color: Object.keys(product.images || {})[0] || 'کروم',
-        bodyWeight: product.specs?.تنه || product.specs?.سبک || 'سبک',
-        hoseMaterial: product.type === 'روشویی' || product.type === 'سینک' ? 'آلومینیوم' : undefined,
-        valveMaterial: product.type === 'آفتابه' || product.type === 'دوش' ? 'برنجی' : undefined,
+        bodyWeight: product.specs?.تنه || product.specs?.سبک || '',
         tags: [
           ...(product.isNew ? ['جدید'] : []),
           ...(product.isBestSeller ? ['پرفروش'] : []),
@@ -109,7 +108,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         image: product.images ? Object.values(product.images)[0] as string : '/loading.gif',
       };
     }
-    return product;
+    const goodsType = product.goodsType || product.type || '';
+    return { ...product, goodsType, type: goodsType };
   };
 
   const fetchProducts = useCallback(async () => {

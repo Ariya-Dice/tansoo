@@ -84,7 +84,37 @@
 .product-description {
   color: #475569;
   line-height: 1.8;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.product-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+.product-detail-tag {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+}
+
+.product-specs-section {
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  padding: 0 1rem;
+}
+
+@media (max-width: 768px) {
+  .product-specs-section {
+    padding: 0 0.5rem;
+    margin-top: 1.5rem;
+  }
 }
 
 .product-colors h3 {

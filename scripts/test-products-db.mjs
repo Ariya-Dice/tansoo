@@ -28,10 +28,11 @@ async function run() {
 
   const created = await createProduct({
     model: TEST_MODEL,
-    type: 'روشویی',
+    goodsType: 'شیر روشویی',
+    type: 'شیر روشویی',
     color: 'کروم',
-    bodyWeight: 'سبک',
-    hoseMaterial: 'آلومینیوم',
+    bodyWeight: '600 گرم',
+    bodyMaterial: 'آلیاژ برنج',
     tags: ['جدید'],
     price: 999001,
     description: 'test product — safe to delete',

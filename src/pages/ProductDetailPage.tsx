@@ -4,7 +4,9 @@ import { useParams } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import { Product } from "../types";
 import { getDefaultImage } from "../constants";
+import { getProductGoodsType } from "../productSpecs";
 import ProductCard from "../components/ProductCard";
+import ProductSpecsTable from "../components/ProductSpecsTable";
 import "./ProductDetailPage.css";
 
 const ProductDetailPage: React.FC = () => {
@@ -15,7 +17,6 @@ const ProductDetailPage: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
-  // پیدا کردن محصول و محصولات مرتبط
   useEffect(() => {
     const found = products.find((p) => p.id === Number(id));
     if (found) {
@@ -37,24 +38,21 @@ const ProductDetailPage: React.FC = () => {
   }
 
   const handleAddToCart = () => {
-    if (product) {
-      addToCart(product, quantity);
-    }
+    if (product) addToCart(product, quantity);
   };
 
-  // استفاده از تصویر محصول یا تصویر پیش‌فرض
-  const mainImageSrc = product.image 
-    ? getImage(product.image) 
+  const goodsType = getProductGoodsType(product);
+  const mainImageSrc = product.image
+    ? getImage(product.image)
     : getDefaultImage(product.model);
 
   return (
     <div className="product-detail-page">
       <div className="product-detail-container">
-        {/* تصویر اصلی */}
         <div className="product-image-wrapper">
           <img
             src={mainImageSrc}
-            alt={`${product.model} ${product.type}`}
+            alt={`${product.model} ${goodsType}`}
             className="product-main-image"
             onError={(e) => {
               (e.target as HTMLImageElement).src = getDefaultImage(product.model);
@@ -62,72 +60,42 @@ const ProductDetailPage: React.FC = () => {
           />
         </div>
 
-        {/* اطلاعات محصول */}
         <div className="product-info">
-          <h1 className="product-name">{product.model} {product.type}</h1>
+          <h1 className="product-name">
+            {product.model} {goodsType}
+          </h1>
           <p className="product-price">
             {product.price.toLocaleString("fa-IR")} تومان
           </p>
-          <p className="product-description">{product.description}</p>
+          {product.description && (
+            <p className="product-description">{product.description}</p>
+          )}
 
-          {/* مشخصات محصول */}
-          <div className="product-specs">
-            <h3>مشخصات محصول</h3>
-            <ul>
-              <li>
-                <span className="spec-key">مدل:</span>
-                <span className="spec-val">{product.model}</span>
-              </li>
-              <li>
-                <span className="spec-key">نوع:</span>
-                <span className="spec-val">{product.type}</span>
-              </li>
-              <li>
-                <span className="spec-key">رنگ:</span>
-                <span className="spec-val">{product.color}</span>
-              </li>
-              <li>
-                <span className="spec-key">وزن تنه:</span>
-                <span className="spec-val">{product.bodyWeight}</span>
-              </li>
-              {product.hoseMaterial && (
-                <li>
-                  <span className="spec-key">جنس شیلنگ:</span>
-                  <span className="spec-val">{product.hoseMaterial}</span>
-                </li>
-              )}
-              {product.valveMaterial && (
-                <li>
-                  <span className="spec-key">جنس شیر:</span>
-                  <span className="spec-val">{product.valveMaterial}</span>
-                </li>
-              )}
-              {product.tags.length > 0 && (
-                <li>
-                  <span className="spec-key">تگ‌ها:</span>
-                  <span className="spec-val">{product.tags.join('، ')}</span>
-                </li>
-              )}
-            </ul>
-          </div>
+          {product.tags.length > 0 && (
+            <div className="product-detail-tags">
+              {product.tags.map((tag) => (
+                <span key={tag} className="product-detail-tag">{tag}</span>
+              ))}
+            </div>
+          )}
 
-          {/* تعداد و افزودن به سبد */}
           <div className="product-actions">
             <div className="quantity-box">
-              <button onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
-                -
-              </button>
+              <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))}>-</button>
               <span>{quantity}</span>
-              <button onClick={() => setQuantity((q) => q + 1)}>+</button>
+              <button type="button" onClick={() => setQuantity((q) => q + 1)}>+</button>
             </div>
-            <button className="add-to-cart" onClick={handleAddToCart}>
+            <button type="button" className="add-to-cart" onClick={handleAddToCart}>
               افزودن به سبد خرید
             </button>
           </div>
         </div>
       </div>
 
-      {/* محصولات مرتبط */}
+      <div className="product-specs-section">
+        <ProductSpecsTable product={product} />
+      </div>
+
       {relatedProducts.length > 0 && (
         <section className="related-section">
           <h2>محصولات مرتبط</h2>

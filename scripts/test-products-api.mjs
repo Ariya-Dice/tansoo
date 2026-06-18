@@ -31,9 +31,10 @@ async function run() {
     headers: headers(true),
     body: JSON.stringify({
       model: TEST_MODEL,
-      type: 'روشویی',
+      type: 'شیر روشویی',
+      goodsType: 'شیر روشویی',
       color: 'کروم',
-      bodyWeight: 'سبک',
+      bodyWeight: '600 گرم',
       tags: [],
       price: 888001,
       description: 'api test',

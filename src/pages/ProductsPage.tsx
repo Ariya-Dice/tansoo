@@ -3,6 +3,7 @@ import ProductCard from '../components/ProductCard';
 import { Product } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { MODELS, TYPES, COLORS, TAGS } from '../constants';
+import { getProductGoodsType } from '../productSpecs';
 import './ProductsPage.css';
 
 const ProductsPage: React.FC = () => {
@@ -15,8 +16,6 @@ const ProductsPage: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string>('همه');
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'none'>('none');
   const [customModel, setCustomModel] = useState<string>('');
-  const [customType, setCustomType] = useState<string>('');
-  const [customColor, setCustomColor] = useState<string>('');
 
   // فیلتر و مرتب‌سازی محصولات
   const filteredAndSortedProducts = React.useMemo(() => {
@@ -34,28 +33,12 @@ const ProductsPage: React.FC = () => {
       }
     }
 
-    // فیلتر بر اساس نوع
     if (selectedType !== 'همه') {
-      if (selectedType === 'سایر...') {
-        filtered = filtered.filter(p => !TYPES.slice(0, -1).includes(p.type));
-        if (customType) {
-          filtered = filtered.filter(p => p.type.toLowerCase().includes(customType.toLowerCase()));
-        }
-      } else {
-        filtered = filtered.filter(p => p.type === selectedType);
-      }
+      filtered = filtered.filter((p) => getProductGoodsType(p) === selectedType);
     }
 
-    // فیلتر بر اساس رنگ
     if (selectedColor !== 'همه') {
-      if (selectedColor === 'سایر...') {
-        filtered = filtered.filter(p => !COLORS.slice(0, -1).includes(p.color));
-        if (customColor) {
-          filtered = filtered.filter(p => p.color.toLowerCase().includes(customColor.toLowerCase()));
-        }
-      } else {
-        filtered = filtered.filter(p => p.color === selectedColor);
-      }
+      filtered = filtered.filter((p) => p.color === selectedColor);
     }
 
     // فیلتر بر اساس تگ
@@ -127,22 +110,13 @@ const ProductsPage: React.FC = () => {
           </div>
 
           <div className="filter-group">
-            <label>نوع:</label>
+            <label>نوع کالا:</label>
             <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
               <option value="همه">همه</option>
               {TYPES.map(type => (
                 <option key={type} value={type}>{type}</option>
               ))}
             </select>
-            {selectedType === 'سایر...' && (
-              <input
-                type="text"
-                placeholder="نام نوع را وارد کنید"
-                value={customType}
-                onChange={(e) => setCustomType(e.target.value)}
-                className="custom-input"
-              />
-            )}
           </div>
 
           <div className="filter-group">
@@ -153,15 +127,6 @@ const ProductsPage: React.FC = () => {
                 <option key={color} value={color}>{color}</option>
               ))}
             </select>
-            {selectedColor === 'سایر...' && (
-              <input
-                type="text"
-                placeholder="نام رنگ را وارد کنید"
-                value={customColor}
-                onChange={(e) => setCustomColor(e.target.value)}
-                className="custom-input"
-              />
-            )}
           </div>
 
           <div className="filter-group">

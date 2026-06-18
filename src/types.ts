@@ -1,15 +1,31 @@
 export interface Product {
   id: number;
-  model: string; // اردکی، لاله، تالیا، قاصدک، قاجاری، بامبو
-  type: string; // آفتابه، دوش حمام، روشویی، سینک
-  color: string; // کروم، سفید، سفید طلایی، مشکی طلایی، سفید کروم، مشکی کروم
-  bodyWeight: string; // سبک، نیمه‌سنگین، سنگین
-  hoseMaterial?: string; // آلومینیوم، استیل (فقط برای سینک و روشویی)
-  valveMaterial?: string; // چدنی، برنجی (فقط برای آفتابه و دوش)
-  tags: string[]; // اقتصادی، پرفروش، جدید
-  price: number; // قیمت به تومان
+  model: string;
+  /** نوع کالا: شیر ظرفشویی، شیر توالت، ... */
+  goodsType: string;
+  /** @deprecated از goodsType استفاده کنید — برای سازگاری با داده قدیمی */
+  type?: string;
+  color: string;
+  bodyMaterial?: string;
+  handleMaterial?: string;
+  bodyWeight: string;
+  packageWeight?: string;
+  cartridgeSize?: string;
+  cartridgeNutMaterial?: string;
+  leftHandedNut?: string;
+  hotColdOutput?: string;
+  packageDimensions?: string;
+  postalHose?: string;
+  escutcheon?: string;
+  valveMaterial?: string;
+  spoutMaterial?: string;
+  platorMaterial?: string;
+  /** @deprecated */
+  hoseMaterial?: string;
+  tags: string[];
+  price: number;
   description: string;
-  image: string; // URL تصویر اصلی
+  image: string;
 }
 
 export interface Category {
@@ -18,8 +34,8 @@ export interface Category {
 }
 
 export interface ProductType {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 export interface Color {

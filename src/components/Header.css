@@ -6,12 +6,13 @@
 .header {
   position: sticky;
   top: 0;
-  background-color: rgb(197, 89, 0) !important; /* رنگ نارنجی تیره با شفافیت */
+  background-color: rgb(197, 89, 0) !important;
   backdrop-filter: blur(5px);
   border-bottom: 1px solid var(--neon-color);
   z-index: 50;
-  padding: 1rem 0;
+  padding: 0.75rem 0;
   direction: rtl;
+  overflow: visible;
 }
 
 .header-container {
@@ -20,30 +21,17 @@
   padding: 0 1rem;
 }
 
-@media (max-width: 768px) {
-  .header-container {
-    padding: 0 0.5rem;
-  }
-}
-
 .header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 4rem;
+  gap: 0.75rem;
+  min-height: 3.5rem;
 }
 
-@media (max-width: 768px) {
-  .header-content {
-    height: 3.5rem;
-  }
-}
-
-/* ===============================
-   Logo (Left)
-   =============================== */
+/* Logo */
 .header-logo {
-  order: 0; /* سمت چپ */
+  flex-shrink: 0;
 }
 
 .header-logo-link {
@@ -52,27 +40,14 @@
   font-weight: 700;
   text-decoration: none;
   text-shadow: 0 0 8px var(--neon-shadow);
+  white-space: nowrap;
 }
 
-@media (max-width: 768px) {
-  .header-logo-link {
-    font-size: 1.125rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .header-logo-link {
-    font-size: 1rem;
-  }
-}
-
-/* ===============================
-   Navigation (Right)
-   =============================== */
+/* Desktop Navigation */
 .header-nav {
   display: none;
   align-items: center;
-  order: 2; /* سمت راست */
+  gap: 0.25rem;
 }
 
 .nav-link {
@@ -81,74 +56,98 @@
   font-weight: 500;
   color: var(--neon-color);
   text-decoration: none;
-  transition: color 0.3s ease, text-shadow 0.3s ease;
+  border-radius: 0.5rem;
+  transition: color 0.3s ease, background-color 0.3s ease, text-shadow 0.3s ease;
 }
 
 .nav-link.active,
 .nav-link:hover {
   text-shadow: 0 0 6px var(--neon-shadow);
+  background-color: rgba(0, 0, 0, 0.12);
 }
 
-/* ===============================
-   Cart Icon (وسط)
-   =============================== */
-.header-cart {
-  order: 1; /* وسط */
+/* Cart + mobile menu group */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .header-cart-link {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
   color: var(--neon-color);
   text-decoration: none;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1.5px solid rgba(0, 148, 197, 0.45);
+  border-radius: 0.75rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .header-cart-link:hover {
-  text-shadow: 0 0 6px var(--neon-shadow);
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 10px var(--neon-shadow);
+  transform: translateY(-1px);
+}
+
+.header-cart-link .icon-md {
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .cart-badge {
   position: absolute;
-  top: 0;
-  left: 0;
-  background-color: var(--neon-color);
-  color: #fd9800;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.125rem 0.375rem;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
+  top: -0.35rem;
+  left: -0.35rem;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.3rem;
+  background: #fff;
+  color: #c55900;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  line-height: 1;
+  border-radius: 999px;
+  border: 2px solid rgb(197, 89, 0);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.25rem;
-  min-height: 1.25rem;
-  box-shadow: 0 0 6px var(--neon-shadow);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
 }
 
-/* ===============================
-   Mobile Navigation
-   =============================== */
-.header-nav-mobile {
-  display: block;
-}
-
+/* Mobile menu toggle */
 .header-nav-mobile button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 0.75rem;
   color: var(--neon-color);
-  background: none;
-  border: none;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1.5px solid rgba(0, 148, 197, 0.45);
   cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .header-nav-mobile button:hover {
-  text-shadow: 0 0 6px var(--neon-shadow);
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 10px var(--neon-shadow);
 }
 
-/* Mobile Menu */
+.header-nav-mobile .icon-md {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+/* Mobile dropdown menu */
 .mobile-menu {
   position: absolute;
   top: 100%;
@@ -158,40 +157,72 @@
   backdrop-filter: blur(10px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
   z-index: 100;
-}
-
-@media (max-width: 768px) {
-  .mobile-menu {
-    top: 3.5rem;
-  }
+  border-bottom: 1px solid var(--neon-color);
 }
 
 .mobile-menu-nav {
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  align-items: flex-end;
+  padding: 0.75rem;
+  align-items: stretch;
+  gap: 0.25rem;
 }
 
 .mobile-menu-link {
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
   color: var(--neon-color);
   text-decoration: none;
+  border-radius: 0.625rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
 }
 
 .mobile-menu-link.active,
 .mobile-menu-link:hover {
+  background-color: rgba(0, 0, 0, 0.15);
   text-shadow: 0 0 6px var(--neon-shadow);
 }
 
-/* ===============================
-   Media Queries
-   =============================== */
 @media (min-width: 769px) {
   .header-nav {
     display: flex;
   }
+
   .header-nav-mobile {
     display: none;
+  }
+
+  .header-content {
+    min-height: 4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 0.75rem;
+  }
+
+  .header-logo-link {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 0 0.5rem;
+  }
+
+  .header-logo-link {
+    font-size: 1rem;
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+  }
+
+  .header-cart-link,
+  .header-nav-mobile button {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }

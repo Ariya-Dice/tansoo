@@ -41,19 +41,29 @@ const Header: React.FC = () => {
             ))}
           </nav>
 
-          {/* Cart Icon */}
-          <div className="header-cart">
-            <Link to="/cart" className="header-cart-link">
-              <ShoppingBagIcon />
-              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-            </Link>
-          </div>
+          {/* Cart + Mobile Menu */}
+          <div className="header-actions">
+            <div className="header-cart">
+              <Link to="/cart" className="header-cart-link" aria-label="سبد خرید">
+                <ShoppingBagIcon />
+                {cartCount > 0 && (
+                  <span className="cart-badge" aria-live="polite">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </Link>
+            </div>
 
-          {/* Mobile Menu Toggle */}
-          <div className="header-nav-mobile">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              {isMenuOpen ? <XIcon /> : <MenuIcon />}
-            </button>
+            <div className="header-nav-mobile">
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label={isMenuOpen ? 'بستن منو' : 'باز کردن منو'}
+                aria-expanded={isMenuOpen}
+              >
+                {isMenuOpen ? <XIcon /> : <MenuIcon />}
+              </button>
+            </div>
           </div>
 
         </div>

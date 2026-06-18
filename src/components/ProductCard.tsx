@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Product } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { getDefaultImage } from '../constants';
+import { getProductGoodsType } from '../productSpecs';
 import './ProductCard.css';
 
 interface ProductCardProps {
@@ -12,6 +13,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { getImage } = useAppContext();
   // استفاده از تصویر محصول یا تصویر پیش‌فرض
+  const goodsType = getProductGoodsType(product);
   const imageSrc = product.image 
     ? getImage(product.image) 
     : getDefaultImage(product.model);
@@ -22,7 +24,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="product-image-container">
           <img
             src={imageSrc}
-            alt={`${product.model} ${product.type}`}
+            alt={`${product.model} ${goodsType}`}
             className="product-image"
             onError={(e) => {
               // Fallback به تصویر پیش‌فرض در صورت خطا
@@ -31,7 +33,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           />
         </div>
         <div className="product-content">
-          <h3 className="product-title">{product.model} {product.type}</h3>
+          <h3 className="product-title">{product.model} {goodsType}</h3>
           <p className="product-meta">
             <span className="product-color">رنگ: {product.color}</span>
             <span className="product-weight">وزن: {product.bodyWeight}</span>
