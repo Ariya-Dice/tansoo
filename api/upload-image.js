@@ -1,6 +1,8 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { isProductsWriteAuthorized, sendUnauthorized } from '../lib/apiAuth.js';
 
+export const config = { runtime: 'nodejs' };
+
 const isCloudinaryConfigured =
   process.env.CLOUDINARY_CLOUD_NAME &&
   process.env.CLOUDINARY_API_KEY &&

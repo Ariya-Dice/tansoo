@@ -1,5 +1,7 @@
 import { verifyDatabaseConnection, getStorageMode } from '../lib/productsRepository.js';
 
+export const config = { runtime: 'nodejs' };
+
 export default async function handler(_req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 

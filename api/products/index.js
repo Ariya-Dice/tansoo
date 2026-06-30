@@ -4,8 +4,12 @@ import {
   updateProduct,
   deleteProduct,
   getStorageMode,
-} from '../lib/productsRepository.js';
-import { isProductsWriteAuthorized, sendUnauthorized } from '../lib/apiAuth.js';
+} from '../../lib/productsRepository.js';
+import { isProductsWriteAuthorized, sendUnauthorized } from '../../lib/apiAuth.js';
+
+export const config = {
+  runtime: 'nodejs',
+};
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -54,7 +58,7 @@ export default async function handler(req, res) {
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error('❌ API Error:', error);
+    console.error('API Error:', error);
     const msg = error.message || 'Internal server error';
     const isConfig =
       msg.includes('not configured') ||

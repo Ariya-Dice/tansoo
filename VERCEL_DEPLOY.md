@@ -139,12 +139,25 @@ git push -u origin main
 
 ## مرحله ۷ — تست بعد از Deploy
 
+**اول این را باز کنید (بدون دیتابیس):**
+
+```
+https://YOUR-DOMAIN.vercel.app/api/ping
+```
+
+باید ببینید:
+```json
+{"ok":true,"api":true,"supabaseConfigured":true,"vercel":true}
+```
+
+اگر `supabaseConfigured: false` → متغیرهای Supabase در Vercel تنظیم نشده‌اند.
+
 | آدرس | انتظار |
 |------|--------|
-| `https://YOUR-DOMAIN.vercel.app/` | صفحه اصلی فروشگاه |
-| `https://YOUR-DOMAIN.vercel.app/api/health` | `{"ok":true,"mode":"supabase",...}` |
-| `https://YOUR-DOMAIN.vercel.app/api/products` | لیست JSON محصولات |
-| `https://YOUR-DOMAIN.vercel.app/#/admin/login` | ورود ادمین |
+| `/api/ping` | `ok:true` و `supabaseConfigured:true` |
+| `/api/health` | `{"ok":true,"mode":"supabase",...}` |
+| `/api/products` | `[]` یا لیست محصولات |
+| `/#/admin/login` | ورود ادمین |
 
 اگر `/api/health` خطای دیتابیس داد → Supabase URL/Key را بررسی کنید.
 
