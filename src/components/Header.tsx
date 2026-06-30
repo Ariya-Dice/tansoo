@@ -8,45 +8,45 @@ import './Header.css';
 const Header: React.FC = () => {
   const { cartCount } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const hasItems = cartCount > 0;
 
   const navLinks = [
     { path: '/', name: 'خانه' },
     { path: '/products', name: 'محصولات' },
+    { path: '/bulk-order', name: 'خرید عمده' },
   ];
 
   return (
     <header className="header">
       <div className="header-container">
         <div className="header-content">
-
-          {/* Logo */}
           <div className="header-logo">
-            <Link to="/" className="header-logo-link">
-              {STORE_NAME}
-            </Link>
+            <Link to="/" className="header-logo-link">{STORE_NAME}</Link>
           </div>
 
-          {/* Desktop Navigation */}
           <nav className="header-nav">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
-                className={({ isActive }) =>
-                  isActive ? 'nav-link active' : 'nav-link'
-                }
+                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
               >
                 {link.name}
               </NavLink>
             ))}
           </nav>
 
-          {/* Cart + Mobile Menu */}
           <div className="header-actions">
             <div className="header-cart">
-              <Link to="/cart" className="header-cart-link" aria-label="سبد خرید">
-                <ShoppingBagIcon />
-                {cartCount > 0 && (
+              <Link
+                to="/cart"
+                className={`header-cart-link${hasItems ? ' header-cart-link--active' : ''}`}
+                aria-label={`سبد خرید${hasItems ? `، ${cartCount} قلم` : ''}`}
+              >
+                <span className={`cart-icon-wrap${hasItems ? ' cart-icon-wrap--shake' : ''}`}>
+                  <ShoppingBagIcon filled={hasItems} />
+                </span>
+                {hasItems && (
                   <span className="cart-badge" aria-live="polite">
                     {cartCount > 99 ? '99+' : cartCount}
                   </span>
@@ -65,11 +65,9 @@ const Header: React.FC = () => {
               </button>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="mobile-menu">
           <nav className="mobile-menu-nav">
@@ -77,9 +75,7 @@ const Header: React.FC = () => {
               <NavLink
                 key={link.path}
                 to={link.path}
-                className={({ isActive }) =>
-                  isActive ? 'mobile-menu-link active' : 'mobile-menu-link'
-                }
+                className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.name}

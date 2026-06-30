@@ -1,64 +1,84 @@
 .particleContainer {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   pointer-events: none;
-  z-index: -1;
   overflow: hidden;
+  z-index: -1;
 }
 
 .sparkleParticle {
   position: absolute;
-  /* انیمیشن سقوط برای همه ذرات اعمال می‌شود */
-  animation-name: fall;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
 
-  /* موقعیت اولیه ذره در بالای صفحه و خارج از دید خواهد بود */
   top: 0;
   left: var(--start-x);
-  
+
   width: var(--size);
   height: var(--size);
-  background: var(--particle-color, rgba(255, 255, 255, 0.8));
+
   border-radius: 50%;
-  filter: blur(var(--blur));
+
+  background: var(--particle-color);
+
+  /* درخشش سبک و کم‌هزینه */
+  box-shadow: 0 0 4px rgba(220, 240, 255, 0.5);
+
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+
+  /* فقط transform بهینه می‌شود */
+  will-change: transform;
 }
 
-/* تعریف رنگ‌های مختلف برای ذرات (بدون تغییر) */
+/* آبی یخی */
 .sparkleParticle:nth-child(4n + 1) {
-  --particle-color: rgba(100, 149, 237, 0.7);
-}
-.sparkleParticle:nth-child(4n + 2) {
-  --particle-color: rgba(255, 105, 180, 0.7);
-}
-.sparkleParticle:nth-child(4n + 3) {
-  --particle-color: rgba(50, 205, 50, 0.7);
-}
-.sparkleParticle:nth-child(4n + 4) {
-  --particle-color: rgba(255, 215, 0, 0.7);
+  --particle-color: rgba(173, 216, 230, 0.8);
 }
 
-/* انیمیشن سقوط که به صورت چرخه‌ای تکرار می‌شود */
+/* نقره‌ای */
+.sparkleParticle:nth-child(4n + 2) {
+  --particle-color: rgba(192, 192, 192, 0.85);
+}
+
+/* سفید یخی */
+.sparkleParticle:nth-child(4n + 3) {
+  --particle-color: rgba(235, 245, 255, 0.8);
+}
+
+/* آبی نقره‌ای */
+.sparkleParticle:nth-child(4n + 4) {
+  --particle-color: rgba(200, 225, 255, 0.75);
+}
+
+/* لایه‌های عمق */
+.depth1 {
+  opacity: 0.9;
+}
+
+.depth2 {
+  opacity: 0.6;
+}
+
+.depth3 {
+  opacity: 0.35;
+}
+
+/* انیمیشن سقوط */
 @keyframes fall {
   from {
-    /* شروع از بالای صفحه و خارج از دید */
-    transform: translateY(-20vh);
+    transform: translateY(-30vh);
     opacity: 0;
   }
 
   10% {
-    /* در 10 درصد اول، ذره ظاهر می‌شود */
     opacity: 1;
   }
-  
+
+  90% {
+    opacity: 1;
+  }
+
   to {
-    /* حرکت تا پایین و خارج شدن از صفحه */
-    transform: translateY(120vh);
-    opacity: 1;
+    transform: translateY(130vh);
+    opacity: 0;
   }
-  
-  
 }

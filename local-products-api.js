@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import express from "express";
 import fs from "fs";
 import path from "path";
@@ -12,14 +13,20 @@ import {
   deleteProduct,
   getStorageMode,
   verifyDatabaseConnection,
+  bulkAdjustPrices,
 } from "./lib/productsRepository.js";
 import { isProductsWriteAuthorized, sendUnauthorized } from "./lib/apiAuth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+dotenv.config({ path: path.join(__dirname, ".env") });
+
 const IMAGES_DIR = path.join(__dirname, "db/product-images");
-const PORT = 4020;
+const DIST_DIR = path.join(__dirname, "dist");
+const PORT = Number(process.env.PORT) || 4020;
+const HOST = process.env.HOST || "0.0.0.0";
+const isProduction = process.env.NODE_ENV === "production";
 
 const isCloudinaryConfigured =
   process.env.CLOUDINARY_CLOUD_NAME &&
@@ -40,6 +47,17 @@ if (isCloudinaryConfigured) {
 if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
 
 const app = express();
+app.disable("x-powered-by");
+
+if (isProduction) {
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    next();
+  });
+}
+
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use("/product-images", express.static(IMAGES_DIR));
@@ -86,6 +104,19 @@ async function handleImageUpload(req, res) {
     res.status(500).json({ error: "Upload failed", message: err.message });
   }
 }
+
+app.get("/api/health", async (_req, res) => {
+  try {
+    const status = await verifyDatabaseConnection();
+    res.json({
+      ok: true,
+      mode: getStorageMode(),
+      productCount: status.productCount ?? null,
+    });
+  } catch (err) {
+    res.status(503).json({ ok: false, error: err.message });
+  }
+});
 
 app.get("/api/products", async (_req, res) => {
   try {
@@ -135,7 +166,19 @@ app.delete("/api/products", async (req, res) => {
   }
 });
 
+app.post("/api/products/bulk-price", async (req, res) => {
+  if (!isProductsWriteAuthorized(req)) return sendUnauthorized(res);
+  try {
+    const { percent, goodsType } = req.body ?? {};
+    const result = await bulkAdjustPrices(percent, { goodsType });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post("/api/upload-image", (req, res, next) => {
+  if (!isProductsWriteAuthorized(req)) return sendUnauthorized(res);
   if (req.is("multipart/form-data")) {
     return upload.single("image")(req, res, (err) => {
       if (err) return res.status(400).json({ error: err.message });
@@ -145,11 +188,24 @@ app.post("/api/upload-image", (req, res, next) => {
   next();
 }, handleImageUpload);
 
-app.listen(PORT, async () => {
-  console.log(`✅ Products API: http://localhost:${PORT}/api/products`);
+if (isProduction) {
+  if (!fs.existsSync(DIST_DIR)) {
+    console.error("❌ پوشه dist/ یافت نشد. ابتدا اجرا کنید: npm run build");
+    process.exit(1);
+  }
+  app.use(express.static(DIST_DIR, { index: false, maxAge: "7d" }));
+  app.get(/^(?!\/api|\/product-images).*/, (_req, res) => {
+    res.sendFile(path.join(DIST_DIR, "index.html"));
+  });
+}
+
+app.listen(PORT, HOST, async () => {
+  const url = `http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`;
+  console.log(`✅ Server: ${url}${isProduction ? " (production)" : ""}`);
+  console.log(`   API: ${url}/api/products`);
   try {
     const status = await verifyDatabaseConnection();
-    console.log(`📦 Storage: ${getStorageMode()} (${status.productCount ?? 0} products)`);
+    console.log(`📦 Database: ${getStorageMode()} (${status.productCount ?? 0} products)`);
   } catch (err) {
     console.error(`❌ Database: ${err.message}`);
   }

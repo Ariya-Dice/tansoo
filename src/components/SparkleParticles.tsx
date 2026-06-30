@@ -8,46 +8,53 @@ type Particle = {
   animation: string;
   startX: number;
   size: number;
-  blur: number;
   depth: number;
 };
+
+const PARTICLE_COUNT = 100;
 
 const SparkleParticles = () => {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
     const generateParticle = (): Particle => {
-      const fallDuration = Math.random() * 10 + 7;
-      const fallDelay = Math.random() * 2;
-      const animationString = `${styles.fall} ${fallDuration}s linear ${fallDelay}s infinite`;
+      // مدت زمان سقوط
+      const fallDuration = Math.random() * 8 + 8;
+
+      // برای جلوگیری از تشکیل موج
+      const fallDelay = -Math.random() * fallDuration;
+
+      const animation = `${styles.fall} ${fallDuration}s linear ${fallDelay}s infinite`;
 
       const depth = Math.floor(Math.random() * 3) + 1;
 
       return {
         id: Math.random(),
         startX: Math.random() * 100,
-        size: Math.random() * 3 + 1.5 * (4 - depth),
-        blur: Math.random() * 2.5 + depth * 0.5,
+        size: Math.random() * 4 + 2,
         depth,
-        animation: animationString,
+        animation,
       };
     };
 
-    setParticles(Array.from({ length: 200 }, generateParticle));
+    setParticles(
+      Array.from({ length: PARTICLE_COUNT }, generateParticle)
+    );
   }, []);
 
   return (
     <div className={styles.particleContainer}>
-      {particles.map((p) => (
+      {particles.map((particle) => (
         <div
-          key={p.id}
-          className={`${styles.sparkleParticle} ${styles[`depth${p.depth}`]}`}
+          key={particle.id}
+          className={`${styles.sparkleParticle} ${
+            styles[`depth${particle.depth}`]
+          }`}
           style={
             {
-              '--start-x': `${p.startX}vw`,
-              '--size': `${p.size}px`,
-              '--blur': `${p.blur}px`,
-              animation: p.animation,
+              '--start-x': `${particle.startX}vw`,
+              '--size': `${particle.size}px`,
+              animation: particle.animation,
             } as React.CSSProperties
           }
         />

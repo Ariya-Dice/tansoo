@@ -6,7 +6,11 @@ import {
   PRODUCT_SPEC_FIELDS,
   emptyProduct,
   getProductGoodsType,
+  OTHER_OPTION,
+  isOtherValue,
+  GOODS_TYPES,
 } from "../../productSpecs";
+import { productsApiHeaders } from "../../utils/api";
 import "./AdminProductsPage.css";
 
 const AdminProductsPage: React.FC = () => {
@@ -18,7 +22,13 @@ const AdminProductsPage: React.FC = () => {
     getImage,
     showToast,
     loading,
+    fetchProducts,
   } = useAppContext();
+
+  const [pricePercent, setPricePercent] = useState('');
+  const [priceCategory, setPriceCategory] = useState('all');
+  const [adjustingPrices, setAdjustingPrices] = useState(false);
+  const [customSpecs, setCustomSpecs] = useState<Record<string, string>>({});
 
   const [newProduct, setNewProduct] = useState<Omit<Product, "id">>(emptyProduct());
   const [editId, setEditId] = useState<number | null>(null);
@@ -32,6 +42,35 @@ const AdminProductsPage: React.FC = () => {
     setNewProduct(emptyProduct());
     setEditId(null);
     setCustomModel("");
+    setCustomSpecs({});
+  };
+
+  const handleBulkPriceAdjust = async () => {
+    const percent = parseFloat(pricePercent);
+    if (!Number.isFinite(percent) || percent === 0) {
+      showToast('درصد معتبر وارد کنید (مثلاً 8 یا -5)');
+      return;
+    }
+    if (!window.confirm(`قیمت ${priceCategory === 'all' ? 'همه محصولات' : priceCategory} ${percent > 0 ? 'افزایش' : 'کاهش'} ${Math.abs(percent)}٪ شود؟`)) {
+      return;
+    }
+    setAdjustingPrices(true);
+    try {
+      const res = await fetch('/api/products/bulk-price', {
+        method: 'POST',
+        headers: productsApiHeaders(true),
+        body: JSON.stringify({ percent, goodsType: priceCategory === 'all' ? undefined : priceCategory }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'خطا در به‌روزرسانی قیمت');
+      showToast(`قیمت ${body.updated} محصول به‌روز شد ✅`);
+      await fetchProducts();
+      setPricePercent('');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'خطا در به‌روزرسانی قیمت');
+    } finally {
+      setAdjustingPrices(false);
+    }
   };
 
   const updateField = <K extends keyof Omit<Product, "id">>(
@@ -149,7 +188,14 @@ const AdminProductsPage: React.FC = () => {
     : (newProduct.model ? getDefaultImage(newProduct.model) : '/loading.gif');
 
   const renderSpecField = (field: typeof PRODUCT_SPEC_FIELDS[number]) => {
-    const value = String(newProduct[field.key] ?? '');
+    const rawValue = String(newProduct[field.key] ?? '');
+    const options = field.options ?? [];
+    const showOther = field.type === 'select' && (
+      rawValue === OTHER_OPTION || isOtherValue(rawValue, options)
+    );
+    const selectValue = showOther && rawValue !== OTHER_OPTION
+      ? OTHER_OPTION
+      : (options.includes(rawValue) ? rawValue : (rawValue ? OTHER_OPTION : ''));
 
     if (field.type === 'select' && field.options) {
       return (
@@ -158,8 +204,20 @@ const AdminProductsPage: React.FC = () => {
             {field.label}{field.required ? ' *' : ''}
           </label>
           <select
-            value={value}
-            onChange={(e) => updateField(field.key, e.target.value)}
+            value={selectValue}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === OTHER_OPTION) {
+                updateField(field.key, OTHER_OPTION);
+              } else {
+                updateField(field.key, v);
+                setCustomSpecs((prev) => {
+                  const next = { ...prev };
+                  delete next[field.key];
+                  return next;
+                });
+              }
+            }}
             className="admin-products-form-input"
             required={field.required}
           >
@@ -168,6 +226,19 @@ const AdminProductsPage: React.FC = () => {
               <option key={opt} value={opt}>{opt}</option>
             ))}
           </select>
+          {showOther && (
+            <input
+              type="text"
+              placeholder={`${field.label} را وارد کنید`}
+              value={customSpecs[field.key] ?? (rawValue !== OTHER_OPTION ? rawValue : '')}
+              onChange={(e) => {
+                setCustomSpecs((prev) => ({ ...prev, [field.key]: e.target.value }));
+                updateField(field.key, e.target.value);
+              }}
+              className="admin-products-form-input custom-input"
+              required={field.required}
+            />
+          )}
         </div>
       );
     }
@@ -179,7 +250,7 @@ const AdminProductsPage: React.FC = () => {
         </label>
         <input
           type="text"
-          value={value}
+          value={rawValue}
           onChange={(e) => updateField(field.key, e.target.value)}
           className="admin-products-form-input"
           placeholder={field.placeholder}
@@ -198,6 +269,39 @@ const AdminProductsPage: React.FC = () => {
         </button>
       </div>
 
+      <div className="admin-bulk-price-panel">
+        <h2 className="admin-bulk-price-title">تنظیم دسته‌جمعی قیمت</h2>
+        <p className="admin-bulk-price-desc">درصد مثبت = افزایش، منفی = کاهش (مثلاً 8 برای ۸٪ افزایش)</p>
+        <div className="admin-bulk-price-row">
+          <input
+            type="number"
+            step="0.1"
+            placeholder="درصد (مثلاً 8)"
+            value={pricePercent}
+            onChange={(e) => setPricePercent(e.target.value)}
+            className="admin-products-form-input"
+          />
+          <select
+            value={priceCategory}
+            onChange={(e) => setPriceCategory(e.target.value)}
+            className="admin-products-form-input"
+          >
+            <option value="all">همه محصولات</option>
+            {GOODS_TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleBulkPriceAdjust}
+            disabled={adjustingPrices}
+            className="admin-bulk-price-btn"
+          >
+            {adjustingPrices ? 'در حال اعمال...' : 'اعمال تغییر قیمت'}
+          </button>
+        </div>
+      </div>
+
       <div className="admin-products-form-container">
         <form onSubmit={handleSubmit} className="admin-products-form">
           <h2 className="admin-products-form-title">
@@ -211,7 +315,7 @@ const AdminProductsPage: React.FC = () => {
                 value={newProduct.model}
                 onChange={(e) => {
                   const value = e.target.value;
-                  const updatedImage = (!newProduct.image && value && value !== 'سایر...')
+                  const updatedImage = (!newProduct.image && value && value !== 'سایر')
                     ? getDefaultImage(value)
                     : newProduct.image;
                   setNewProduct((prev) => ({ ...prev, model: value, image: updatedImage }));
@@ -224,7 +328,7 @@ const AdminProductsPage: React.FC = () => {
                   <option key={model} value={model}>{model}</option>
                 ))}
               </select>
-              {newProduct.model === 'سایر...' && (
+              {newProduct.model === 'سایر' && (
                 <input
                   type="text"
                   placeholder="نام مدل را وارد کنید"

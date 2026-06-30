@@ -23,7 +23,7 @@ const ProductsPage: React.FC = () => {
 
     // فیلتر بر اساس مدل
     if (selectedModel !== 'همه') {
-      if (selectedModel === 'سایر...') {
+      if (selectedModel === 'سایر') {
         filtered = filtered.filter(p => !MODELS.slice(0, -1).includes(p.model));
         if (customModel) {
           filtered = filtered.filter(p => p.model.toLowerCase().includes(customModel.toLowerCase()));
@@ -98,7 +98,7 @@ const ProductsPage: React.FC = () => {
                 <option key={model} value={model}>{model}</option>
               ))}
             </select>
-            {selectedModel === 'سایر...' && (
+            {selectedModel === 'سایر' && (
               <input
                 type="text"
                 placeholder="نام مدل را وارد کنید"

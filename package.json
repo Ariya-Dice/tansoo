@@ -4,20 +4,22 @@
   "version": "0.0.0",
   "type": "module",
   "engines": {
-    "node": ">=18.x"
+    "node": ">=20.x"
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:api": "node local-products-api.js",
     "dev:web": "vite",
     "build": "vite build",
+    "start": "node local-products-api.js",
+    "prod": "node scripts/start-production.mjs",
     "preview": "vite preview",
     "test:db": "node scripts/test-products-db.mjs",
-    "test:api": "node scripts/test-products-api.mjs"
+    "test:api": "node scripts/test-products-api.mjs",
+    "seed:supabase": "node scripts/seed-from-json.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
-    "better-sqlite3": "^11.9.1",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
@@ -27,12 +29,13 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1"
   },
+  "optionalDependencies": {
+    "better-sqlite3": "^11.9.1"
+  },
   "devDependencies": {
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.2.1",
-    "concurrently": "^9.1.2",
-    "patch-package": "^8.0.1",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   }

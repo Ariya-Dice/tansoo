@@ -89,10 +89,44 @@
   transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
+.header-cart-link--active {
+  color: #fff;
+  background: linear-gradient(135deg, #0094c5 0%, #0077a3 100%);
+  border-color: #fff;
+  box-shadow: 0 0 16px rgba(0, 148, 197, 0.65), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cart-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-icon-wrap--shake {
+  animation: cart-shake 4s ease-in-out infinite;
+}
+
+@keyframes cart-shake {
+  0%, 88%, 100% { transform: rotate(0) scale(1); }
+  90% { transform: rotate(-10deg) scale(1.05); }
+  92% { transform: rotate(10deg) scale(1.05); }
+  94% { transform: rotate(-6deg) scale(1.02); }
+  96% { transform: rotate(6deg) scale(1.02); }
+}
+
 .header-cart-link:hover {
   background: rgba(0, 0, 0, 0.25);
   box-shadow: 0 0 10px var(--neon-shadow);
   transform: translateY(-1px);
+}
+
+.header-cart-link:not(.header-cart-link--active):hover {
+  transform: translateY(-1px);
+}
+
+.header-cart-link .cart-bag-icon {
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .header-cart-link .icon-md {

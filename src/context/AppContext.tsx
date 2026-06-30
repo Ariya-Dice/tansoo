@@ -1,19 +1,10 @@
-// src/context/AppContext.tsx
 import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from "react";
 import { Product, CartItem } from "../types";
-import { initialImages } from "../db/ImageDB";
+import { initialImages } from "../utils/images";
 import { ADMIN_PASSWORD } from "../constants";
+import { productsApiHeaders } from "../utils/api";
 
-// همیشه از API یکسان استفاده می‌شود (در dev با Vite proxy به localhost:4020)
 const PRODUCTS_API = "/api/products";
-
-function productsApiHeaders(json = false): HeadersInit {
-  const headers: Record<string, string> = {};
-  if (json) headers["Content-Type"] = "application/json";
-  const secret = import.meta.env.VITE_PRODUCTS_API_SECRET;
-  if (secret) headers["X-Api-Secret"] = secret;
-  return headers;
-}
 
 function warnStorageMode(res: Response) {
   const mode = res.headers.get("X-Storage-Mode");
@@ -256,11 +247,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateQuantity = (productId: number, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(productId);
+      return;
+    }
     setCart((prev) =>
       prev.map((i) =>
-        i.product.id === productId
-          ? { ...i, quantity }
-          : i
+        i.product.id === productId ? { ...i, quantity } : i
       )
     );
   };

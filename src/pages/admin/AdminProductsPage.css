@@ -343,6 +343,56 @@
     text-align: right;
   }
 
+  .admin-bulk-price-panel {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 0.75rem;
+  }
+
+  .admin-bulk-price-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #fbbf24;
+    margin-bottom: 0.35rem;
+  }
+
+  .admin-bulk-price-desc {
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    margin-bottom: 1rem;
+  }
+
+  .admin-bulk-price-row {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .admin-bulk-price-btn {
+    padding: 0.65rem 1.25rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #1e293b;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .admin-bulk-price-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  @media (max-width: 640px) {
+    .admin-bulk-price-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .admin-products-form-group-full {
     grid-column: 1 / -1;
   }

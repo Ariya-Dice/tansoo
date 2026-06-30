@@ -7,6 +7,8 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
+import BulkOrderPage from './pages/BulkOrderPage';
+import BulkOrderSuccessPage from './pages/BulkOrderSuccessPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
@@ -40,6 +42,8 @@ const StorefrontRoutes: React.FC = () => (
         <Route path="/product/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/bulk-order" element={<BulkOrderPage />} />
+        <Route path="/bulk-order/success" element={<BulkOrderSuccessPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </main>

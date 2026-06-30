@@ -1,20 +1,46 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# شیرآلات ساختمانی تانسو
 
-# Run and deploy your AI Studio app
+فروشگاه آنلاین شیرآلات با پنل مدیریت محصولات، سبد خرید، و API محصولات.
 
-This contains everything you need to run your app locally.
+## Tech Stack
 
-View your app in AI Studio: https://ai.studio/apps/drive/1ApYRiBQoHB_TZgtO430ThXMwtP3HtT4u
+- **Frontend:** React 18 + TypeScript + Vite
+- **Backend:** Express (Node.js)
+- **Database:** SQLite (VPS) یا Supabase PostgreSQL (Vercel)
 
-## Run Locally
+## Quick Start (Development)
 
-**Prerequisites:**  Node.js
+```bash
+npm install
+copy .env.example .env
+npm run dev
+```
 
+- سایت: http://localhost:5173  
+- API: http://localhost:4020/api/products  
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Production
+
+| Platform | Guide |
+|----------|--------|
+| **Vercel** (recommended for quick launch) | [`VERCEL_DEPLOY.md`](VERCEL_DEPLOY.md) |
+| **Windows VPS / self-hosted** | [`DEPLOY.md`](DEPLOY.md) |
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Vite + API در حالت توسعه |
+| `npm run build` | Build فرانت‌اند → `dist/` |
+| `npm start` | فقط سرور (نیاز به build قبلی) |
+| `npm run prod` | build + start production |
+| `npm run test:db` | تست اتصال دیتابیس |
+
+## Admin
+
+- URL: `/#/admin/login`
+- رمز: متغیر `VITE_ADMIN_PASSWORD` در `.env`
+
+## Image Upload
+
+- Local/VPS: `db/product-images/` یا Cloudinary — راهنما: `CLOUDINARY_SETUP.md`

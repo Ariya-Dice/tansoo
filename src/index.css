@@ -12,8 +12,21 @@ html {
 
 body {
   background-color: #020617;
+  background-image:
+    linear-gradient(rgba(2, 6, 23, 0.88), rgba(2, 6, 23, 0.92)),
+    url('/image/Hexagon.svg');
+  background-size: cover, 480px;
+  background-position: center, center;
+  background-repeat: no-repeat, repeat;
+  background-attachment: fixed, fixed;
   color: #e2e8f0;
   line-height: 1.6;
+  min-height: 100vh;
+}
+
+.main-content {
+  position: relative;
+  z-index: 1;
 }
 
 /* Layout */
