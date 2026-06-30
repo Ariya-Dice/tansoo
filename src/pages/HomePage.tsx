@@ -2,6 +2,7 @@
 import React, { useRef } from 'react';
 import ProductCard from '../components/ProductCard';
 import { useAppContext } from '../context/AppContext';
+import { getApiErrorHint } from '../utils/apiError';
 import './HomePage.css';
 
 const HomePage: React.FC = () => {
@@ -49,7 +50,7 @@ const HomePage: React.FC = () => {
         <div className="loading-center">
           <p style={{ color: '#ef4444', marginBottom: '1rem' }}>⚠️ {error}</p>
           <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-            لطفاً مطمئن شوید که سرور backend در localhost:4020 در حال اجرا است.
+            {getApiErrorHint(error)}
           </p>
         </div>
       ) : (

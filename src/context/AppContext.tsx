@@ -3,6 +3,7 @@ import { Product, CartItem } from "../types";
 import { initialImages } from "../utils/images";
 import { ADMIN_PASSWORD } from "../constants";
 import { productsApiHeaders } from "../utils/api";
+import { getApiErrorHint, readApiError } from "../utils/apiError";
 
 const PRODUCTS_API = "/api/products";
 
@@ -111,7 +112,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       warnStorageMode(res);
 
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        const msg = await readApiError(res, `HTTP error! status: ${res.status}`);
+        throw new Error(msg);
       }
 
       const data = await res.json();
@@ -122,7 +124,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       let errorMessage = "خطا در دریافت محصولات";
       
       if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-        errorMessage = "سرور API در دسترس نیست. دستور npm run dev را اجرا کنید (هم Vite و هم API روی پورت 4020).";
+        errorMessage = import.meta.env.DEV
+          ? "سرور API در دسترس نیست. دستور npm run dev را اجرا کنید."
+          : "اتصال به API برقرار نشد. تنظیمات Vercel را بررسی کنید.";
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }

@@ -4,6 +4,7 @@ import { Product } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { MODELS, TYPES, COLORS, TAGS } from '../constants';
 import { getProductGoodsType } from '../productSpecs';
+import { getApiErrorHint } from '../utils/apiError';
 import './ProductsPage.css';
 
 const ProductsPage: React.FC = () => {
@@ -54,7 +55,7 @@ const ProductsPage: React.FC = () => {
     }
 
     return filtered;
-  }, [products, selectedModel, selectedType, selectedColor, selectedTag, sortBy, customModel, customType, customColor]);
+  }, [products, selectedModel, selectedType, selectedColor, selectedTag, sortBy, customModel]);
 
   const { error } = useAppContext();
 
@@ -75,7 +76,7 @@ const ProductsPage: React.FC = () => {
             <h2 className="products-empty-title">⚠️ خطا در اتصال به سرور</h2>
             <p className="products-empty-text">{error}</p>
             <p className="products-empty-text" style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
-              لطفاً مطمئن شوید که سرور backend در localhost:4020 در حال اجرا است.
+              {getApiErrorHint(error)}
             </p>
           </div>
         </div>

@@ -55,10 +55,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('❌ API Error:', error);
-    const status = error.message === 'Product not found' ? 404 : 500;
+    const msg = error.message || 'Internal server error';
+    const isConfig =
+      msg.includes('not configured') ||
+      msg.includes('Supabase') ||
+      msg.includes('schema.sql');
+    const status =
+      error.message === 'Product not found' ? 404 : isConfig ? 503 : 500;
     return res.status(status).json({
-      error: status === 404 ? 'Product not found' : 'Internal server error',
-      message: error.message,
+      error: status === 404 ? 'Product not found' : isConfig ? 'Service unavailable' : 'Internal server error',
+      message: msg,
     });
   }
 }
