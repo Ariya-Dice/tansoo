@@ -11,6 +11,13 @@ const Footer: React.FC = () => {
           <div className="footer-info">
             <h3 className="footer-title">{STORE_NAME}</h3>
             <p className="footer-description">شیرآلات بهداشتی درجه یک</p>
+            <p className="footer-description">
+              <Link to="/about" className="footer-link">درباره ما</Link>
+              {' · '}
+              <Link to="/contact" className="footer-link">ارتباط با ما</Link>
+              {' · '}
+              <a href="tel:09368013251" className="footer-link">۰۹۳۶۸۰۱۳۲۵۱</a>
+            </p>
           </div>
           <div className="footer-bottom">
             <p>&copy; {new Date().getFullYear()} شیرآلات تانسو. تمامی حقوق محفوظ است.</p>

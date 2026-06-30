@@ -53,11 +53,11 @@ export interface ProductSpecFieldDef {
 }
 
 export const PRODUCT_SPEC_FIELDS: ProductSpecFieldDef[] = [
-  { key: 'goodsType', label: 'نوع کالا', type: 'select', options: withOther(GOODS_TYPES), required: true },
-  { key: 'color', label: 'رنگ', type: 'select', options: SPEC_COLORS, required: true },
+  { key: 'goodsType', label: 'نوع کالا', type: 'select', options: withOther(GOODS_TYPES) },
+  { key: 'color', label: 'رنگ', type: 'select', options: SPEC_COLORS },
   { key: 'bodyMaterial', label: 'جنس بدنه', type: 'select', options: BODY_MATERIALS },
   { key: 'handleMaterial', label: 'جنس دسته', type: 'select', options: HANDLE_MATERIALS },
-  { key: 'bodyWeight', label: 'وزن تنه', type: 'text', required: true, placeholder: 'مثال: 600 گرم' },
+  { key: 'bodyWeight', label: 'وزن تنه', type: 'text', placeholder: 'مثال: 600 گرم' },
   { key: 'packageWeight', label: 'وزن تقریبی بسته‌بندی', type: 'text', placeholder: 'مثال: 650 گرم' },
   { key: 'cartridgeSize', label: 'سایز کارتریج', type: 'select', options: CARTRIDGE_SIZES },
   { key: 'cartridgeNutMaterial', label: 'جنس مهره کارتریج', type: 'select', options: CARTRIDGE_NUT_MATERIALS },

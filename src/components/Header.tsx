@@ -13,7 +13,9 @@ const Header: React.FC = () => {
   const navLinks = [
     { path: '/', name: 'خانه' },
     { path: '/products', name: 'محصولات' },
+    { path: '/about', name: 'درباره ما' },
     { path: '/bulk-order', name: 'خرید عمده' },
+    { path: '/contact', name: 'ارتباط با ما' },
   ];
 
   return (

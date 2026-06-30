@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import { Product } from "../../types";
 import { MODELS, TAGS, getDefaultImage } from "../../constants";
@@ -11,6 +11,7 @@ import {
   GOODS_TYPES,
 } from "../../productSpecs";
 import { productsApiHeaders } from "../../utils/api";
+import { formatPriceInput, parsePriceInput } from "../../utils/priceFormat";
 import "./AdminProductsPage.css";
 
 const AdminProductsPage: React.FC = () => {
@@ -37,12 +38,30 @@ const AdminProductsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'model' | 'price' | 'tags'>('model');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [customModel, setCustomModel] = useState("");
+  const [priceDisplay, setPriceDisplay] = useState("");
+
+  const duplicateWarning = useMemo(() => {
+    const model = newProduct.model.trim();
+    const goodsType = getProductGoodsType(newProduct as Product);
+    if (!model || !goodsType) return null;
+
+    const duplicate = products.find(
+      (p) =>
+        p.id !== editId &&
+        p.model.trim() === model &&
+        getProductGoodsType(p) === goodsType,
+    );
+
+    if (!duplicate) return null;
+    return `محصول «${model} ${goodsType}» قبلاً اضافه شده است.`;
+  }, [newProduct.model, newProduct.goodsType, products, editId]);
 
   const resetForm = () => {
     setNewProduct(emptyProduct());
     setEditId(null);
     setCustomModel("");
     setCustomSpecs({});
+    setPriceDisplay("");
   };
 
   const handleBulkPriceAdjust = async () => {
@@ -122,11 +141,6 @@ const AdminProductsPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newProduct.model || !newProduct.goodsType || !newProduct.color || !newProduct.bodyWeight || !newProduct.price) {
-      showToast("لطفاً فیلدهای الزامی (مدل، نوع کالا، رنگ، وزن تنه، قیمت) را پر کنید ❌");
-      return;
-    }
-
     setSaving(true);
     try {
       const productToSave = {
@@ -163,6 +177,7 @@ const AdminProductsPage: React.FC = () => {
       type: getProductGoodsType(p),
     });
     setEditId(p.id);
+    setPriceDisplay(formatPriceInput(p.price));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -201,7 +216,7 @@ const AdminProductsPage: React.FC = () => {
       return (
         <div className="admin-products-form-group" key={field.key}>
           <label className="admin-products-form-label">
-            {field.label}{field.required ? ' *' : ''}
+            {field.label}
           </label>
           <select
             value={selectValue}
@@ -219,7 +234,6 @@ const AdminProductsPage: React.FC = () => {
               }
             }}
             className="admin-products-form-input"
-            required={field.required}
           >
             <option value="">انتخاب کنید...</option>
             {field.options.map((opt) => (
@@ -236,7 +250,6 @@ const AdminProductsPage: React.FC = () => {
                 updateField(field.key, e.target.value);
               }}
               className="admin-products-form-input custom-input"
-              required={field.required}
             />
           )}
         </div>
@@ -246,7 +259,7 @@ const AdminProductsPage: React.FC = () => {
     return (
       <div className="admin-products-form-group" key={field.key}>
         <label className="admin-products-form-label">
-          {field.label}{field.required ? ' *' : ''}
+          {field.label}
         </label>
         <input
           type="text"
@@ -254,7 +267,6 @@ const AdminProductsPage: React.FC = () => {
           onChange={(e) => updateField(field.key, e.target.value)}
           className="admin-products-form-input"
           placeholder={field.placeholder}
-          required={field.required}
         />
       </div>
     );
@@ -308,9 +320,15 @@ const AdminProductsPage: React.FC = () => {
             {editId ? "ویرایش محصول" : "افزودن محصول جدید"}
           </h2>
 
+          {duplicateWarning && (
+            <div className="admin-products-duplicate-warning" role="status">
+              {duplicateWarning}
+            </div>
+          )}
+
           <div className="admin-products-form-grid">
             <div className="admin-products-form-group">
-              <label className="admin-products-form-label">مدل *</label>
+              <label className="admin-products-form-label">مدل</label>
               <select
                 value={newProduct.model}
                 onChange={(e) => {
@@ -321,7 +339,6 @@ const AdminProductsPage: React.FC = () => {
                   setNewProduct((prev) => ({ ...prev, model: value, image: updatedImage }));
                 }}
                 className="admin-products-form-input"
-                required
               >
                 <option value="">انتخاب کنید...</option>
                 {MODELS.map((model) => (
@@ -338,7 +355,6 @@ const AdminProductsPage: React.FC = () => {
                     updateField("model", e.target.value);
                   }}
                   className="admin-products-form-input custom-input"
-                  required
                 />
               )}
             </div>
@@ -350,14 +366,19 @@ const AdminProductsPage: React.FC = () => {
             {PRODUCT_SPEC_FIELDS.map(renderSpecField)}
 
             <div className="admin-products-form-group">
-              <label className="admin-products-form-label">قیمت (تومان) *</label>
+              <label className="admin-products-form-label">قیمت (تومان)</label>
               <input
-                type="number"
-                min="0"
-                value={newProduct.price || ''}
-                onChange={(e) => updateField("price", parseInt(e.target.value, 10) || 0)}
-                className="admin-products-form-input"
-                required
+                type="text"
+                inputMode="numeric"
+                dir="ltr"
+                value={priceDisplay}
+                onChange={(e) => {
+                  const parsed = parsePriceInput(e.target.value);
+                  setPriceDisplay(formatPriceInput(parsed));
+                  updateField("price", parsed);
+                }}
+                className="admin-products-form-input admin-products-price-input"
+                placeholder="مثال: ۱٬۲۵۰٬۰۰۰"
               />
             </div>
 

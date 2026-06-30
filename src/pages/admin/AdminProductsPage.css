@@ -680,6 +680,24 @@
     margin-top: 0.5rem;
   }
 
+  .admin-products-duplicate-warning {
+    margin-bottom: 1rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.5rem;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    color: #fcd34d;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    text-align: right;
+  }
+
+  .admin-products-price-input {
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+
   /* Responsive Styles */
   @media (max-width: 768px) {
     .admin-products-header {
