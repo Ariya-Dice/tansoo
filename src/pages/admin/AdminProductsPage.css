@@ -2,8 +2,6 @@
 .admin-products {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
   gap: 0.625rem;
   animation: aria-fade-in 0.3s ease;
 }
@@ -447,4 +445,11 @@
   .admin-products-tags-group {
     grid-column: span 1;
   }
+}
+
+.admin-products-table-scroll {
+  flex: 1;
+  min-height: 300px;
+  overflow-y: auto;
+  overflow-x: auto;
 }
