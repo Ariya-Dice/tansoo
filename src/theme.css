@@ -1,0 +1,44 @@
+/* Aria Premium Light Theme — Design Tokens */
+:root {
+  --aria-canvas: #F8FAFC;
+  --aria-surface: #FFFFFF;
+  --aria-primary: #2563EB;
+  --aria-primary-light: #EFF6FF;
+  --aria-text: #0F172A;
+  --aria-text-secondary: #64748B;
+  --aria-text-muted: #94A3B8;
+  --aria-border: #E2E8F0;
+  --aria-border-light: #F1F5F9;
+
+  --aria-success-text: #059669;
+  --aria-success-bg: #ECFDF5;
+  --aria-success-border: #A7F3D0;
+
+  --aria-warning-text: #B45309;
+  --aria-warning-bg: #FFFBEB;
+  --aria-warning-border: #FDE68A;
+
+  --aria-danger-text: #BE123C;
+  --aria-danger-bg: #FFF1F2;
+  --aria-danger-border: #FECDD3;
+
+  --aria-radius-xl: 12px;
+  --aria-radius-2xl: 16px;
+  --aria-radius-3xl: 24px;
+
+  --aria-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --aria-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+  --aria-shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.08);
+  --aria-shadow-2xl: 0 25px 50px -12px rgba(15, 23, 42, 0.15);
+
+  --aria-transition: all 0.3s ease;
+}
+
+@keyframes aria-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: aria-fade-in 0.3s ease;
+}

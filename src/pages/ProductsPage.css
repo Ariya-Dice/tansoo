@@ -1,138 +1,93 @@
 .products-page {
-    padding-top: 4rem;
-    min-height: 100vh;
-  }
-  
-  .products-title {
-    font-size: 1.875rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    color: #e2e8f0;
-    text-align: center;
-  }
-  
-  /* فیلترها */
-  .products-filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background-color: #0f172a;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  }
-  
-  .filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .filter-group label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #94a3b8;
-    text-align: right;
-  }
-  
-  .filter-group select {
-    padding: 0.5rem;
-    background-color: #020617;
-    border: 1px solid rgba(0, 229, 255, 0.2);
-    border-radius: 0.375rem;
-    color: #e2e8f0;
-    font-size: 0.875rem;
-    text-align: right;
-    direction: rtl;
-  }
-  
-  .filter-group select:focus {
-    outline: none;
-    border-color: #00e5ff;
-    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1);
-  }
-  
-  .custom-input {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    background-color: #020617;
-    border: 1px solid rgba(0, 229, 255, 0.2);
-    border-radius: 0.375rem;
-    color: #e2e8f0;
-    font-size: 0.875rem;
-    text-align: right;
-    direction: rtl;
-  }
-  
-  .custom-input:focus {
-    outline: none;
-    border-color: #00e5ff;
-    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1);
-  }
-  
+  padding: 2rem 0 3rem;
+  min-height: 100vh;
+  animation: aria-fade-in 0.3s ease;
+}
+
+.products-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+  color: var(--aria-text);
+  text-align: center;
+}
+
+.products-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--aria-surface);
+  border: 1px solid var(--aria-border);
+  border-radius: var(--aria-radius-2xl);
+  box-shadow: var(--aria-shadow-sm);
+}
+
+.filter-group label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--aria-text-secondary);
+  text-align: right;
+}
+
+.filter-group select,
+.custom-input {
+  padding: 0.5rem 0.625rem;
+  background: var(--aria-surface);
+  border: 1px solid var(--aria-border);
+  border-radius: var(--aria-radius-xl);
+  color: var(--aria-text);
+  font-size: 0.8125rem;
+  width: 100%;
+}
+
+.filter-group select:focus,
+.custom-input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.products-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--aria-text-secondary);
+}
+
+.products-empty-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: var(--aria-text);
+}
+
+.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+  color: var(--aria-text-secondary);
+}
+
+@media (max-width: 640px) {
   .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
   }
-  
-  .products-empty {
-    text-align: center;
-    padding: 4rem 2rem;
-    color: #94a3b8;
-  }
-  
-  .products-empty-title {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #e2e8f0;
-  }
-  
-  .products-empty-text {
-    font-size: 1.125rem;
-  }
-  
-  .loading-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 50vh;
-    gap: 1rem;
-  }
-  
-  .loading-gif {
-    width: 64px;
-    height: 64px;
-  }
-  
-  @media (max-width: 768px) {
-    .products-grid {
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-    }
-  }
-  
-  @media (max-width: 640px) {
-    .products-grid {
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
+}
 
-    .products-page {
-      padding-top: 2rem;
-    }
-
-    .products-title {
-      font-size: 1.5rem;
-      margin-bottom: 1.5rem;
-      padding: 0 1rem;
-    }
+@media (max-width: 400px) {
+  .products-grid {
+    grid-template-columns: 1fr;
   }
-
-  @media (max-width: 480px) {
-    .products-title {
-      font-size: 1.25rem;
-    }
-  }
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { STORE_NAME } from '../constants';
+import './ContactPage.css';
 import './AboutPage.css';
 
 const AboutPage: React.FC = () => {

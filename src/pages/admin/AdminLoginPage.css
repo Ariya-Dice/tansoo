@@ -3,95 +3,74 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #020617;
-  font-family: sans-serif;
+  background: var(--aria-canvas);
 }
 
 .admin-login-box {
   width: 100%;
   max-width: 400px;
-  background-color: #0f172a;
-  border-radius: 12px;
+  background: var(--aria-surface);
+  border: 1px solid var(--aria-border);
+  border-radius: var(--aria-radius-3xl);
   padding: 2rem;
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+  box-shadow: var(--aria-shadow-xl);
   text-align: center;
-}
-
-.admin-login-header {
-  margin-bottom: 1.5rem;
+  animation: aria-fade-in 0.3s ease;
 }
 
 .admin-login-title {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #00e5ff;
-  text-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--aria-text);
 }
 
 .admin-login-subtitle {
-  color: #94a3b8;
+  color: var(--aria-text-secondary);
   margin-top: 0.5rem;
-  font-size: 1rem;
-}
-
-.admin-login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.admin-login-input-group {
-  text-align: right;
 }
 
 .admin-login-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid rgba(0, 229, 255, 0.3);
-  border-radius: 6px;
-  background-color: #020617;
-  color: #e2e8f0;
+  border: 1px solid var(--aria-border);
+  border-radius: var(--aria-radius-xl);
+  background: var(--aria-surface);
+  color: var(--aria-text);
   font-size: 1rem;
-  direction: rtl;
 }
 
 .admin-login-input:focus {
   outline: none;
-  border-color: #00e5ff;
-  box-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .admin-login-error {
-  color: #ef4444;
-  font-size: 0.9rem;
+  color: var(--aria-danger-text);
+  font-size: 0.875rem;
 }
 
 .admin-login-btn {
-  background-color: #00e5ff;
-  color: #020617;
-  font-weight: bold;
+  background: var(--aria-text);
+  color: #fff;
+  font-weight: 800;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--aria-radius-xl);
   padding: 0.75rem;
   cursor: pointer;
-  transition: 0.3s;
+  transition: var(--aria-transition);
 }
 
 .admin-login-btn:hover {
-  background-color: rgba(0, 229, 255, 0.8);
-}
-
-.admin-login-footer {
-  margin-top: 1rem;
+  background: #1E293B;
 }
 
 .admin-login-back {
-  color: #94a3b8;
-  font-size: 0.9rem;
+  color: var(--aria-text-secondary);
   text-decoration: none;
-  transition: 0.3s;
+  font-weight: 600;
 }
 
 .admin-login-back:hover {
-  color: #00e5ff;
+  color: var(--aria-primary);
 }
