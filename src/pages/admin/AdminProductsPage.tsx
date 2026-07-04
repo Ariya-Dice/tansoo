@@ -131,30 +131,57 @@ const AdminProductsPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const productToSave = {
-        ...newProduct,
-        type: newProduct.goodsType,
-        image: newProduct.image || (newProduct.model ? getDefaultImage(newProduct.model) : ''),
-      };
-      if (editId) {
-        await updateProduct(editId, productToSave);
-      } else {
-        await addProduct(productToSave);
-      }
-      await fetchProducts(); // رفع مشکل عدم نمایش محصولات
-      resetForm();
-      showToast(editId ? "محصول ویرایش شد ✅" : "محصول ثبت شد ✅");
-    } catch (err) {
-      console.error("❌ Error saving product:", err);
-      showToast("خطا در ذخیره محصول ❌");
-    } finally {
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setSaving(true);
+
+  try {
+    const confirmed = window.confirm(
+      `تأیید ${editId ? "ویرایش" : "ثبت"} محصول
+
+مدل:
+${newProduct.model}
+
+نوع:
+${getProductGoodsType(newProduct as Product)}
+
+قیمت:
+${newProduct.price.toLocaleString("fa-IR")} تومان
+
+آیا مطمئن هستید؟`
+    );
+
+    if (!confirmed) {
       setSaving(false);
+      return;
     }
-  };
+
+    const productToSave = {
+      ...newProduct,
+      type: newProduct.goodsType,
+      image:
+        newProduct.image ||
+        (newProduct.model ? getDefaultImage(newProduct.model) : ""),
+    };
+
+    if (editId) {
+      await updateProduct(editId, productToSave);
+    } else {
+      await addProduct(productToSave);
+    }
+
+    await fetchProducts();
+
+    resetForm();
+
+    showToast(editId ? "محصول ویرایش شد ✅" : "محصول ثبت شد ✅");
+  } catch (err) {
+    console.error("❌ Error saving product:", err);
+    showToast("خطا در ذخیره محصول ❌");
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleDelete = async (id: number) => {
     if (window.confirm("آیا از حذف محصول مطمئن هستید؟")) {
