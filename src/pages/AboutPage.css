@@ -1,5 +1,735 @@
-/* About page shares ContactPage.css base classes */
-.about-back a:hover,
-.contact-back a:hover {
-  text-decoration: underline;
+/* =====================================================
+   About Page
+===================================================== */
+
+.about-page {
+  min-height: 100vh;
+  padding: 2rem 1rem 4rem;
+  animation: aria-fade-in .35s ease;
+}
+
+.about-page .container {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.about-hero {
+  position: relative;
+  text-align: center;
+  padding: 2rem 0 5rem;
+  overflow: hidden;
+}
+
+.about-watermark {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(5rem, 12vw, 8rem);
+  font-weight: 900;
+  letter-spacing: .45rem;
+  color: rgba(15, 23, 42, .04);
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.about-badge {
+  position: relative;
+  z-index: 2;
+
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+
+  padding: .7rem 1.3rem;
+
+  border-radius: 999px;
+
+  border: 1px solid #dbeafe;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+
+  font-size: .9rem;
+  font-weight: 800;
+
+  margin-bottom: 1.8rem;
+}
+
+.about-title {
+  position: relative;
+  z-index: 2;
+
+  margin: 0;
+
+  font-size: clamp(2.1rem, 5vw, 3.5rem);
+
+  line-height: 1.2;
+
+  font-weight: 900;
+
+  color: #0f172a;
+
+  margin-bottom: 1.4rem;
+}
+
+.about-subtitle {
+  position: relative;
+  z-index: 2;
+
+  max-width: 760px;
+
+  margin: auto;
+
+  color: #64748b;
+
+  font-size: 1.08rem;
+
+  line-height: 2;
+
+  font-weight: 500;
+}
+
+/* =====================================================
+   STORY
+===================================================== */
+
+.about-story {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  margin-bottom: 5rem;
+}
+
+.story-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.story-heading {
+  border-right: 5px solid #2563eb;
+  padding-right: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.story-heading h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.story-heading span {
+  display: block;
+  margin-top: .55rem;
+  color: #94a3b8;
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.story-content p {
+  color: #475569;
+  line-height: 2.15;
+  font-size: 1rem;
+  margin-bottom: 1.4rem;
+}
+
+/* =====================================================
+   FEATURES
+===================================================== */
+
+.story-features {
+  margin-top: 2rem;
+
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 1rem 1.5rem;
+
+  padding-top: 2rem;
+
+  border-top: 1px solid #e2e8f0;
+}
+
+.story-feature {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+}
+
+.story-feature svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.story-feature span {
+  color: #1e293b;
+  font-size: .95rem;
+  font-weight: 700;
+}
+
+/* =====================================================
+   WORKSHOP CARD
+===================================================== */
+
+.story-card {
+  position: relative;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 30px;
+
+  padding: 2rem;
+
+  text-align: center;
+
+  box-shadow: 0 18px 40px rgba(15,23,42,.08);
+
+  overflow: hidden;
+}
+
+.story-card::before {
+
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+  radial-gradient(circle at top right,
+  rgba(37,99,235,.08),
+  transparent 45%);
+
+  pointer-events: none;
+}
+
+.story-card-icon {
+
+  width: 92px;
+  height: 92px;
+
+  margin: auto;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+
+  border: 1px solid #bfdbfe;
+
+  margin-bottom: 1.6rem;
+}
+
+.story-card h3 {
+
+  margin: 0;
+
+  color: #0f172a;
+
+  font-size: 1.35rem;
+
+  font-weight: 900;
+}
+
+.story-card-subtitle {
+
+  color: #94a3b8;
+
+  margin-top: .7rem;
+
+  font-size: .92rem;
+
+  font-weight: 700;
+
+  margin-bottom: 1.8rem;
+}
+
+/* =====================================================
+   INNER BOX
+===================================================== */
+
+.story-card-box {
+
+  text-align: right;
+
+  background: #f8fafc;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 22px;
+
+  padding: 1.4rem;
+}
+
+.story-card-box-title {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: .55rem;
+
+  color: #0f172a;
+
+  font-size: .95rem;
+
+  font-weight: 900;
+
+  margin-bottom: .9rem;
+}
+
+.story-card-box-title svg {
+  color: #f59e0b;
+}
+
+.story-card-box p {
+
+  margin: 0;
+
+  color: #64748b;
+
+  line-height: 2;
+
+  font-size: .92rem;
+}
+
+/* =====================================================
+   RESPONSIVE (PART 1)
+===================================================== */
+
+@media (max-width:992px) {
+
+  .about-story {
+
+    grid-template-columns: 1fr;
+
+    gap: 2.5rem;
+  }
+
+  .story-card {
+
+    max-width: 500px;
+
+    margin: auto;
+  }
+
+}
+
+@media (max-width:768px) {
+
+  .about-page {
+    padding: 1rem 1rem 3rem;
+  }
+
+  .about-hero {
+    padding-bottom: 3rem;
+  }
+
+  .about-title {
+    font-size: 2rem;
+  }
+
+  .about-subtitle {
+    font-size: .95rem;
+  }
+
+  .story-heading h2 {
+    font-size: 1.5rem;
+  }
+
+  .story-features {
+    grid-template-columns: 1fr;
+  }
+
+  .story-card {
+    padding: 1.5rem;
+  }
+
+}
+
+@media (max-width:480px) {
+
+  .about-badge {
+    font-size: .8rem;
+    padding: .6rem 1rem;
+  }
+
+  .story-heading {
+    padding-right: 1rem;
+  }
+
+  .story-heading h2 {
+    font-size: 1.3rem;
+  }
+
+  .story-content p {
+    font-size: .92rem;
+  }
+
+}
+
+/* =====================================================
+   VALUES SECTION
+===================================================== */
+
+.about-values {
+  margin: 5rem 0;
+}
+
+.values-title {
+  text-align: center;
+  margin: 0 0 2.5rem;
+
+  font-size: 2rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.75rem;
+}
+
+.value-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 28px;
+  padding: 2rem;
+  transition: all .3s ease;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, .05);
+}
+
+.value-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, .12);
+}
+
+.value-icon {
+  width: 62px;
+  height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 18px;
+
+  font-size: 1.6rem;
+
+  margin-bottom: 1.4rem;
+}
+
+.value-icon-red {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.value-icon-blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.value-icon-green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.value-card h3 {
+  margin: 0 0 1rem;
+
+  color: #0f172a;
+
+  font-size: 1.2rem;
+
+  font-weight: 900;
+}
+
+.value-card p {
+  margin: 0;
+
+  color: #64748b;
+
+  line-height: 2;
+
+  font-size: .95rem;
+}
+
+/* =====================================================
+   CONTACT SECTION
+===================================================== */
+
+.about-contact {
+  margin-top: 5rem;
+
+  background: #0f172a;
+
+  border-radius: 34px;
+
+  overflow: hidden;
+
+  position: relative;
+
+  color: #fff;
+
+  box-shadow: 0 20px 50px rgba(15, 23, 42, .18);
+}
+
+.about-contact::before {
+
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(circle at bottom left,
+      rgba(37,99,235,.22),
+      transparent 45%);
+
+  pointer-events: none;
+}
+
+.contact-content {
+  position: relative;
+  z-index: 2;
+
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 3rem;
+
+  padding: 3rem;
+}
+
+.contact-info h2 {
+  margin: 0 0 1rem;
+
+  font-size: 2rem;
+
+  font-weight: 900;
+
+  color: #fff;
+}
+
+.contact-info p {
+  margin: 0;
+
+  color: #cbd5e1;
+
+  line-height: 2;
+
+  font-size: 1rem;
+}
+
+.contact-card {
+
+  background: rgba(15,23,42,.35);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  border-radius: 24px;
+
+  padding: 1.7rem;
+
+  backdrop-filter: blur(12px);
+}
+
+.contact-item {
+
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: .9rem;
+
+  color: #e2e8f0;
+
+  line-height: 1.9;
+
+  font-size: .95rem;
+}
+
+.contact-item+.contact-item {
+  margin-top: 1.3rem;
+}
+
+.contact-icon {
+
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(37,99,235,.18);
+
+  color: #60a5fa;
+
+  flex-shrink: 0;
+}
+
+.contact-item a {
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  transition: .25s;
+}
+
+.contact-item a:hover {
+  color: #60a5fa;
+}
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.about-footer {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.about-back-button {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: .9rem 1.8rem;
+
+  border-radius: 16px;
+
+  background: #2563eb;
+
+  color: #fff;
+
+  font-weight: 800;
+
+  text-decoration: none;
+
+  transition: .25s;
+}
+
+.about-back-button:hover {
+
+  background: #1d4ed8;
+
+  transform: translateY(-2px);
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width:1100px){
+
+  .values-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .contact-content{
+    grid-template-columns:1fr;
+  }
+
+}
+
+@media (max-width:768px){
+
+  .about-values{
+    margin:4rem 0;
+  }
+
+  .values-title{
+    font-size:1.6rem;
+  }
+
+  .values-grid{
+    grid-template-columns:1fr;
+    gap:1.2rem;
+  }
+
+  .value-card{
+    padding:1.5rem;
+  }
+
+  .contact-content{
+    padding:2rem;
+    gap:2rem;
+  }
+
+  .contact-info h2{
+    font-size:1.5rem;
+  }
+
+  .contact-info p{
+    font-size:.95rem;
+  }
+
+  .contact-card{
+    padding:1.3rem;
+  }
+
+  .about-back-button{
+    width:100%;
+    max-width:340px;
+  }
+
+}
+
+@media (max-width:480px){
+
+  .about-contact{
+    border-radius:24px;
+  }
+
+  .contact-content{
+    padding:1.4rem;
+  }
+
+  .contact-item{
+    font-size:.9rem;
+  }
+
+  .contact-icon{
+    width:34px;
+    height:34px;
+    font-size:.9rem;
+  }
+
+  .value-card h3{
+    font-size:1.05rem;
+  }
+
+  .value-card p{
+    font-size:.9rem;
+  }
+
+  .about-back-button{
+    padding:.85rem 1.4rem;
+    font-size:.95rem;
+  }
+
 }
