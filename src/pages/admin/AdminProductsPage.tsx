@@ -30,7 +30,6 @@ const AdminProductsPage: React.FC = () => {
   const [priceCategory, setPriceCategory] = useState('all');
   const [adjustingPrices, setAdjustingPrices] = useState(false);
   const [customSpecs, setCustomSpecs] = useState<Record<string, string>>({});
-
   const [newProduct, setNewProduct] = useState<Omit<Product, "id">>(emptyProduct());
   const [editId, setEditId] = useState<number | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -44,14 +43,12 @@ const AdminProductsPage: React.FC = () => {
     const model = newProduct.model.trim();
     const goodsType = getProductGoodsType(newProduct as Product);
     if (!model || !goodsType) return null;
-
     const duplicate = products.find(
       (p) =>
         p.id !== editId &&
         p.model.trim() === model &&
         getProductGoodsType(p) === goodsType,
     );
-
     if (!duplicate) return null;
     return `محصول «${model} ${goodsType}» قبلاً اضافه شده است.`;
   }, [newProduct.model, newProduct.goodsType, products, editId]);
@@ -108,13 +105,11 @@ const AdminProductsPage: React.FC = () => {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-
       const uploadHeaders: Record<string, string> = {
         "Content-Type": "application/json",
       };
       const apiSecret = import.meta.env.VITE_PRODUCTS_API_SECRET;
       if (apiSecret) uploadHeaders["X-Api-Secret"] = apiSecret;
-
       const res = await fetch("/api/upload-image", {
         method: "POST",
         headers: uploadHeaders,
@@ -124,9 +119,7 @@ const AdminProductsPage: React.FC = () => {
           type: file.type,
         }),
       });
-
       if (!res.ok) throw new Error("خطا در آپلود تصویر");
-
       const data = await res.json();
       updateField("image", data.url || data.filename);
       showToast("تصویر با موفقیت آپلود شد ✅");
@@ -140,7 +133,6 @@ const AdminProductsPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setSaving(true);
     try {
       const productToSave = {
@@ -148,13 +140,14 @@ const AdminProductsPage: React.FC = () => {
         type: newProduct.goodsType,
         image: newProduct.image || (newProduct.model ? getDefaultImage(newProduct.model) : ''),
       };
-
       if (editId) {
         await updateProduct(editId, productToSave);
       } else {
         await addProduct(productToSave);
       }
+      await fetchProducts(); // رفع مشکل عدم نمایش محصولات
       resetForm();
+      showToast(editId ? "محصول ویرایش شد ✅" : "محصول ثبت شد ✅");
     } catch (err) {
       console.error("❌ Error saving product:", err);
       showToast("خطا در ذخیره محصول ❌");
@@ -166,6 +159,7 @@ const AdminProductsPage: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm("آیا از حذف محصول مطمئن هستید؟")) {
       await deleteProduct(id);
+      await fetchProducts(); // رفع مشکل عدم به‌روزرسانی لیست
     }
   };
 
@@ -255,7 +249,6 @@ const AdminProductsPage: React.FC = () => {
         </div>
       );
     }
-
     return (
       <div className="admin-products-form-group" key={field.key}>
         <label className="admin-products-form-label">
@@ -322,13 +315,11 @@ const AdminProductsPage: React.FC = () => {
           <h2 className="admin-products-form-title">
             {editId ? "ویرایش محصول" : "ثبت محصول"}
           </h2>
-
           {duplicateWarning && (
             <div className="admin-products-duplicate-warning" role="status">
               {duplicateWarning}
             </div>
           )}
-
           <div className="admin-products-form-grid">
             <div className="admin-products-form-group">
               <label className="admin-products-form-label">مدل</label>
@@ -361,9 +352,7 @@ const AdminProductsPage: React.FC = () => {
                 />
               )}
             </div>
-
             {PRODUCT_SPEC_FIELDS.map(renderSpecField)}
-
             <div className="admin-products-form-group">
               <label className="admin-products-form-label">قیمت (تومان)</label>
               <input
@@ -380,7 +369,6 @@ const AdminProductsPage: React.FC = () => {
                 placeholder="۱٬۲۵۰٬۰۰۰"
               />
             </div>
-
             <div className="admin-products-form-group admin-products-tags-group">
               <label className="admin-products-form-label">تگ‌ها</label>
               <div className="admin-products-tags">
@@ -396,7 +384,6 @@ const AdminProductsPage: React.FC = () => {
                 ))}
               </div>
             </div>
-
             <div className="admin-products-form-group admin-products-form-group-full">
               <label className="admin-products-form-label">توضیحات</label>
               <textarea
@@ -406,7 +393,6 @@ const AdminProductsPage: React.FC = () => {
                 rows={2}
               />
             </div>
-
             <div className="admin-products-form-group admin-products-form-group-full">
               <label className="admin-products-form-label">تصویر</label>
               <div className="admin-products-image-row">
@@ -430,7 +416,6 @@ const AdminProductsPage: React.FC = () => {
               </div>
             </div>
           </div>
-
           <div className="admin-products-form-actions">
             <button type="submit" className="admin-products-form-submit" disabled={saving || loading}>
               {saving ? 'ذخیره...' : editId ? 'ذخیره' : 'ثبت'}
@@ -464,71 +449,79 @@ const AdminProductsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="admin-products-table-scroll">
-        {loading && products.length === 0 ? (
-          <div className="admin-products-loading">
-            <p>در حال بارگذاری...</p>
-          </div>
-        ) : sortedProducts.length === 0 ? (
-          <div className="admin-products-empty">
-            <p>هیچ محصولی وجود ندارد.</p>
-          </div>
-        ) : (
-          <table className="admin-products-table">
-            <thead>
-              <tr>
-                <th>تصویر</th>
-                <th>مدل</th>
-                <th>نوع کالا</th>
-                <th>رنگ</th>
-                <th>قیمت</th>
-                <th>تگ‌ها</th>
-                <th>عملیات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedProducts.map((product) => {
-                const productImage = product.image
-                  ? getImage(product.image)
-                  : getDefaultImage(product.model);
-                const goodsType = getProductGoodsType(product);
-
-                return (
-                  <tr key={product.id}>
-                    <td>
-                      <img
-                        src={productImage}
-                        alt={`${product.model} ${goodsType}`}
-                        className="admin-products-table-image"
-                      />
-                    </td>
-                    <td>{product.model}</td>
-                    <td>{goodsType}</td>
-                    <td>{product.color}</td>
-                    <td>{product.price.toLocaleString('fa-IR')} تومان</td>
-                    <td>
-                      <div className="admin-products-table-tags">
-                        {product.tags.map((tag) => (
-                          <span key={tag} className="admin-products-table-tag">{tag}</span>
-                        ))}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="admin-products-table-actions">
-                        <button type="button" onClick={() => handleEdit(product)} className="admin-products-table-edit">
-                          ویرایش
-                        </button>
-                        <button type="button" onClick={() => handleDelete(product.id)} className="admin-products-table-delete">
-                          حذف
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+        <div 
+          className="admin-products-table-scroll"
+          style={{ 
+            overflowY: 'auto', 
+            maxHeight: 'calc(100vh - 480px)', 
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            background: '#fff'
+          }}
+        >
+          {loading && products.length === 0 ? (
+            <div className="admin-products-loading">
+              <p>در حال بارگذاری...</p>
+            </div>
+          ) : sortedProducts.length === 0 ? (
+            <div className="admin-products-empty">
+              <p>هیچ محصولی وجود ندارد.</p>
+            </div>
+          ) : (
+            <table className="admin-products-table">
+              <thead>
+                <tr>
+                  <th>تصویر</th>
+                  <th>مدل</th>
+                  <th>نوع کالا</th>
+                  <th>رنگ</th>
+                  <th>قیمت</th>
+                  <th>تگ‌ها</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedProducts.map((product) => {
+                  const productImage = product.image
+                    ? getImage(product.image)
+                    : getDefaultImage(product.model);
+                  const goodsType = getProductGoodsType(product);
+                  return (
+                    <tr key={product.id}>
+                      <td>
+                        <img
+                          src={productImage}
+                          alt={`${product.model} ${goodsType}`}
+                          className="admin-products-table-image"
+                        />
+                      </td>
+                      <td>{product.model}</td>
+                      <td>{goodsType}</td>
+                      <td>{product.color}</td>
+                      <td>{product.price.toLocaleString('fa-IR')} تومان</td>
+                      <td>
+                        <div className="admin-products-table-tags">
+                          {product.tags.map((tag) => (
+                            <span key={tag} className="admin-products-table-tag">{tag}</span>
+                          ))}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="admin-products-table-actions">
+                          <button type="button" onClick={() => handleEdit(product)} className="admin-products-table-edit">
+                            ویرایش
+                          </button>
+                          <button type="button" onClick={() => handleDelete(product.id)} className="admin-products-table-delete">
+                            حذف
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </section>
     </div>
