@@ -235,7 +235,7 @@ const AdminProductsPage: React.FC = () => {
             }}
             className="admin-products-form-input"
           >
-            <option value="">انتخاب کنید...</option>
+            <option value="">—</option>
             {field.options.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
             ))}
@@ -274,31 +274,34 @@ const AdminProductsPage: React.FC = () => {
 
   return (
     <div className="admin-products">
-      <div className="admin-products-header">
+      <div className="admin-products-toolbar">
         <h1 className="admin-products-title">مدیریت محصولات</h1>
-        <button type="button" className="admin-products-add-btn" onClick={resetForm}>
-          افزودن محصول جدید
-        </button>
+        <div className="admin-products-toolbar-actions">
+          <button type="button" className="admin-products-add-btn" onClick={resetForm}>
+            محصول جدید
+          </button>
+        </div>
       </div>
 
       <div className="admin-bulk-price-panel">
-        <h2 className="admin-bulk-price-title">تنظیم دسته‌جمعی قیمت</h2>
-        <p className="admin-bulk-price-desc">درصد مثبت = افزایش، منفی = کاهش (مثلاً 8 برای ۸٪ افزایش)</p>
+        <span className="admin-bulk-price-title">تغییر قیمت گروهی</span>
         <div className="admin-bulk-price-row">
           <input
             type="number"
             step="0.1"
-            placeholder="درصد (مثلاً 8)"
+            placeholder="درصد"
             value={pricePercent}
             onChange={(e) => setPricePercent(e.target.value)}
             className="admin-products-form-input"
+            style={{ maxWidth: '5rem' }}
           />
           <select
             value={priceCategory}
             onChange={(e) => setPriceCategory(e.target.value)}
             className="admin-products-form-input"
+            style={{ maxWidth: '9rem' }}
           >
-            <option value="all">همه محصولات</option>
+            <option value="all">همه</option>
             {GOODS_TYPES.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
@@ -309,15 +312,15 @@ const AdminProductsPage: React.FC = () => {
             disabled={adjustingPrices}
             className="admin-bulk-price-btn"
           >
-            {adjustingPrices ? 'در حال اعمال...' : 'اعمال تغییر قیمت'}
+            {adjustingPrices ? '...' : 'اعمال'}
           </button>
         </div>
       </div>
 
-      <div className="admin-products-form-container">
+      <div className="admin-products-form-panel">
         <form onSubmit={handleSubmit} className="admin-products-form">
           <h2 className="admin-products-form-title">
-            {editId ? "ویرایش محصول" : "افزودن محصول جدید"}
+            {editId ? "ویرایش محصول" : "ثبت محصول"}
           </h2>
 
           {duplicateWarning && (
@@ -340,7 +343,7 @@ const AdminProductsPage: React.FC = () => {
                 }}
                 className="admin-products-form-input"
               >
-                <option value="">انتخاب کنید...</option>
+                <option value="">—</option>
                 {MODELS.map((model) => (
                   <option key={model} value={model}>{model}</option>
                 ))}
@@ -348,7 +351,7 @@ const AdminProductsPage: React.FC = () => {
               {newProduct.model === 'سایر' && (
                 <input
                   type="text"
-                  placeholder="نام مدل را وارد کنید"
+                  placeholder="نام مدل"
                   value={customModel}
                   onChange={(e) => {
                     setCustomModel(e.target.value);
@@ -357,10 +360,6 @@ const AdminProductsPage: React.FC = () => {
                   className="admin-products-form-input custom-input"
                 />
               )}
-            </div>
-
-            <div className="admin-products-form-section-title admin-products-form-group-full">
-              مشخصات فنی محصول
             </div>
 
             {PRODUCT_SPEC_FIELDS.map(renderSpecField)}
@@ -374,11 +373,11 @@ const AdminProductsPage: React.FC = () => {
                 value={priceDisplay}
                 onChange={(e) => {
                   const parsed = parsePriceInput(e.target.value);
-                  setPriceDisplay(formatPriceInput(parsed));
+                  setPriceDisplay(e.target.value === '' ? '' : formatPriceInput(parsed));
                   updateField("price", parsed);
                 }}
                 className="admin-products-form-input admin-products-price-input"
-                placeholder="مثال: ۱٬۲۵۰٬۰۰۰"
+                placeholder="۱٬۲۵۰٬۰۰۰"
               />
             </div>
 
@@ -391,7 +390,6 @@ const AdminProductsPage: React.FC = () => {
                       type="checkbox"
                       checked={newProduct.tags.includes(tag)}
                       onChange={() => toggleTag(tag)}
-                      className="admin-products-tag-checkbox"
                     />
                     <span>{tag}</span>
                   </label>
@@ -405,19 +403,16 @@ const AdminProductsPage: React.FC = () => {
                 value={newProduct.description}
                 onChange={(e) => updateField("description", e.target.value)}
                 className="admin-products-form-textarea"
-                rows={4}
+                rows={2}
               />
             </div>
 
             <div className="admin-products-form-group admin-products-form-group-full">
-              <label className="admin-products-form-label">تصویر محصول</label>
-              <div className="admin-products-image-upload">
+              <label className="admin-products-form-label">تصویر</label>
+              <div className="admin-products-image-row">
                 <div className="admin-products-image-preview">
                   {uploadingImage ? (
-                    <div className="admin-products-image-loading">
-                      <img src="/loading.gif" alt="در حال آپلود..." />
-                      <p>در حال آپلود...</p>
-                    </div>
+                    <img src="/loading.gif" alt="..." />
                   ) : (
                     <img src={previewImage} alt="پیش‌نمایش" />
                   )}
@@ -431,23 +426,14 @@ const AdminProductsPage: React.FC = () => {
                   }}
                   className="admin-products-image-input"
                 />
-                <p className="admin-products-image-hint">
-                  اگر تصویری آپلود نکنید، تصویر پیش‌فرض مدل استفاده می‌شود.
-                </p>
+                <span className="admin-products-image-hint">پیش‌فرض: تصویر مدل</span>
               </div>
             </div>
           </div>
 
           <div className="admin-products-form-actions">
             <button type="submit" className="admin-products-form-submit" disabled={saving || loading}>
-              {saving ? (
-                <>
-                  <img src="/loading.gif" alt="در حال ذخیره..." className="loading-icon" />
-                  در حال ذخیره...
-                </>
-              ) : (
-                editId ? "ذخیره تغییرات" : "ذخیره محصول"
-              )}
+              {saving ? 'ذخیره...' : editId ? 'ذخیره' : 'ثبت'}
             </button>
             {editId && (
               <button type="button" onClick={resetForm} className="admin-products-form-cancel">
@@ -458,11 +444,11 @@ const AdminProductsPage: React.FC = () => {
         </form>
       </div>
 
-      <div className="admin-products-table-container">
+      <section className="admin-products-list-panel">
         <div className="admin-products-table-header">
-          <h2>لیست محصولات ({products.length})</h2>
+          <h2>لیست ({products.length})</h2>
           <div className="admin-products-sort">
-            <label>مرتب‌سازی:</label>
+            <label>مرتب:</label>
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
               <option value="model">مدل</option>
               <option value="price">قیمت</option>
@@ -478,9 +464,9 @@ const AdminProductsPage: React.FC = () => {
           </div>
         </div>
 
+        <div className="admin-products-table-scroll">
         {loading && products.length === 0 ? (
           <div className="admin-products-loading">
-            <img src="/loading.gif" alt="در حال بارگذاری..." />
             <p>در حال بارگذاری...</p>
           </div>
         ) : sortedProducts.length === 0 ? (
@@ -543,7 +529,8 @@ const AdminProductsPage: React.FC = () => {
             </tbody>
           </table>
         )}
-      </div>
+        </div>
+      </section>
     </div>
   );
 };
