@@ -197,9 +197,37 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
       goodsType: getProductGoodsType(p),
       type: getProductGoodsType(p),
     });
+  
     setEditId(p.id);
     setPriceDisplay(formatPriceInput(p.price));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  
+    // Custom model
+    setCustomModel(
+      MODELS.includes(p.model) ? "" : p.model
+    );
+  
+    // Custom select fields
+    const specs: Record<string, string> = {};
+  
+    PRODUCT_SPEC_FIELDS.forEach((field) => {
+      if (field.type !== "select") return;
+  
+      const value = String(p[field.key] ?? "");
+  
+      if (
+        value &&
+        !field.options?.includes(value)
+      ) {
+        specs[field.key] = value;
+      }
+    });
+  
+    setCustomSpecs(specs);
+  
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const toggleTag = (tag: string) => {
@@ -233,49 +261,90 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
       ? OTHER_OPTION
       : (options.includes(rawValue) ? rawValue : (rawValue ? OTHER_OPTION : ''));
 
-    if (field.type === 'select' && field.options) {
-      return (
-        <div className="admin-products-form-group" key={field.key}>
-          <label className="admin-products-form-label">
-            {field.label}
-          </label>
-          <select
-            value={selectValue}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v === OTHER_OPTION) {
-                updateField(field.key, OTHER_OPTION);
-              } else {
-                updateField(field.key, v);
+      if (field.type === "select" && field.options) {
+        const customValue = customSpecs[field.key] ?? "";
+      
+        return (
+          <div
+            className="admin-products-form-group"
+            key={field.key}
+          >
+            <label className="admin-products-form-label">
+              {field.label}
+            </label>
+      
+            <select
+              value={
+                field.options.includes(rawValue)
+                  ? rawValue
+                  : rawValue
+                  ? OTHER_OPTION
+                  : ""
+              }
+              onChange={(e) => {
+                const value = e.target.value;
+      
+                if (value === OTHER_OPTION) {
+                  updateField(field.key, OTHER_OPTION);
+      
+                  setCustomSpecs((prev) => ({
+                    ...prev,
+                    [field.key]: "",
+                  }));
+      
+                  return;
+                }
+      
+                updateField(field.key, value);
+      
                 setCustomSpecs((prev) => {
                   const next = { ...prev };
                   delete next[field.key];
                   return next;
                 });
-              }
-            }}
-            className="admin-products-form-input"
-          >
-            <option value="">—</option>
-            {field.options.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
-          {showOther && (
-            <input
-              type="text"
-              placeholder={`${field.label} را وارد کنید`}
-              value={customSpecs[field.key] ?? (rawValue !== OTHER_OPTION ? rawValue : '')}
-              onChange={(e) => {
-                setCustomSpecs((prev) => ({ ...prev, [field.key]: e.target.value }));
-                updateField(field.key, e.target.value);
               }}
-              className="admin-products-form-input custom-input"
-            />
-          )}
-        </div>
-      );
-    }
+              className="admin-products-form-input"
+            >
+              <option value="">—</option>
+      
+              {field.options.map((opt) => (
+                <option
+                  key={opt}
+                  value={opt}
+                >
+                  {opt}
+                </option>
+              ))}
+      
+              <option value={OTHER_OPTION}>
+                {OTHER_OPTION}
+              </option>
+            </select>
+      
+            {(rawValue === OTHER_OPTION ||
+              customValue !== "") && (
+              <input
+                type="text"
+                placeholder={`${field.label} را وارد کنید`}
+                value={customValue}
+                onChange={(e) => {
+                  setCustomSpecs((prev) => ({
+                    ...prev,
+                    [field.key]: e.target.value,
+                  }));
+                }}
+                onBlur={() => {
+                  updateField(
+                    field.key,
+                    customValue.trim() as never
+                  );
+                }}
+                className="admin-products-form-input custom-input"
+              />
+            )}
+          </div>
+        );
+      }
     return (
       <div className="admin-products-form-group" key={field.key}>
         <label className="admin-products-form-label">
@@ -348,37 +417,68 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
             </div>
           )}
           <div className="admin-products-form-grid">
-            <div className="admin-products-form-group">
-              <label className="admin-products-form-label">مدل</label>
-              <select
-                value={newProduct.model}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const updatedImage = (!newProduct.image && value && value !== 'سایر')
-                    ? getDefaultImage(value)
-                    : newProduct.image;
-                  setNewProduct((prev) => ({ ...prev, model: value, image: updatedImage }));
-                }}
-                className="admin-products-form-input"
-              >
-                <option value="">—</option>
-                {MODELS.map((model) => (
-                  <option key={model} value={model}>{model}</option>
-                ))}
-              </select>
-              {newProduct.model === 'سایر' && (
-                <input
-                  type="text"
-                  placeholder="نام مدل"
-                  value={customModel}
-                  onChange={(e) => {
-                    setCustomModel(e.target.value);
-                    updateField("model", e.target.value);
-                  }}
-                  className="admin-products-form-input custom-input"
-                />
-              )}
-            </div>
+          <div className="admin-products-form-group">
+  <label className="admin-products-form-label">مدل</label>
+
+  <select
+    value={
+      MODELS.includes(newProduct.model)
+        ? newProduct.model
+        : OTHER_OPTION
+    }
+    onChange={(e) => {
+      const value = e.target.value;
+
+      if (value === OTHER_OPTION) {
+        setCustomModel("");
+        updateField("model", OTHER_OPTION);
+        return;
+      }
+
+      const updatedImage =
+        (!newProduct.image && value)
+          ? getDefaultImage(value)
+          : newProduct.image;
+
+      setCustomModel("");
+
+      setNewProduct((prev) => ({
+        ...prev,
+        model: value,
+        image: updatedImage,
+      }));
+    }}
+    className="admin-products-form-input"
+  >
+    <option value="">—</option>
+
+    {MODELS.map((model) => (
+      <option key={model} value={model}>
+        {model}
+      </option>
+    ))}
+
+    <option value={OTHER_OPTION}>
+      {OTHER_OPTION}
+    </option>
+  </select>
+
+  {(newProduct.model === OTHER_OPTION ||
+    customModel !== "") && (
+    <input
+      type="text"
+      placeholder="نام مدل"
+      value={customModel}
+      onChange={(e) => {
+        setCustomModel(e.target.value);
+      }}
+      onBlur={() => {
+        updateField("model", customModel.trim());
+      }}
+      className="admin-products-form-input custom-input"
+    />
+  )}
+</div>
             {PRODUCT_SPEC_FIELDS.map(renderSpecField)}
             <div className="admin-products-form-group">
               <label className="admin-products-form-label">قیمت (تومان)</label>
@@ -480,7 +580,7 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
           className="admin-products-table-scroll"
           style={{ 
             overflowY: 'auto', 
-            maxHeight: 'calc(100vh - 480px)', 
+            maxHeight: 'calc(100vh - 150px)', 
             border: '1px solid #ddd',
             borderRadius: '8px',
             background: '#fff'

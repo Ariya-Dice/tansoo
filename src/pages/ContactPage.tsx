@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { STORE_NAME } from '../constants';
 import './ContactPage.css';
 
-const PHONE = '09368013251';
-const PHONE_DISPLAY = '۰۹۳۶۸۰۱۳۲۵۱';
+const PHONE = '0902';
+const PHONE_DISPLAY = '0902';
 const ADDRESS = 'اردبیل - شهرک مخابرات - طلاییه - طلاییه شرقی ۴';
-const MANAGER = 'مهندس بهرامی';
+const MANAGER = 'بردیا عبداللهیان';
 const MAP_LAT = 38.215555;
 const MAP_LNG = 48.311236;
 const MAP_EMBED_URL = `https://maps.google.com/maps?q=${MAP_LAT},${MAP_LNG}&hl=fa&z=17&output=embed`;
@@ -19,7 +19,6 @@ const ContactPage: React.FC = () => {
         <header className="contact-header">
           <h1 className="contact-title">ارتباط با ما</h1>
           <p className="contact-subtitle">
-            برای مشاوره، سفارش یا بازدید از کارگاه با {STORE_NAME} در تماس باشید.
           </p>
         </header>
 
@@ -40,7 +39,7 @@ const ContactPage: React.FC = () => {
             </div>
 
             <div className="contact-item">
-              <span className="contact-item-label">آدرس کارگاه</span>
+              <span className="contact-item-label">آدرس فروشگاه</span>
               <p className="contact-item-value contact-address">{ADDRESS}</p>
             </div>
 
@@ -60,11 +59,11 @@ const ContactPage: React.FC = () => {
           </section>
 
           <section className="contact-card contact-card--map">
-            <h2 className="contact-card-title">موقعیت کارگاه</h2>
+            <h2 className="contact-card-title">موقعیت فروشگاه</h2>
             <p className="contact-map-hint">برای مشاهده دقیق‌تر، روی نقشه زوم کنید یا لینک مسیریابی را بزنید.</p>
             <div className="contact-map-wrap">
               <iframe
-                title="موقعیت کارگاه تانسو روی گوگل مپ"
+                title="موقعیت  آر بی روی گوگل مپ"
                 src={MAP_EMBED_URL}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

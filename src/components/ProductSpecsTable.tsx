@@ -8,11 +8,32 @@ interface ProductSpecsTableProps {
 }
 
 const ProductSpecsTable: React.FC<ProductSpecsTableProps> = ({ product }) => {
-  const rows = getProductSpecRows(product);
+  const rows = getProductSpecRows(product).filter(({ value }) => {
+    if (value === null || value === undefined) {
+      return false;
+    }
+
+    const text = String(value).trim();
+
+    return (
+      text !== '' &&
+      text !== '-' &&
+      text !== '—' &&
+      text.toLowerCase() !== 'null' &&
+      text.toLowerCase() !== 'undefined'
+    );
+  });
+
+  if (rows.length === 0) {
+    return null;
+  }
 
   return (
     <div className="product-specs-table-wrap">
-      <h3 className="product-specs-table-title">جدول مشخصات فنی</h3>
+      <h3 className="product-specs-table-title">
+        جدول مشخصات فنی
+      </h3>
+
       <div className="product-specs-table-scroll">
         <table className="product-specs-table">
           <thead>
@@ -21,6 +42,7 @@ const ProductSpecsTable: React.FC<ProductSpecsTableProps> = ({ product }) => {
               <th scope="col">مقدار</th>
             </tr>
           </thead>
+
           <tbody>
             {rows.map(({ label, value }) => (
               <tr key={label}>
