@@ -116,6 +116,13 @@
   border-color: var(--aria-warning-border);
 }
 
+.product-brand {
+  margin: 4px 0 8px;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
 .product-badge-economical {
   background: var(--aria-primary-light);
   color: var(--aria-primary);

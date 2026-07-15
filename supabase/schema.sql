@@ -23,6 +23,8 @@ create table if not exists public.products (
   hose_material text,
   tags text[] not null default '{}',
   price bigint not null default 0,
+  brand text not null default '',
+  stock bigint not null default 0,
   description text not null default '',
   image text not null default '',
   created_at timestamptz not null default now()
@@ -42,6 +44,8 @@ alter table public.products add column if not exists postal_hose text;
 alter table public.products add column if not exists escutcheon text;
 alter table public.products add column if not exists spout_material text;
 alter table public.products add column if not exists plator_material text;
+alter table public.products add column if not exists brand text not null default '';
+alter table public.products add column if not exists stock bigint not null default 0;
 
 update public.products
 set goods_type = type

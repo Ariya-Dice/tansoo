@@ -253,15 +253,10 @@
 }
 
 .admin-products-list-panel {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
   background: var(--aria-surface);
   border: 1px solid var(--aria-border);
   border-radius: var(--aria-radius-2xl);
   box-shadow: var(--aria-shadow-sm);
-  overflow: hidden;
 }
 
 .admin-products-table-header {
@@ -309,9 +304,51 @@
 }
 
 .admin-products-table-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+  overflow-x: auto;
+}
+
+.admin-products-stock-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.admin-products-stock-value {
+  min-width: 2rem;
+  text-align: center;
+  font-weight: 800;
+}
+
+.admin-products-stock-value--low {
+  color: #c2410c;
+}
+
+.admin-products-stock-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--aria-border);
+  border-radius: 6px;
+  background: var(--aria-canvas);
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admin-products-stock-btn:hover {
+  background: var(--aria-primary-light);
+}
+
+.admin-products-product-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.admin-products-product-brand {
+  font-size: 0.625rem;
+  color: var(--aria-text-secondary);
+  font-weight: 600;
 }
 
 .admin-products-table {
@@ -445,11 +482,4 @@
   .admin-products-tags-group {
     grid-column: span 1;
   }
-}
-
-.admin-products-table-scroll {
-  flex: 1;
-  min-height: 300px;
-  overflow-y: auto;
-  overflow-x: auto;
 }

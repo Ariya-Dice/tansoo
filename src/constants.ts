@@ -23,6 +23,16 @@ export { GOODS_TYPES as TYPES, SPEC_COLORS as COLORS } from './productSpecs';
 // تگ‌های محصول
 export const TAGS = ['اقتصادی', 'پرفروش', 'جدید'];
 
+/** برندهای محصول */
+export const BRANDS = [
+  'تانسو',
+  'قهرمان',
+  'سایر',
+] as const;
+
+/** آستانه هشدار موجودی کم در پنل ادمین */
+export const LOW_STOCK_THRESHOLD = 2;
+
 // تصاویر پیش‌فرض برای هر مدل
 export const DEFAULT_MODEL_IMAGES: { [key: string]: string } = {
   'اردکی': '/ordak.jpg',
