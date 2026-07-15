@@ -71,6 +71,11 @@ export const PRODUCT_SPEC_FIELDS: ProductSpecFieldDef[] = [
   { key: 'platorMaterial', label: 'جنس پلاتور', type: 'select', options: PLATOR_MATERIALS },
 ];
 
+export function formatProductTitle(product: Pick<Product, 'model' | 'goodsType' | 'type'>): string {
+  const goodsType = getProductGoodsType(product as Product);
+  return `${goodsType} مدل ${product.model}`.trim();
+}
+
 export function emptyProduct(): Omit<Product, 'id'> {
   return {
     model: '',
@@ -93,6 +98,8 @@ export function emptyProduct(): Omit<Product, 'id'> {
     platorMaterial: '',
     tags: [],
     price: 0,
+    brand: '',
+    stock: 0,
     description: '',
     image: '',
   };

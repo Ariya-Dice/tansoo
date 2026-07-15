@@ -4,6 +4,7 @@ import { initialImages } from "../utils/images";
 import { ADMIN_PASSWORD } from "../constants";
 import { productsApiHeaders } from "../utils/api";
 import { getApiErrorHint, readApiError } from "../utils/apiError";
+import { formatProductTitle, getProductGoodsType } from "../productSpecs";
 
 const PRODUCTS_API = "/api/products";
 
@@ -30,10 +31,12 @@ interface AppContextType {
   addProduct: (product: Omit<Product, "id">) => Promise<Product | void>;
   updateProduct: (id: number, updates: Partial<Product>) => Promise<Product | void>;
   deleteProduct: (id: number) => Promise<void>;
-  addToCart: (product: Product, quantity: number) => void;
+  addToCart: (product: Product, quantity: number) => boolean;
   updateQuantity: (productId: number, quantity: number) => void;
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
+  fulfillOrder: (items: { productId: number; quantity: number }[]) => Promise<boolean>;
+  adjustProductStock: (id: number, payload: { stock?: number; delta?: number }) => Promise<Product | void>;
   showToast: (msg: string) => void;
   getImage: (filename: string) => string;
 
@@ -96,12 +99,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           ...(product.isBestSeller ? ['پرفروش'] : []),
         ],
         price: product.price || 0,
+        brand: product.brand || '',
+        stock: Number(product.stock ?? 0),
         description: product.description || '',
         image: product.images ? Object.values(product.images)[0] as string : '/loading.gif',
       };
     }
     const goodsType = product.goodsType || product.type || '';
-    return { ...product, goodsType, type: goodsType };
+    return {
+      ...product,
+      goodsType,
+      type: goodsType,
+      brand: product.brand ?? '',
+      stock: Number(product.stock ?? 0),
+    };
   };
 
   const fetchProducts = useCallback(async () => {
@@ -160,7 +171,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       
       const newProduct = await res.json();
       setProducts((prev) => [...prev, newProduct]);
-      showToast(`محصول "${product.model} ${product.type}" اضافه شد ✅`);
+      showToast(`محصول "${formatProductTitle(product)}" اضافه شد ✅`);
       return newProduct;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "خطا در افزودن محصول";
@@ -233,21 +244,98 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const fulfillOrder = async (items: { productId: number; quantity: number }[]) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/orders/fulfill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body.message || body.error || 'خطا در ثبت سفارش');
+      }
+
+      if (Array.isArray(body.products)) {
+        setProducts((prev) => {
+          const byId = new Map(body.products.map((p: Product) => [p.id, p]));
+          return prev.map((p) => (byId.has(p.id) ? { ...p, ...byId.get(p.id)! } : p));
+        });
+      } else {
+        await fetchProducts();
+      }
+
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'خطا در ثبت سفارش';
+      setError(errorMessage);
+      showToast(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const adjustProductStock = async (
+    id: number,
+    payload: { stock?: number; delta?: number },
+  ) => {
+    setError(null);
+    try {
+      const res = await fetch(`/api/products/stock?id=${id}`, {
+        method: 'PATCH',
+        headers: productsApiHeaders(true),
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body.message || body.error || 'خطا در به‌روزرسانی موجودی');
+      }
+
+      setProducts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...body } : p)),
+      );
+      showToast('موجودی به‌روز شد ✅');
+      return body as Product;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'خطا در به‌روزرسانی موجودی';
+      showToast(errorMessage);
+      throw err;
+    }
+  };
+
   // 🛒 ====== CART HANDLERS ======
-  const addToCart = (product: Product, quantity: number) => {
+  const addToCart = (product: Product, quantity: number): boolean => {
+    const available = Number(product.stock ?? 0);
+    if (available <= 0) {
+      showToast('این محصول موجود نیست');
+      return false;
+    }
+
+    const existingQty = cart.find((i) => i.product.id === product.id)?.quantity ?? 0;
+    if (existingQty + quantity > available) {
+      showToast(`حداکثر ${available.toLocaleString('fa-IR')} عدد از این محصول موجود است`);
+      return false;
+    }
+
     setCart((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
         return prev.map((i) =>
           i.product.id === product.id
-            ? { ...i, quantity: i.quantity + quantity }
-            : i
+            ? { ...i, quantity: i.quantity + quantity, product }
+            : i,
         );
-      } else {
-        return [...prev, { product, quantity }];
       }
+      return [...prev, { product, quantity }];
     });
-    showToast(`${product.model} ${product.type} (${product.color}) به سبد خرید افزوده شد`);
+
+    const label = formatProductTitle(product);
+    const brandLabel = product.brand ? ` — برند: ${product.brand}` : '';
+    showToast(`${label}${brandLabel} (${product.color}) به سبد خرید افزوده شد`);
+    return true;
   };
 
   const updateQuantity = (productId: number, quantity: number) => {
@@ -255,10 +343,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       removeFromCart(productId);
       return;
     }
+
+    const product = products.find((p) => p.id === productId);
+    const available = Number(product?.stock ?? 0);
+    if (product && quantity > available) {
+      showToast(`حداکثر ${available.toLocaleString('fa-IR')} عدد موجود است`);
+      return;
+    }
+
     setCart((prev) =>
       prev.map((i) =>
-        i.product.id === productId ? { ...i, quantity } : i
-      )
+        i.product.id === productId
+          ? { ...i, quantity, product: product ?? i.product }
+          : i,
+      ),
     );
   };
 
@@ -320,6 +418,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateQuantity,
         removeFromCart,
         clearCart,
+        fulfillOrder,
+        adjustProductStock,
         showToast,
         getImage,
         isAdmin,

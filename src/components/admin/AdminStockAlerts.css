@@ -1,0 +1,43 @@
+.admin-stock-alerts {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--aria-radius-2xl);
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  flex-shrink: 0;
+}
+
+.admin-stock-alerts-title {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.admin-stock-alerts-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.admin-stock-alerts-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: space-between;
+}
+
+.admin-stock-alerts-brand {
+  color: #c2410c;
+}
+
+.admin-stock-alerts-list strong {
+  font-weight: 800;
+  white-space: nowrap;
+}

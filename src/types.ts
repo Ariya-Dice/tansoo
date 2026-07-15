@@ -24,6 +24,10 @@ export interface Product {
   hoseMaterial?: string;
   tags: string[];
   price: number;
+  /** برند محصول — مثلاً تانسو، قهرمان */
+  brand: string;
+  /** موجودی قابل فروش */
+  stock: number;
   description: string;
   image: string;
 }

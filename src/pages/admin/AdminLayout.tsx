@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { STORE_NAME } from '../../constants';
+import AdminStockAlerts from '../../components/admin/AdminStockAlerts';
 import './AdminLayout.css';
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -36,7 +37,10 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </button>
         </header>
 
-        <main className="admin-content">{children}</main>
+        <main className="admin-content">
+          <AdminStockAlerts />
+          {children}
+        </main>
       </div>
     </div>
   );

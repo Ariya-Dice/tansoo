@@ -12,10 +12,10 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { getImage } = useAppContext();
-  // استفاده از تصویر محصول یا تصویر پیش‌فرض
+
   const goodsType = getProductGoodsType(product);
-  const imageSrc = product.image 
-    ? getImage(product.image) 
+  const imageSrc = product.image
+    ? getImage(product.image)
     : getDefaultImage(product.model);
 
   return (
@@ -24,30 +24,61 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="product-image-container">
           <img
             src={imageSrc}
-            alt={`${product.model} ${goodsType}`}
+            alt={`${goodsType} مدل ${product.model}`}
             className="product-image"
             onError={(e) => {
-              // Fallback به تصویر پیش‌فرض در صورت خطا
               (e.target as HTMLImageElement).src = getDefaultImage(product.model);
             }}
           />
         </div>
+
         <div className="product-content">
-          <h3 className="product-title">{product.model} {goodsType}</h3>
+          <h3 className="product-title">
+            {goodsType} مدل {product.model}
+          </h3>
+
+          {product.brand && (
+            <p className="product-brand">
+              برند: {product.brand}
+            </p>
+          )}
+
           <p className="product-meta">
             <span className="product-color">رنگ: {product.color}</span>
             <span className="product-weight">وزن: {product.bodyWeight}</span>
           </p>
-          <p className="product-price">{product.price?.toLocaleString('fa-IR')} تومان</p>
+
+          <p className="product-price">
+            {product.price?.toLocaleString('fa-IR')} تومان
+          </p>
+
           <div className="product-tags">
-            {product.tags.includes('جدید') && <span className="product-badge product-badge-new">جدید</span>}
-            {product.tags.includes('پرفروش') && <span className="product-badge product-badge-bestseller">پرفروش</span>}
-            {product.tags.includes('اقتصادی') && <span className="product-badge product-badge-economical">اقتصادی</span>}
+            {product.tags.includes('جدید') && (
+              <span className="product-badge product-badge-new">
+                جدید
+              </span>
+            )}
+
+            {product.tags.includes('پرفروش') && (
+              <span className="product-badge product-badge-bestseller">
+                پرفروش
+              </span>
+            )}
+
+            {product.tags.includes('اقتصادی') && (
+              <span className="product-badge product-badge-economical">
+                اقتصادی
+              </span>
+            )}
           </div>
         </div>
       </Link>
+
       <div className="product-overlay">
-        <Link to={`/product/${product.id}`} className="product-button">
+        <Link
+          to={`/product/${product.id}`}
+          className="product-button"
+        >
           مشاهده جزئیات
         </Link>
       </div>

@@ -18,6 +18,12 @@ body {
   min-height: 100vh;
 }
 
+.app {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+}
+
 .main-content {
   position: relative;
   z-index: 1;
