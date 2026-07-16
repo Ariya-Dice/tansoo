@@ -5,6 +5,7 @@ import { useAppContext } from "../context/AppContext";
 import { Product } from "../types";
 import { getDefaultImage } from "../constants";
 import { getProductGoodsType } from "../productSpecs";
+import { getAvailabilityLabel, isProductAvailable } from "../utils/availability";
 import ProductCard from "../components/ProductCard";
 import ProductSpecsTable from "../components/ProductSpecsTable";
 import "./ProductDetailPage.css";
@@ -42,6 +43,8 @@ const ProductDetailPage: React.FC = () => {
   };
 
   const goodsType = getProductGoodsType(product);
+  const availability = getAvailabilityLabel(product);
+  const available = isProductAvailable(product);
   const mainImageSrc = product.image
     ? getImage(product.image)
     : getDefaultImage(product.model);
@@ -62,11 +65,21 @@ const ProductDetailPage: React.FC = () => {
 
         <div className="product-info">
           <h1 className="product-name">
-            {product.model} {goodsType}
+            {goodsType} مدل {product.model}
           </h1>
+          {product.brand && (
+            <p className="product-brand">برند: {product.brand}</p>
+          )}
           <p className="product-price">
             {product.price.toLocaleString("fa-IR")} تومان
           </p>
+          <span
+            className={`product-availability-badge product-availability-badge--${
+              available ? "in" : "out"
+            }`}
+          >
+            {availability}
+          </span>
           {product.description && (
             <p className="product-description">{product.description}</p>
           )}
@@ -81,12 +94,29 @@ const ProductDetailPage: React.FC = () => {
 
           <div className="product-actions">
             <div className="quantity-box">
-              <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))}>-</button>
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={!available}
+              >
+                -
+              </button>
               <span>{quantity}</span>
-              <button type="button" onClick={() => setQuantity((q) => q + 1)}>+</button>
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => q + 1)}
+                disabled={!available || quantity >= product.stock}
+              >
+                +
+              </button>
             </div>
-            <button type="button" className="add-to-cart" onClick={handleAddToCart}>
-              افزودن به سبد خرید
+            <button
+              type="button"
+              className="add-to-cart"
+              onClick={handleAddToCart}
+              disabled={!available}
+            >
+              {available ? "افزودن به سبد خرید" : "ناموجود"}
             </button>
           </div>
         </div>

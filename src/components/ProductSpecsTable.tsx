@@ -1,6 +1,7 @@
 import React from 'react';
 import { Product } from '../types';
 import { getProductSpecRows } from '../productSpecs';
+import { getAvailabilityLabel } from '../utils/availability';
 import './ProductSpecsTable.css';
 
 interface ProductSpecsTableProps {
@@ -8,7 +9,13 @@ interface ProductSpecsTableProps {
 }
 
 const ProductSpecsTable: React.FC<ProductSpecsTableProps> = ({ product }) => {
-  const rows = getProductSpecRows(product).filter(({ value }) => {
+  const extraRows: { label: string; value: string }[] = [];
+  if (product.brand?.trim()) {
+    extraRows.push({ label: 'برند', value: product.brand.trim() });
+  }
+  extraRows.push({ label: 'وضعیت', value: getAvailabilityLabel(product) });
+
+  const rows = [...extraRows, ...getProductSpecRows(product)].filter(({ value }) => {
     if (value === null || value === undefined) {
       return false;
     }

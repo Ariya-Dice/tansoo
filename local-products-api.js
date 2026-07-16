@@ -11,6 +11,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  adjustProductStock,
   getStorageMode,
   verifyDatabaseConnection,
   bulkAdjustPrices,
@@ -174,6 +175,22 @@ app.post("/api/products/bulk-price", async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch("/api/products/stock", async (req, res) => {
+  if (!isProductsWriteAuthorized(req)) return sendUnauthorized(res);
+  try {
+    const id = parseInt(req.query.id, 10);
+    if (!id) return res.status(400).json({ error: "Product ID is required" });
+    const product = await adjustProductStock(id, req.body ?? {});
+    res.setHeader("X-Storage-Mode", getStorageMode());
+    res.json(product);
+  } catch (err) {
+    const status =
+      err.message === "Product not found" ? 404 :
+      err.message?.includes("stock") || err.message?.includes("delta") ? 400 : 500;
+    res.status(status).json({ error: err.message });
   }
 });
 
