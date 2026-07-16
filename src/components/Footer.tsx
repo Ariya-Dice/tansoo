@@ -10,18 +10,51 @@ const Footer: React.FC = () => {
         <div className="footer-content">
           <div className="footer-info">
             <h3 className="footer-title">{STORE_NAME}</h3>
+
             <p className="footer-description">فروشگاه آر بی</p>
+
             <p className="footer-description">
-              <Link to="/about" className="footer-link">درباره ما</Link>
+              <Link to="/about" className="footer-link">
+                درباره ما
+              </Link>
               {' · '}
-              <Link to="/contact" className="footer-link">ارتباط با ما</Link>
+              <Link to="/contact" className="footer-link">
+                ارتباط با ما
+              </Link>
               {' · '}
-              <a href="tel:0902" className="footer-link">۰۹۳۶</a>
+              <a href="tel:0936" className="footer-link">
+                ۰۹۳۶
+              </a>
             </p>
           </div>
+
+          <div className="footer-enamad">
+            <a
+              referrerPolicy="origin"
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://trustseal.enamad.ir/?id=759060&Code=kZTiAGVwyLU8KgsOi6cRNBOjLIaAWi0g"
+            >
+              <img
+                referrerPolicy="origin"
+                src="https://trustseal.enamad.ir/logo.aspx?id=759060&Code=kZTiAGVwyLU8KgsOi6cRNBOjLIaAWi0g"
+                alt="نماد اعتماد الکترونیکی"
+                className="enamad-logo"
+                data-code="kZTiAGVwyLU8KgsOi6cRNBOjLIaAWi0g"
+              />
+            </a>
+          </div>
+
           <div className="footer-bottom">
-            <p>&copy; {new Date().getFullYear()} فروشگاه آر بی. تمامی حقوق محفوظ است.</p>
-            <p><Link to="/admin" className="footer-link">پنل مدیریت</Link></p>
+            <p>
+              &copy; {new Date().getFullYear()} فروشگاه آر بی. تمامی حقوق محفوظ است.
+            </p>
+
+            <p>
+              <Link to="/admin" className="footer-link">
+                پنل مدیریت
+              </Link>
+            </p>
           </div>
         </div>
       </div>
