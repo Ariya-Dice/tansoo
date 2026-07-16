@@ -324,6 +324,40 @@
   color: #c2410c;
 }
 
+.admin-products-availability-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--aria-transition);
+  margin-left: 0.25rem;
+}
+
+.admin-products-availability-badge--in {
+  background: var(--aria-success-bg);
+  color: var(--aria-success-text);
+  border-color: var(--aria-success-border);
+}
+
+.admin-products-availability-badge--out {
+  background: var(--aria-canvas);
+  color: var(--aria-text-muted);
+  border-color: var(--aria-border);
+}
+
+.admin-products-availability-badge:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.admin-products-availability-badge:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .admin-products-stock-btn {
   width: 1.5rem;
   height: 1.5rem;

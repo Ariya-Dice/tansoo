@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import { Product } from "../../types";
-import { MODELS, TAGS, getDefaultImage } from "../../constants";
+import { MODELS, TAGS, BRANDS, getDefaultImage } from "../../constants";
 import {
   PRODUCT_SPEC_FIELDS,
   emptyProduct,
@@ -12,6 +12,12 @@ import {
 } from "../../productSpecs";
 import { productsApiHeaders } from "../../utils/api";
 import { formatPriceInput, parsePriceInput } from "../../utils/priceFormat";
+import {
+  getAvailabilityLabel,
+  isProductAvailable,
+  stockFromAvailability,
+  type AvailabilityLabel,
+} from "../../utils/availability";
 import "./AdminProductsPage.css";
 
 const AdminProductsPage: React.FC = () => {
@@ -20,6 +26,7 @@ const AdminProductsPage: React.FC = () => {
     addProduct,
     updateProduct,
     deleteProduct,
+    adjustProductStock,
     getImage,
     showToast,
     loading,
@@ -37,7 +44,11 @@ const AdminProductsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'model' | 'price' | 'tags'>('model');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [customModel, setCustomModel] = useState("");
+  const [customBrand, setCustomBrand] = useState("");
   const [priceDisplay, setPriceDisplay] = useState("");
+  const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityLabel>("موجود");
+  const [stockCount, setStockCount] = useState("1");
+  const [togglingAvailabilityId, setTogglingAvailabilityId] = useState<number | null>(null);
 
   const duplicateWarning = useMemo(() => {
     const model = newProduct.model.trim();
@@ -57,8 +68,11 @@ const AdminProductsPage: React.FC = () => {
     setNewProduct(emptyProduct());
     setEditId(null);
     setCustomModel("");
+    setCustomBrand("");
     setCustomSpecs({});
     setPriceDisplay("");
+    setAvailabilityStatus("موجود");
+    setStockCount("1");
   };
 
   const handleBulkPriceAdjust = async () => {
@@ -136,6 +150,17 @@ const AdminProductsPage: React.FC = () => {
   setSaving(true);
 
   try {
+    const brand = newProduct.brand.trim();
+    if (!brand) {
+      showToast("برند محصول را انتخاب یا وارد کنید");
+      setSaving(false);
+      return;
+    }
+
+    const stock = availabilityStatus === "ناموجود"
+      ? 0
+      : Math.max(1, parseInt(stockCount, 10) || 1);
+
     const confirmed = window.confirm(
       `تأیید ${editId ? "ویرایش" : "ثبت"} محصول
 
@@ -144,6 +169,12 @@ ${newProduct.model}
 
 نوع:
 ${getProductGoodsType(newProduct as Product)}
+
+برند:
+${brand}
+
+وضعیت:
+${availabilityStatus}${availabilityStatus === "موجود" ? ` (${stock.toLocaleString("fa-IR")} عدد)` : ""}
 
 قیمت:
 ${newProduct.price.toLocaleString("fa-IR")} تومان
@@ -158,6 +189,8 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
 
     const productToSave = {
       ...newProduct,
+      brand,
+      stock,
       type: newProduct.goodsType,
       image:
         newProduct.image ||
@@ -205,6 +238,14 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
     setCustomModel(
       MODELS.includes(p.model) ? "" : p.model
     );
+
+    setCustomBrand(
+      BRANDS.includes(p.brand as typeof BRANDS[number]) ? "" : p.brand
+    );
+
+    const available = isProductAvailable(p);
+    setAvailabilityStatus(getAvailabilityLabel(p));
+    setStockCount(available ? String(Math.max(1, p.stock)) : "1");
   
     // Custom select fields
     const specs: Record<string, string> = {};
@@ -237,6 +278,37 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
         ? prev.tags.filter((t) => t !== tag)
         : [...prev.tags, tag],
     }));
+  };
+
+  const handleAvailabilityChange = (status: AvailabilityLabel) => {
+    setAvailabilityStatus(status);
+    if (status === "ناموجود") {
+      updateField("stock", 0);
+      return;
+    }
+    const nextStock = stockFromAvailability(status, Number(stockCount) || newProduct.stock);
+    setStockCount(String(nextStock));
+    updateField("stock", nextStock);
+  };
+
+  const handleStockCountChange = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    setStockCount(digits);
+    if (availabilityStatus === "موجود" && digits) {
+      updateField("stock", Math.max(1, parseInt(digits, 10) || 1));
+    }
+  };
+
+  const handleToggleTableAvailability = async (product: Product) => {
+    const nextStock = isProductAvailable(product) ? 0 : Math.max(1, product.stock);
+    setTogglingAvailabilityId(product.id);
+    try {
+      await adjustProductStock(product.id, { stock: nextStock });
+    } catch {
+      // toast handled in context
+    } finally {
+      setTogglingAvailabilityId(null);
+    }
   };
 
   const sortedProducts = [...products].sort((a, b) => {
@@ -479,6 +551,49 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
     />
   )}
 </div>
+            <div className="admin-products-form-group">
+              <label className="admin-products-form-label">برند</label>
+              <select
+                value={
+                  BRANDS.includes(newProduct.brand as typeof BRANDS[number])
+                    ? newProduct.brand
+                    : newProduct.brand
+                    ? OTHER_OPTION
+                    : ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === OTHER_OPTION) {
+                    setCustomBrand("");
+                    updateField("brand", OTHER_OPTION);
+                    return;
+                  }
+                  setCustomBrand("");
+                  updateField("brand", value);
+                }}
+                className="admin-products-form-input"
+                required
+              >
+                <option value="">—</option>
+                {BRANDS.map((brand) => (
+                  <option key={brand} value={brand}>
+                    {brand}
+                  </option>
+                ))}
+                <option value={OTHER_OPTION}>{OTHER_OPTION}</option>
+              </select>
+              {(newProduct.brand === OTHER_OPTION || customBrand !== "") && (
+                <input
+                  type="text"
+                  placeholder="نام برند"
+                  value={customBrand}
+                  onChange={(e) => setCustomBrand(e.target.value)}
+                  onBlur={() => updateField("brand", customBrand.trim())}
+                  className="admin-products-form-input custom-input"
+                  maxLength={100}
+                />
+              )}
+            </div>
             {PRODUCT_SPEC_FIELDS.map(renderSpecField)}
             <div className="admin-products-form-group">
               <label className="admin-products-form-label">قیمت (تومان)</label>
@@ -496,6 +611,32 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
                 placeholder="۱٬۲۵۰٬۰۰۰"
               />
             </div>
+            <div className="admin-products-form-group">
+              <label className="admin-products-form-label">وضعیت موجودی</label>
+              <select
+                value={availabilityStatus}
+                onChange={(e) => handleAvailabilityChange(e.target.value as AvailabilityLabel)}
+                className="admin-products-form-input"
+              >
+                <option value="موجود">موجود</option>
+                <option value="ناموجود">ناموجود</option>
+              </select>
+            </div>
+            {availabilityStatus === "موجود" && (
+              <div className="admin-products-form-group">
+                <label className="admin-products-form-label">تعداد موجودی</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  dir="ltr"
+                  value={stockCount}
+                  onChange={(e) => handleStockCountChange(e.target.value)}
+                  className="admin-products-form-input"
+                  placeholder="۱"
+                  min={1}
+                />
+              </div>
+            )}
             <div className="admin-products-form-group admin-products-tags-group">
               <label className="admin-products-form-label">تگ‌ها</label>
               <div className="admin-products-tags">
@@ -601,8 +742,10 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
                   <th>تصویر</th>
                   <th>مدل</th>
                   <th>نوع کالا</th>
+                  <th>برند</th>
                   <th>رنگ</th>
                   <th>قیمت</th>
+                  <th>موجودی</th>
                   <th>تگ‌ها</th>
                   <th>عملیات</th>
                 </tr>
@@ -613,6 +756,7 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
                     ? getImage(product.image)
                     : getDefaultImage(product.model);
                   const goodsType = getProductGoodsType(product);
+                  const availability = getAvailabilityLabel(product);
                   return (
                     <tr key={product.id}>
                       <td>
@@ -622,10 +766,38 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
                           className="admin-products-table-image"
                         />
                       </td>
-                      <td>{product.model}</td>
+                      <td>
+                        <div className="admin-products-product-name">
+                          <span>{product.model}</span>
+                          {product.brand && (
+                            <span className="admin-products-product-brand">
+                              برند: {product.brand}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td>{goodsType}</td>
+                      <td>{product.brand || "—"}</td>
                       <td>{product.color}</td>
                       <td>{product.price.toLocaleString('fa-IR')} تومان</td>
+                      <td>
+                        <button
+                          type="button"
+                          className={`admin-products-availability-badge admin-products-availability-badge--${
+                            availability === "موجود" ? "in" : "out"
+                          }`}
+                          onClick={() => handleToggleTableAvailability(product)}
+                          disabled={togglingAvailabilityId === product.id}
+                          title="کلیک برای تغییر وضعیت"
+                        >
+                          {togglingAvailabilityId === product.id ? "..." : availability}
+                        </button>
+                        {availability === "موجود" && (
+                          <span className="admin-products-stock-value">
+                            {product.stock.toLocaleString("fa-IR")}
+                          </span>
+                        )}
+                      </td>
                       <td>
                         <div className="admin-products-table-tags">
                           {product.tags.map((tag) => (

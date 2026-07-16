@@ -129,6 +129,18 @@
   border-color: #BFDBFE;
 }
 
+.product-badge-availability--in {
+  background: var(--aria-success-bg);
+  color: var(--aria-success-text);
+  border-color: var(--aria-success-border);
+}
+
+.product-badge-availability--out {
+  background: var(--aria-canvas);
+  color: var(--aria-text-muted);
+  border-color: var(--aria-border);
+}
+
 .product-overlay {
   padding: 0 1rem 1rem;
 }

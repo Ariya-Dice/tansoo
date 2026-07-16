@@ -4,6 +4,7 @@ import { Product } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { getDefaultImage } from '../constants';
 import { getProductGoodsType } from '../productSpecs';
+import { getAvailabilityLabel, isProductAvailable } from '../utils/availability';
 import './ProductCard.css';
 
 interface ProductCardProps {
@@ -14,6 +15,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { getImage } = useAppContext();
 
   const goodsType = getProductGoodsType(product);
+  const availability = getAvailabilityLabel(product);
+  const available = isProductAvailable(product);
   const imageSrc = product.image
     ? getImage(product.image)
     : getDefaultImage(product.model);
@@ -53,6 +56,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </p>
 
           <div className="product-tags">
+            <span
+              className={`product-badge product-badge-availability product-badge-availability--${
+                available ? 'in' : 'out'
+              }`}
+            >
+              {availability}
+            </span>
+
             {product.tags.includes('جدید') && (
               <span className="product-badge product-badge-new">
                 جدید
