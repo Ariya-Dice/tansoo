@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
             </span>
 
             <span className="banner-title-blue">
-با خرید از فروشگاه آر بی            </span>
+با خرید از فروشگاه آربی            </span>
 
           </h1>
 

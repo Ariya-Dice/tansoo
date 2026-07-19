@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { STORE_NAME } from '../constants';
 import './ContactPage.css';
 
-const PHONE = '0902';
-const PHONE_DISPLAY = '0902';
+const PHONE = '09368013251';
+const PHONE_DISPLAY = '09368013251';
 const ADDRESS = 'اردبیل - شهرک مخابرات - طلاییه - طلاییه شرقی ۴';
 const MANAGER = 'بردیا عبداللهیان';
 const MAP_LAT = 38.215555;
@@ -63,7 +63,7 @@ const ContactPage: React.FC = () => {
             <p className="contact-map-hint">برای مشاهده دقیق‌تر، روی نقشه زوم کنید یا لینک مسیریابی را بزنید.</p>
             <div className="contact-map-wrap">
               <iframe
-                title="موقعیت  آر بی روی گوگل مپ"
+                title="موقعیت  آربی روی گوگل مپ"
                 src={MAP_EMBED_URL}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
