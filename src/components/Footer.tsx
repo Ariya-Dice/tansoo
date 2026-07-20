@@ -17,11 +17,11 @@ const Footer: React.FC = () => {
               <Link to="/about" className="footer-link">
                 درباره ما
               </Link>
-              {' -- '}
+              {'     '}
               <Link to="/contact" className="footer-link">
                 ارتباط با ما
               </Link>
-              {' -- '}
+              {'     '}
               <a href="tel:0936" className="footer-link">
               </a>
             </p>
