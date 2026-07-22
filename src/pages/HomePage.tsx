@@ -54,7 +54,7 @@ const HomePage: React.FC = () => {
         <div className="banner-container">
 
           <div className="banner-badge">
-            <span className="badge-icon">⌂</span>
+            <span className="badge-icon">✨</span>
             <span>بدون واسطه از تولیدکننده خرید کنید</span>
           </div>
 
@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
             </span>
 
             <span className="banner-title-blue">
-با خرید از فروشگاه آربی            </span>
+با خرید شیرآلات اهرمی ( تانسو ) از فروشگاه آربی            </span>
 
           </h1>
 
