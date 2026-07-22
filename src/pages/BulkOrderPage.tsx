@@ -42,8 +42,8 @@ const BulkOrderPage: React.FC = () => {
         <header className="bulk-order-header">
           <h1>خرید عمده / تعداد بالا</h1>
           <p>
-            برای سفارش‌های با تعداد بالا، درخواست خود را ثبت کنید. پس از ثبت، کارشناس فروش با شما تماس می‌گیرد
-            و ادامه فرآیند به صورت تلفنی هماهنگ می‌شود.
+            برای سفارش‌های با تعداد بالا، درخواست خود را ثبت کنید. پس از ثبت، مسئول فروش با شما تماس می‌گیرد
+            و ادامه فرآیند به صورت تماس تلفنی هماهنگ می‌شود.
           </p>
         </header>
 
@@ -76,7 +76,7 @@ const BulkOrderPage: React.FC = () => {
               </div>
               <div className="bulk-order-field">
                 <label htmlFor="quantity">تعداد تقریبی *</label>
-                <input id="quantity" name="quantity" required placeholder="مثال: ۵۰ عدد" value={form.quantity} onChange={handleChange} />
+                <input id="quantity" name="quantity" required placeholder="مثال: 12 عدد" value={form.quantity} onChange={handleChange} />
               </div>
             </div>
             <div className="bulk-order-field">
