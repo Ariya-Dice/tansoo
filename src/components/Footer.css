@@ -73,3 +73,14 @@
     text-align: right;
   }
 }
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.footer-link {
+  text-decoration: none;
+}

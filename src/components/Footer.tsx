@@ -8,24 +8,23 @@ const Footer: React.FC = () => {
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-content">
-          <div className="footer-info">
-            <h3 className="footer-title">{STORE_NAME}</h3>
+        <div className="footer-info">
+  <h3 className="footer-title">{STORE_NAME}</h3>
 
-            <p className="footer-description">فروشگاه آربی</p>
+  <p className="footer-description">
+    فروشگاه تخصصی شیرآلات اهرمی تانسو
+  </p>
 
-            <p className="footer-description">
-              <Link to="/about" className="footer-link">
-                درباره ما
-              </Link>
-              {'     '}
-              <Link to="/contact" className="footer-link">
-                ارتباط با ما
-              </Link>
-              {'     '}
-              <a href="tel:0936" className="footer-link">
-              </a>
-            </p>
-          </div>
+  <div className="footer-links">
+    <Link to="/about" className="footer-link">
+      درباره ما
+    </Link>
+
+    <Link to="/contact" className="footer-link">
+      ارتباط با ما
+    </Link>
+  </div>
+</div>
 
           <div className="footer-enamad">
             <a

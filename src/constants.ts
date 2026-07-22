@@ -1,5 +1,5 @@
 
-export const STORE_NAME = " فروشگاه آر بی ";
+export const STORE_NAME = " فروشگاه آربی ";
 
 // پسورد ادمین — در .env مقدار VITE_ADMIN_PASSWORD را تنظیم کنید
 export const ADMIN_PASSWORD =
