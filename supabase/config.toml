@@ -1,0 +1,7 @@
+# Supabase local config — payment Edge Functions are public (Zibal callback has no JWT)
+
+[functions.request-payment]
+verify_jwt = false
+
+[functions.verify-payment]
+verify_jwt = false

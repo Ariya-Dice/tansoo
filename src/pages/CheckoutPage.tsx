@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { getDefaultImage } from '../constants';
 import { getProductGoodsType } from '../productSpecs';
+import { isSupabaseConfigured } from '../lib/supabaseClient';
+import { requestPayment } from '../services/payment';
 import './CheckoutPage.css';
 
 const CheckoutPage: React.FC = () => {
@@ -22,20 +24,27 @@ const CheckoutPage: React.FC = () => {
     setCustomerDetails((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) {
       showToast('سبد خرید شما خالی است.');
       return;
     }
 
+    if (!isSupabaseConfigured()) {
+      showToast('درگاه پرداخت پیکربندی نشده است. VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY را تنظیم کنید.');
+      return;
+    }
+
     setIsProcessing(true);
-    setTimeout(() => {
-      clearCart();
+    try {
+      const result = await requestPayment(customerDetails, cart, cartTotal);
+      window.location.href = result.paymentUrl;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'خطا در شروع پرداخت';
+      showToast(message);
       setIsProcessing(false);
-      showToast('سفارش شما با موفقیت ثبت شد ✅');
-      navigate('/');
-    }, 1500);
+    }
   };
 
   if (cart.length === 0) {
@@ -85,7 +94,7 @@ const CheckoutPage: React.FC = () => {
                 <textarea id="note" name="note" rows={2} className="checkout-form-textarea" value={customerDetails.note} onChange={handleInputChange} />
               </div>
               <button type="submit" disabled={isProcessing} className="checkout-submit-btn">
-                {isProcessing ? 'در حال ثبت سفارش...' : `ثبت سفارش — ${cartTotal.toLocaleString('fa-IR')} تومان`}
+                {isProcessing ? 'در حال انتقال به درگاه...' : `پرداخت — ${cartTotal.toLocaleString('fa-IR')} تومان`}
               </button>
             </form>
             <p className="checkout-hint">

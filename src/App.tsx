@@ -11,6 +11,8 @@ import BulkOrderPage from './pages/BulkOrderPage';
 import BulkOrderSuccessPage from './pages/BulkOrderSuccessPage';
 import ContactPage from './pages/ContactPage';
 import AboutPage from './pages/AboutPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentFailedPage from './pages/PaymentFailedPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
@@ -45,6 +47,8 @@ const StorefrontRoutes: React.FC = () => (
         <Route path="/bulk-order/success" element={<BulkOrderSuccessPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/payment/success" element={<PaymentSuccessPage />} />
+        <Route path="/payment/failed" element={<PaymentFailedPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </main>
