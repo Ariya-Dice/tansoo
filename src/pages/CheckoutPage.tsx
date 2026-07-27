@@ -25,39 +25,63 @@ const CheckoutPage: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (cart.length === 0) {
-      showToast('سبد خرید شما خالی است.');
-      return;
-    }
+  e.preventDefault();
 
-    if (!isSupabaseConfigured()) {
-      showToast('درگاه پرداخت پیکربندی نشده است. VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY را تنظیم کنید.');
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const result = await requestPayment(customerDetails, cart, cartTotal);
-      window.location.href = result.paymentUrl;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'خطا در شروع پرداخت';
-      showToast(message);
-      setIsProcessing(false);
-    }
-  };
+  console.log('1. handleSubmit started');
 
   if (cart.length === 0) {
-    return (
-      <div className="checkout-page checkout-empty">
-        <div className="checkout-empty-card">
-          <h1>سبد خرید خالی است</h1>
-          <p>ابتدا محصولی به سبد اضافه کنید.</p>
-          <Link to="/products" className="checkout-btn checkout-btn-primary">مشاهده محصولات</Link>
-        </div>
-      </div>
-    );
+    console.log('2. Cart is empty');
+    showToast('سبد خرید شما خالی است.');
+    return;
   }
+
+  console.log('3. Cart check passed');
+
+  if (!isSupabaseConfigured()) {
+    console.error('4. Supabase is NOT configured');
+    showToast(
+      'درگاه پرداخت پیکربندی نشده است. VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY را تنظیم کنید.',
+    );
+    return;
+  }
+
+  console.log('5. Supabase is configured');
+
+  setIsProcessing(true);
+
+  try {
+    console.log('6. Customer Details:', customerDetails);
+    console.log('7. Cart:', cart);
+    console.log('8. Total Amount:', cartTotal);
+
+    console.log('9. Calling requestPayment...');
+
+    const result = await requestPayment(
+      customerDetails,
+      cart,
+      cartTotal,
+    );
+
+    console.log('10. requestPayment response:', result);
+
+    if (!result?.paymentUrl) {
+      throw new Error('Payment URL is missing.');
+    }
+
+    console.log('11. Redirecting to:', result.paymentUrl);
+
+    window.location.assign(result.paymentUrl);
+  } catch (err) {
+    console.error('12. Payment Error:', err);
+
+    const message =
+      err instanceof Error ? err.message : 'خطا در شروع پرداخت';
+
+    showToast(message);
+
+    setIsProcessing(false);
+  }
+};
 
   return (
     <div className="checkout-page">
