@@ -35,31 +35,79 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('========== REQUEST PAYMENT START ==========');
+
+    console.log('STEP 1 - Checking Environment Variables');
+
     const merchant = Deno.env.get('ZIBAL_MERCHANT');
+    console.log('ZIBAL_MERCHANT exists:', !!merchant);
+
+    console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL'));
+    console.log(
+      'SUPABASE_SERVICE_ROLE_KEY exists:',
+      !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+    );
+
     if (!merchant) {
       throw new Error('ZIBAL_MERCHANT is not configured');
     }
 
+    console.log('STEP 2 - Reading Request Body');
+
     const body = (await req.json()) as RequestBody;
     const { customerDetails, items, totalAmount } = body;
 
-    if (!customerDetails?.name?.trim() || !customerDetails?.phone?.trim() || !customerDetails?.address?.trim()) {
-      return new Response(JSON.stringify({ error: 'نام، شماره تماس و آدرس الزامی است' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    console.log('Customer:', customerDetails);
+    console.log('Items:', items);
+    console.log('Total Amount:', totalAmount);
+
+    if (
+      !customerDetails?.name?.trim() ||
+      !customerDetails?.phone?.trim() ||
+      !customerDetails?.address?.trim()
+    ) {
+      return new Response(
+        JSON.stringify({ error: 'نام، شماره تماس و آدرس الزامی است' }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
     }
 
-    if (!Array.isArray(items) || items.length === 0 || !Number.isFinite(totalAmount) || totalAmount <= 0) {
-      return new Response(JSON.stringify({ error: 'سبد خرید نامعتبر است' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (
+      !Array.isArray(items) ||
+      items.length === 0 ||
+      !Number.isFinite(totalAmount) ||
+      totalAmount <= 0
+    ) {
+      return new Response(
+        JSON.stringify({ error: 'سبد خرید نامعتبر است' }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
     }
+
+    console.log('STEP 3 - Creating Supabase Admin Client');
 
     const supabase = getSupabaseAdmin();
+
+    console.log('Supabase Admin Client Created');
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!.replace(/\/+$/, '');
     const callbackUrl = `${supabaseUrl}/functions/v1/verify-payment`;
+
+    console.log('Callback URL:', callbackUrl);
+
+    console.log('STEP 4 - Creating Order');
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -75,9 +123,14 @@ Deno.serve(async (req) => {
       .select('id')
       .single();
 
+    console.log('Order Result:', order);
+    console.log('Order Error:', orderError);
+
     if (orderError || !order) {
       throw new Error(orderError?.message ?? 'Failed to create order');
     }
+
+    console.log('STEP 5 - Creating Order Items');
 
     const orderItems = items.map((item) => ({
       order_id: order.id,
@@ -89,14 +142,24 @@ Deno.serve(async (req) => {
       unit_price: item.unitPrice,
     }));
 
-    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+    console.log('Order Items:', orderItems);
+
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
+
+    console.log('Order Items Error:', itemsError);
+
     if (itemsError) {
       await supabase.from('orders').delete().eq('id', order.id);
       throw new Error(itemsError.message);
     }
 
-    // Zibal expects amount in Rials; storefront prices are in Toman.
+    console.log('STEP 6 - Calling Zibal');
+
     const amountRials = Math.round(totalAmount * 10);
+
+    console.log('Amount (Rials):', amountRials);
 
     const zibal = await zibalRequest({
       merchant,
@@ -107,18 +170,41 @@ Deno.serve(async (req) => {
       mobile: customerDetails.phone.trim(),
     });
 
+    console.log('Zibal Response:', zibal);
+
     if (zibal.result !== 100 || !zibal.trackId) {
-      await supabase.from('orders').update({ status: 'failed' }).eq('id', order.id);
+      console.log('Zibal Error:', zibal);
+
+      await supabase
+        .from('orders')
+        .update({ status: 'failed' })
+        .eq('id', order.id);
+
       return new Response(
-        JSON.stringify({ error: zibal.message ?? 'خطا در ایجاد تراکنش زیبال', code: zibal.result }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({
+          error: zibal.message ?? 'خطا در ایجاد تراکنش زیبال',
+          code: zibal.result,
+        }),
+        {
+          status: 502,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        },
       );
     }
 
+    console.log('STEP 7 - Updating Order');
+
     await supabase
       .from('orders')
-      .update({ zibal_track_id: zibal.trackId })
+      .update({
+        zibal_track_id: zibal.trackId,
+      })
       .eq('id', order.id);
+
+    console.log('STEP 8 - Success');
 
     return new Response(
       JSON.stringify({
@@ -126,14 +212,34 @@ Deno.serve(async (req) => {
         trackId: zibal.trackId,
         paymentUrl: zibalStartUrl(zibal.trackId),
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      },
     );
   } catch (err) {
-    console.error('request-payment error:', err);
-    const message = err instanceof Error ? err.message : 'Internal server error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('========== REQUEST PAYMENT ERROR ==========');
+    console.error(err);
+    console.error(
+      'Message:',
+      err instanceof Error ? err.message : String(err),
+    );
+    console.error('Stack:', err instanceof Error ? err.stack : '');
+
+    return new Response(
+      JSON.stringify({
+        error: err instanceof Error ? err.message : 'Internal server error',
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
   }
 });
