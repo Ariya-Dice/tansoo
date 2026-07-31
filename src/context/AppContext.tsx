@@ -1,10 +1,23 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from "react";
-import { Product, CartItem } from "../types";
+import type { Session } from "@supabase/supabase-js";
+import { Product, CartItem, Order, OrderDetail, OrderStatus, OrdersListResult, BulkOrderRequest, BulkOrderStatus, BulkOrdersListResult } from "../types";
 import { initialImages } from "../utils/images";
-import { ADMIN_PASSWORD } from "../constants";
 import { productsApiHeaders } from "../utils/api";
-import { getApiErrorHint, readApiError } from "../utils/apiError";
-import { formatProductTitle, getProductGoodsType } from "../productSpecs";
+import { readApiError } from "../utils/apiError";
+import { formatProductTitle } from "../productSpecs";
+import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
+import { adminAuthErrorMessage, isAdminUser } from "../utils/adminAuth";
+import {
+  fetchOrders,
+  fetchOrderById,
+  updateOrderStatusInDb,
+  type OrdersQueryParams,
+} from "../services/orders";
+import {
+  fetchBulkOrders,
+  updateBulkOrderStatusInDb,
+  type BulkOrdersQueryParams,
+} from "../services/bulkOrder";
 
 const PRODUCTS_API = "/api/products";
 
@@ -35,15 +48,25 @@ interface AppContextType {
   updateQuantity: (productId: number, quantity: number) => void;
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
-  fulfillOrder: (items: { productId: number; quantity: number }[]) => Promise<boolean>;
   adjustProductStock: (id: number, payload: { stock?: number; delta?: number }) => Promise<Product | void>;
   showToast: (msg: string) => void;
   getImage: (filename: string) => string;
 
-  // مدیریت ادمین
+  // مدیریت ادمین (Supabase Auth + RLS)
   isAdmin: boolean;
-  loginAdmin: (password: string) => boolean;
-  logoutAdmin: () => void;
+  authLoading: boolean;
+  loginAdmin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logoutAdmin: () => Promise<void>;
+
+  // سفارشات (Database)
+  getOrders: (params?: OrdersQueryParams) => Promise<OrdersListResult>;
+  getOrder: (orderId: string) => Promise<OrderDetail>;
+  searchOrders: (params: OrdersQueryParams) => Promise<OrdersListResult>;
+  updateOrderStatus: (orderId: string, currentStatus: OrderStatus, newStatus: OrderStatus) => Promise<Order>;
+
+  // خرید عمده
+  getBulkOrders: (params?: BulkOrdersQueryParams) => Promise<BulkOrdersListResult>;
+  updateBulkOrderStatus: (id: number, status: BulkOrderStatus) => Promise<BulkOrderRequest>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -58,17 +81,55 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     visible: false,
   });
 
-  // 🛡️ مدیریت ادمین
+  // 🛡️ مدیریت ادمین — Supabase Auth
   const [isAdmin, setIsAdmin] = useState(false);
-  const loginAdmin = (password: string): boolean => {
-    // در تولید بهتر است از environment variable استفاده شود
-    if (password === ADMIN_PASSWORD) {
-      setIsAdmin(true);
-      return true;
+  const [authLoading, setAuthLoading] = useState(true);
+
+  const applyAuthSession = useCallback((session: Session | null) => {
+    setIsAdmin(isAdminUser(session?.user ?? null));
+  }, []);
+
+  const loginAdmin = async (
+    email: string,
+    password: string,
+  ): Promise<{ success: boolean; error?: string }> => {
+    if (!isSupabaseConfigured()) {
+      return { success: false, error: 'Supabase پیکربندی نشده است.' };
     }
-    return false;
+
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: 'ایمیل یا رمز عبور نامعتبر است.' };
+      }
+
+      if (!isAdminUser(data.user)) {
+        await supabase.auth.signOut();
+        return { success: false, error: adminAuthErrorMessage() };
+      }
+
+      applyAuthSession(data.session);
+      return { success: true };
+    } catch {
+      return { success: false, error: 'خطا در ورود. لطفاً دوباره تلاش کنید.' };
+    }
   };
-  const logoutAdmin = () => setIsAdmin(false);
+
+  const logoutAdmin = async () => {
+    if (isSupabaseConfigured()) {
+      try {
+        await getSupabaseClient().auth.signOut();
+      } catch {
+        // ignore sign-out errors
+      }
+    }
+    setIsAdmin(false);
+  };
 
   // 🛒 مجموع سبد خرید
   const cartTotal = cart.reduce(
@@ -244,38 +305,51 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const fulfillOrder = async (items: { productId: number; quantity: number }[]) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/orders/fulfill', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(body.message || body.error || 'خطا در ثبت سفارش');
-      }
-
-      if (Array.isArray(body.products)) {
-        setProducts((prev) => {
-          const byId = new Map(body.products.map((p: Product) => [p.id, p]));
-          return prev.map((p) => (byId.has(p.id) ? { ...p, ...byId.get(p.id)! } : p));
-        });
-      } else {
-        await fetchProducts();
-      }
-
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'خطا در ثبت سفارش';
-      setError(errorMessage);
-      showToast(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
+  const requireAdminSession = () => {
+    if (!isAdmin) {
+      throw new Error('دسترسی ادمین مجاز نیست.');
     }
+  };
+
+  const getOrders = async (params?: OrdersQueryParams): Promise<OrdersListResult> => {
+    requireAdminSession();
+    return fetchOrders(params);
+  };
+
+  const searchOrders = async (params: OrdersQueryParams): Promise<OrdersListResult> => {
+    requireAdminSession();
+    return fetchOrders(params);
+  };
+
+  const getOrder = async (orderId: string): Promise<OrderDetail> => {
+    requireAdminSession();
+    return fetchOrderById(orderId);
+  };
+
+  const updateOrderStatus = async (
+    orderId: string,
+    currentStatus: OrderStatus,
+    newStatus: OrderStatus,
+  ): Promise<Order> => {
+    requireAdminSession();
+    const updated = await updateOrderStatusInDb(orderId, currentStatus, newStatus);
+    showToast('وضعیت سفارش به‌روز شد');
+    return updated;
+  };
+
+  const getBulkOrders = async (params?: BulkOrdersQueryParams): Promise<BulkOrdersListResult> => {
+    requireAdminSession();
+    return fetchBulkOrders(params);
+  };
+
+  const updateBulkOrderStatus = async (
+    id: number,
+    status: BulkOrderStatus,
+  ): Promise<BulkOrderRequest> => {
+    requireAdminSession();
+    const updated = await updateBulkOrderStatusInDb(id, status);
+    showToast('وضعیت درخواست به‌روز شد');
+    return updated;
   };
 
   const adjustProductStock = async (
@@ -401,6 +475,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     fetchProducts();
   }, [fetchProducts]);
 
+  // 🔐 Restore Supabase admin session
+  useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setAuthLoading(false);
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) {
+        applyAuthSession(session);
+        setAuthLoading(false);
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      applyAuthSession(session);
+    });
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [applyAuthSession]);
+
   return (
     <AppContext.Provider
       value={{
@@ -418,13 +519,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateQuantity,
         removeFromCart,
         clearCart,
-        fulfillOrder,
         adjustProductStock,
         showToast,
         getImage,
         isAdmin,
+        authLoading,
         loginAdmin,
         logoutAdmin,
+        getOrders,
+        getOrder,
+        searchOrders,
+        updateOrderStatus,
+        getBulkOrders,
+        updateBulkOrderStatus,
       }}
     >
       {children}

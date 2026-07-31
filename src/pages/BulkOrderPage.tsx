@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
+import { submitBulkOrderRequest } from '../services/bulkOrder';
+import { isSupabaseConfigured } from '../lib/supabaseClient';
 import { GOODS_TYPES } from '../productSpecs';
 import './BulkOrderPage.css';
 
@@ -21,19 +23,36 @@ const BulkOrderPage: React.FC = () => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.phone || !form.goodsType || !form.quantity) {
       showToast('لطفاً فیلدهای الزامی را پر کنید');
       return;
     }
+
+    if (!isSupabaseConfigured()) {
+      showToast('سیستم ثبت درخواست پیکربندی نشده است.');
+      return;
+    }
+
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      await submitBulkOrderRequest({
+        name: form.name,
+        phone: form.phone,
+        company: form.company,
+        goodsType: form.goodsType,
+        quantity: form.quantity,
+        note: form.note,
+      });
       navigate('/bulk-order/success', {
         state: { name: form.name, phone: form.phone },
       });
-    }, 800);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'خطا در ثبت درخواست');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

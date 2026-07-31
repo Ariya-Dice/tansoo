@@ -1,10 +1,6 @@
 
 export const STORE_NAME = " فروشگاه آربی ";
 
-// پسورد ادمین — در .env مقدار VITE_ADMIN_PASSWORD را تنظیم کنید
-export const ADMIN_PASSWORD =
-  import.meta.env.VITE_ADMIN_PASSWORD || "admin123";
-
 // مدل‌های محصول
 export const MODELS = [
   'اردکی',
