@@ -1,5 +1,4 @@
 import { CartItem } from '../types';
-import { getProductGoodsType } from '../productSpecs';
 import { getSupabaseClient } from '../lib/supabaseClient';
 
 export interface PaymentCustomerDetails {

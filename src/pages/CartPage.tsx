@@ -74,14 +74,6 @@ const CartPage: React.FC = () => {
                     <p className="cart-item-price">
                       {item.product.price.toLocaleString('fa-IR')} <small>تومان</small>
                     </p>
-
-                    <p className="cart-item-notice">
-  <strong>توجه:</strong> لطفا توجه داشته باشید که سیستم فروش آربی، سفارش‌محور
-  می‌باشد. آماده‌سازی و ارسال سفارش با توجه به تعداد سفارش، حدود
-  <strong> ۳ تا ۱۰ روز کاری </strong>
-  زمان خواهد برد.
-</p>
-
                   </div>
                   <div className="cart-item-actions">
                     <div className="cart-qty" role="group" aria-label="تعداد">
@@ -100,21 +92,52 @@ const CartPage: React.FC = () => {
               );
             })}
           </div>
-
           <aside className="cart-summary">
-            <h2 className="cart-summary-title">خلاصه سفارش</h2>
-            <div className="cart-summary-row">
-              <span>تعداد اقلام</span>
-              <span>{totalQty} عدد</span>
-            </div>
-            <div className="cart-summary-row cart-summary-total">
-              <span>جمع کل</span>
-              <span>{cartTotal.toLocaleString('fa-IR')} تومان</span>
-            </div>
-            <Link to="/checkout" className="cart-btn cart-btn-primary cart-btn-block">ادامه و تسویه حساب</Link>
-            <Link to="/bulk-order" className="cart-btn cart-btn-secondary cart-btn-block">خرید عمده</Link>
-            <button type="button" onClick={clearCart} className="cart-btn cart-btn-ghost cart-btn-block">خالی کردن سبد</button>
-          </aside>
+  <h2 className="cart-summary-title">خلاصه سفارش</h2>
+
+  <div className="cart-summary-row">
+    <span>تعداد اقلام</span>
+    <span>{totalQty} عدد</span>
+  </div>
+
+  <div className="cart-summary-row cart-summary-total">
+    <span>جمع کل</span>
+    <span>{cartTotal.toLocaleString('fa-IR')} تومان</span>
+  </div>
+
+  <Link
+    to="/checkout"
+    className="cart-btn cart-btn-primary cart-btn-block"
+  >
+    ادامه و تسویه حساب
+  </Link>
+
+  <Link
+    to="/bulk-order"
+    className="cart-btn cart-btn-secondary cart-btn-block"
+  >
+    خرید عمده
+  </Link>
+
+  <button
+    type="button"
+    onClick={clearCart}
+    className="cart-btn cart-btn-ghost cart-btn-block"
+  >
+    خالی کردن سبد
+  </button>
+
+  {/* توضیح مهم سفارش */}
+  <div className="cart-order-notice">
+    <strong>توجه:</strong>
+    <span>
+      لطفا توجه داشته باشید که سیستم فروش آربی، سفارش‌محور می‌باشد.
+      آماده‌سازی و ارسال سفارش با توجه به تعداد سفارش، حدود
+      <strong> ۳ تا ۱۰ روز کاری </strong>
+      زمان خواهد برد.
+    </span>
+  </div>
+</aside>
         </div>
       </div>
     </div>

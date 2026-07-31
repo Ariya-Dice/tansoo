@@ -1,245 +1,204 @@
-import { handleCors, corsHeaders } from '../_shared/cors.ts';
-import { getSupabaseAdmin } from '../_shared/supabaseAdmin.ts';
-import { zibalRequest, zibalStartUrl } from '../_shared/zibal.ts';
-
-interface CartItemInput {
-  productId: number;
-  model: string;
-  goodsType: string;
-  color: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-interface RequestBody {
-  customerDetails: {
-    name: string;
-    phone: string;
-    email?: string;
-    address: string;
-    note?: string;
-  };
-  items: CartItemInput[];
-  totalAmount: number;
-}
-
-Deno.serve(async (req) => {
-  const cors = handleCors(req);
-  if (cors) return cors;
-
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
-  try {
-    console.log('========== REQUEST PAYMENT START ==========');
-
-    console.log('STEP 1 - Checking Environment Variables');
-
-    const merchant = Deno.env.get('ZIBAL_MERCHANT');
-    console.log('ZIBAL_MERCHANT exists:', !!merchant);
-
-    console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL'));
-    console.log(
-      'SUPABASE_SERVICE_ROLE_KEY exists:',
-      !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-    );
-
-    if (!merchant) {
-      throw new Error('ZIBAL_MERCHANT is not configured');
-    }
-
-    console.log('STEP 2 - Reading Request Body');
-
-    const body = (await req.json()) as RequestBody;
-    const { customerDetails, items, totalAmount } = body;
-
-    console.log('Customer:', customerDetails);
-    console.log('Items:', items);
-    console.log('Total Amount:', totalAmount);
-
-    if (
-      !customerDetails?.name?.trim() ||
-      !customerDetails?.phone?.trim() ||
-      !customerDetails?.address?.trim()
-    ) {
-      return new Response(
-        JSON.stringify({ error: 'نام، شماره تماس و آدرس الزامی است' }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-    }
-
-    if (
-      !Array.isArray(items) ||
-      items.length === 0 ||
-      !Number.isFinite(totalAmount) ||
-      totalAmount <= 0
-    ) {
-      return new Response(
-        JSON.stringify({ error: 'سبد خرید نامعتبر است' }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-    }
-
-    console.log('STEP 3 - Creating Supabase Admin Client');
-
-    const supabase = getSupabaseAdmin();
-
-    console.log('Supabase Admin Client Created');
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!.replace(/\/+$/, '');
-    const callbackUrl = `${supabaseUrl}/functions/v1/verify-payment`;
-
-    console.log('Callback URL:', callbackUrl);
-
-    console.log('STEP 4 - Creating Order');
-
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        customer_name: customerDetails.name.trim(),
-        customer_phone: customerDetails.phone.trim(),
-        customer_email: (customerDetails.email ?? '').trim(),
-        customer_address: customerDetails.address.trim(),
-        customer_note: (customerDetails.note ?? '').trim(),
-        total_amount: totalAmount,
-        status: 'pending',
-      })
-      .select('id')
-      .single();
-
-    console.log('Order Result:', order);
-    console.log('Order Error:', orderError);
-
-    if (orderError || !order) {
-      throw new Error(orderError?.message ?? 'Failed to create order');
-    }
-
-    console.log('STEP 5 - Creating Order Items');
-
-    const orderItems = items.map((item) => ({
-      order_id: order.id,
-      product_id: item.productId,
-      product_model: item.model,
-      product_goods_type: item.goodsType,
-      product_color: item.color,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-    }));
-
-    console.log('Order Items:', orderItems);
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
-
-    console.log('Order Items Error:', itemsError);
-
-    if (itemsError) {
-      await supabase.from('orders').delete().eq('id', order.id);
-      throw new Error(itemsError.message);
-    }
-
-    console.log('STEP 6 - Calling Zibal');
-
-    const amountRials = Math.round(totalAmount * 10);
-
-    console.log('Amount (Rials):', amountRials);
-
-    const zibal = await zibalRequest({
-      merchant,
-      amount: amountRials,
-      callbackUrl,
-      description: `سفارش ${order.id}`,
-      orderId: order.id,
-      mobile: customerDetails.phone.trim(),
-    });
-
-    console.log('Zibal Response:', zibal);
-
-    if (zibal.result !== 100 || !zibal.trackId) {
-      console.log('Zibal Error:', zibal);
-
-      await supabase
-        .from('orders')
-        .update({ status: 'failed' })
-        .eq('id', order.id);
-
-      return new Response(
-        JSON.stringify({
-          error: zibal.message ?? 'خطا در ایجاد تراکنش زیبال',
-          code: zibal.result,
-        }),
-        {
-          status: 502,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-    }
-
-    console.log('STEP 7 - Updating Order');
-
-    await supabase
-      .from('orders')
-      .update({
-        zibal_track_id: zibal.trackId,
-      })
-      .eq('id', order.id);
-
-    console.log('STEP 8 - Success');
-
-    return new Response(
-      JSON.stringify({
-        orderId: order.id,
-        trackId: zibal.trackId,
-        paymentUrl: zibalStartUrl(zibal.trackId),
-      }),
-      {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-  } catch (err) {
-    console.error('========== REQUEST PAYMENT ERROR ==========');
-    console.error(err);
-    console.error(
-      'Message:',
-      err instanceof Error ? err.message : String(err),
-    );
-    console.error('Stack:', err instanceof Error ? err.stack : '');
-
-    return new Response(
-      JSON.stringify({
-        error: err instanceof Error ? err.message : 'Internal server error',
-      }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-  }
-});
+import { handleCors, corsHeaders } from '../_shared/cors.ts';
+import { getSupabaseAdmin } from '../_shared/supabaseAdmin.ts';
+import { zibalRequest, zibalStartUrl } from '../_shared/zibal.ts';
+import {
+  clientErrorMessage,
+  normalizeOrderItems,
+  validateCustomer,
+  type CustomerInput,
+} from '../_shared/orderValidation.ts';
+
+interface RequestBody {
+  customerDetails: CustomerInput;
+  items: Array<{ productId: number; quantity: number }>;
+  /** @deprecated ignored — server calculates total */
+  totalAmount?: number;
+}
+
+interface DbProduct {
+  id: number;
+  model: string;
+  goods_type: string;
+  type: string;
+  color: string;
+  price: number;
+  stock: number;
+}
+
+Deno.serve(async (req) => {
+  const cors = handleCors(req);
+  if (cors) return cors;
+
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    const merchant = Deno.env.get('ZIBAL_MERCHANT');
+    if (!merchant) {
+      console.error('request-payment: ZIBAL_MERCHANT not configured');
+      throw new Error('config_error');
+    }
+
+    const body = (await req.json()) as RequestBody;
+    const customerDetails = validateCustomer(body.customerDetails);
+    const lineItems = normalizeOrderItems(body.items);
+
+    const supabase = getSupabaseAdmin();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!.replace(/\/+$/, '');
+    const callbackUrl = `${supabaseUrl}/functions/v1/verify-payment`;
+
+    const productIds = lineItems.map((i) => i.productId);
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, model, goods_type, type, color, price, stock')
+      .in('id', productIds);
+
+    if (productsError || !products?.length) {
+      console.error('request-payment: products fetch failed', productsError?.message);
+      return jsonError('product_not_found', 400);
+    }
+
+    const productMap = new Map<number, DbProduct>();
+    for (const p of products as DbProduct[]) {
+      productMap.set(Number(p.id), p);
+    }
+
+    let totalAmount = 0;
+    const orderItemsPayload: Array<{
+      product_id: number;
+      product_model: string;
+      product_goods_type: string;
+      product_color: string;
+      quantity: number;
+      unit_price: number;
+    }> = [];
+
+    for (const line of lineItems) {
+      const product = productMap.get(line.productId);
+      if (!product) {
+        return jsonError('product_not_found', 400);
+      }
+
+      const unitPrice = Number(product.price ?? 0);
+      const stock = Number(product.stock ?? 0);
+
+      if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+        return jsonError('invalid_order', 400);
+      }
+      if (stock < line.quantity) {
+        return jsonError('insufficient_stock', 400);
+      }
+
+      totalAmount += unitPrice * line.quantity;
+      orderItemsPayload.push({
+        product_id: line.productId,
+        product_model: String(product.model ?? ''),
+        product_goods_type: String(product.goods_type || product.type || ''),
+        product_color: String(product.color ?? ''),
+        quantity: line.quantity,
+        unit_price: unitPrice,
+      });
+    }
+
+    if (totalAmount <= 0) {
+      return jsonError('invalid_items', 400);
+    }
+
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        customer_name: customerDetails.name,
+        customer_phone: customerDetails.phone,
+        customer_email: customerDetails.email ?? '',
+        customer_address: customerDetails.address,
+        customer_note: customerDetails.note ?? '',
+        total_amount: totalAmount,
+        status: 'pending',
+      })
+      .select('id, order_number')
+      .single();
+
+    if (orderError || !order) {
+      console.error('request-payment: order insert failed', orderError?.message);
+      return jsonError('invalid_order', 500);
+    }
+
+    const orderItems = orderItemsPayload.map((item) => ({
+      order_id: order.id,
+      ...item,
+    }));
+
+    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+
+    if (itemsError) {
+      console.error('request-payment: order_items insert failed', itemsError.message);
+      await supabase.from('orders').delete().eq('id', order.id);
+      return jsonError('invalid_order', 500);
+    }
+
+    const amountRials = Math.round(totalAmount * 10);
+    const orderLabel = order.order_number ?? order.id;
+
+    const zibal = await zibalRequest({
+      merchant,
+      amount: amountRials,
+      callbackUrl,
+      description: `سفارش ${orderLabel}`,
+      orderId: order.id,
+      mobile: customerDetails.phone,
+    });
+
+    if (zibal.result !== 100 || !zibal.trackId) {
+      console.error('request-payment: zibal failed', zibal.result, zibal.message);
+      await supabase.from('orders').update({ status: 'failed' }).eq('id', order.id);
+      return new Response(
+        JSON.stringify({
+          error: 'خطا در ایجاد تراکنش پرداخت. لطفاً دوباره تلاش کنید.',
+        }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
+    await supabase
+      .from('orders')
+      .update({ zibal_track_id: zibal.trackId })
+      .eq('id', order.id);
+
+    return new Response(
+      JSON.stringify({
+        orderId: order.id,
+        orderNumber: order.order_number,
+        trackId: zibal.trackId,
+        paymentUrl: zibalStartUrl(zibal.trackId),
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
+  } catch (err) {
+    const code = err instanceof Error ? err.message : 'invalid_order';
+    console.error('request-payment error:', code);
+    const status = code.startsWith('invalid_') || code === 'insufficient_stock' || code === 'product_not_found'
+      ? 400
+      : 500;
+    return jsonError(code, status);
+  }
+});
+
+function jsonError(code: string, status: number): Response {
+  return new Response(
+    JSON.stringify({ error: clientErrorMessage(code) }),
+    {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    },
+  );
+}
