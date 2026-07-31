@@ -56,11 +56,7 @@ const CheckoutPage: React.FC = () => {
 
     console.log('9. Calling requestPayment...');
 
-    const result = await requestPayment(
-      customerDetails,
-      cart,
-      cartTotal,
-    );
+    const result = await requestPayment(customerDetails, cart);
 
     console.log('10. requestPayment response:', result);
 
