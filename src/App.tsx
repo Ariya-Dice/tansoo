@@ -17,15 +17,18 @@ import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminOrderDetailPage from './pages/admin/AdminOrderDetailPage';
+import AdminBulkOrdersPage from './pages/admin/AdminBulkOrdersPage';
 import { useAppContext } from './context/AppContext';
+
 const App: React.FC = () => {
-  const { isAdmin } = useAppContext();
+  const { isAdmin, authLoading } = useAppContext();
 
   return (
     <HashRouter>
       <div className="app">
         <Routes>
-          <Route path="/admin/*" element={<AdminRoutes isAdminLoggedIn={isAdmin} />} />
+          <Route path="/admin/*" element={<AdminRoutes isAdminLoggedIn={isAdmin} authLoading={authLoading} />} />
           <Route path="/*" element={<StorefrontRoutes />} />
         </Routes>
       </div>
@@ -58,20 +61,25 @@ const StorefrontRoutes: React.FC = () => (
 
 interface AdminRoutesProps {
     isAdminLoggedIn: boolean;
+    authLoading: boolean;
 }
 
-const AdminRoutes: React.FC<AdminRoutesProps> = ({ isAdminLoggedIn }) => (
+const AdminRoutes: React.FC<AdminRoutesProps> = ({ isAdminLoggedIn, authLoading }) => (
   <Routes>
     <Route path="login" element={<AdminLoginPage />} />
     <Route
       path="*"
       element={
-        isAdminLoggedIn ? (
+        authLoading ? (
+          <div className="admin-auth-loading">در حال بررسی نشست...</div>
+        ) : isAdminLoggedIn ? (
           <AdminLayout>
             <Routes>
               <Route path="dashboard" element={<Navigate to="/admin/products" />} />
               <Route path="products" element={<AdminProductsPage />} />
               <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="orders/:id" element={<AdminOrderDetailPage />} />
+              <Route path="bulk-orders" element={<AdminBulkOrdersPage />} />
               <Route path="*" element={<Navigate to="/admin/products" />} />
             </Routes>
           </AdminLayout>

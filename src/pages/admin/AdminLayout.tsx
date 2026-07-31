@@ -9,8 +9,8 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { logoutAdmin } = useAppContext();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logoutAdmin();
+  const handleLogout = async () => {
+    await logoutAdmin();
     navigate('/admin/login');
   };
 
@@ -27,6 +27,10 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
           <NavLink to="/admin/orders" className="admin-nav-link">
             سفارشات
+          </NavLink>
+
+          <NavLink to="/admin/bulk-orders" className="admin-nav-link">
+            خرید عمده
           </NavLink>
         </nav>
       </aside>
@@ -58,6 +62,15 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             }
           >
             سفارشات
+          </NavLink>
+
+          <NavLink
+            to="/admin/bulk-orders"
+            className={({ isActive }) =>
+              `admin-mobile-nav-link ${isActive ? 'active' : ''}`
+            }
+          >
+            خرید عمده
           </NavLink>
         </nav>
 

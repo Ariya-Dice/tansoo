@@ -8,7 +8,7 @@ import { requestPayment } from '../services/payment';
 import './CheckoutPage.css';
 
 const CheckoutPage: React.FC = () => {
-  const { cart, cartTotal, clearCart, showToast, getImage } = useAppContext();
+  const { cart, cartTotal, showToast, getImage } = useAppContext();
   const navigate = useNavigate();
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
@@ -25,59 +25,37 @@ const CheckoutPage: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  console.log('1. handleSubmit started');
-
-  if (cart.length === 0) {
-    console.log('2. Cart is empty');
-    showToast('سبد خرید شما خالی است.');
-    return;
-  }
-
-  console.log('3. Cart check passed');
-
-  if (!isSupabaseConfigured()) {
-    console.error('4. Supabase is NOT configured');
-    showToast(
-      'درگاه پرداخت پیکربندی نشده است. VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY را تنظیم کنید.',
-    );
-    return;
-  }
-
-  console.log('5. Supabase is configured');
-
-  setIsProcessing(true);
-
-  try {
-    console.log('6. Customer Details:', customerDetails);
-    console.log('7. Cart:', cart);
-    console.log('8. Total Amount:', cartTotal);
-
-    console.log('9. Calling requestPayment...');
-
-    const result = await requestPayment(customerDetails, cart);
-
-    console.log('10. requestPayment response:', result);
-
-    if (!result?.paymentUrl) {
-      throw new Error('Payment URL is missing.');
+    if (cart.length === 0) {
+      showToast('سبد خرید شما خالی است.');
+      return;
     }
 
-    console.log('11. Redirecting to:', result.paymentUrl);
+    if (!isSupabaseConfigured()) {
+      showToast(
+        'درگاه پرداخت پیکربندی نشده است. VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY را تنظیم کنید.',
+      );
+      return;
+    }
 
-    window.location.assign(result.paymentUrl);
-  } catch (err) {
-    console.error('12. Payment Error:', err);
+    setIsProcessing(true);
 
-    const message =
-      err instanceof Error ? err.message : 'خطا در شروع پرداخت';
+    try {
+      const result = await requestPayment(customerDetails, cart);
 
-    showToast(message);
+      if (!result?.paymentUrl) {
+        throw new Error('آدرس درگاه پرداخت دریافت نشد.');
+      }
 
-    setIsProcessing(false);
-  }
-};
+      window.location.assign(result.paymentUrl);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'خطا در شروع پرداخت';
+      showToast(message);
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="checkout-page">
@@ -118,7 +96,7 @@ const CheckoutPage: React.FC = () => {
               </button>
             </form>
             <p className="checkout-hint">
-              برای سفارش‌های عمده یا تعداد بالا از{' '}
+              مبلغ نهایی در سرور محاسبه می‌شود. برای سفارش‌های عمده از{' '}
               <Link to="/bulk-order">صفحه خرید عمده</Link> استفاده کنید.
             </p>
           </section>
@@ -147,7 +125,7 @@ const CheckoutPage: React.FC = () => {
             </div>
             <div className="checkout-order-summary">
               <div className="checkout-order-total">
-                <span>مبلغ نهایی</span>
+                <span>مبلغ تقریبی</span>
                 <span>{cartTotal.toLocaleString('fa-IR')} تومان</span>
               </div>
               <p className="checkout-order-note">هزینه ارسال پس از هماهنگی محاسبه می‌شود.</p>

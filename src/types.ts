@@ -53,15 +53,84 @@ export interface CartItem {
   quantity: number;
 }
 
+export type OrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'failed';
+
+export type BulkOrderStatus = 'pending' | 'contacted' | 'completed' | 'cancelled';
+
 export interface Order {
   id: string;
-  customerDetails: {
-    name: string;
-    email: string;
-    address: string;
-  };
-  items: CartItem[];
+  order_number: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  customer_address: string;
+  customer_note: string;
+  total_amount: number;
+  status: OrderStatus;
+  zibal_track_id: number | null;
+  zibal_ref_number: string | null;
+  created_at: string;
+  updated_at: string;
+  paid_at: string | null;
+}
+
+export interface OrderItem {
+  id: number;
+  order_id: string;
+  product_id: number;
+  product_model: string;
+  product_goods_type: string;
+  product_color: string;
+  quantity: number;
+  unit_price: number;
+}
+
+export interface OrderStatusHistory {
+  id: number;
+  order_id: string;
+  old_status: OrderStatus | null;
+  new_status: OrderStatus;
+  changed_by: string;
+  created_at: string;
+}
+
+export interface BulkOrderRequest {
+  id: number;
+  name: string;
+  phone: string;
+  company: string;
+  goods_type: string;
+  quantity: string;
+  note: string;
+  status: BulkOrderStatus;
+  created_at: string;
+}
+
+export interface OrderWithItems extends Order {
+  items: OrderItem[];
+}
+
+export interface OrderDetail extends OrderWithItems {
+  status_history: OrderStatusHistory[];
+}
+
+export interface OrdersListResult {
+  orders: Order[];
   total: number;
-  status: 'Pending' | 'Paid' | 'Shipped';
-  date: Date;
+  page: number;
+  pageSize: number;
+}
+
+export interface BulkOrdersListResult {
+  requests: BulkOrderRequest[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
