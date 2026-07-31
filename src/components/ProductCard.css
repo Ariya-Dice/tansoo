@@ -85,6 +85,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+.product-order-notice {
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.65rem;
+  background: rgba(249, 115, 22, 0.08);
+  border-right: 4px solid #f97316;
+  color: #fdba74;
+  font-size: 0.85rem;
+  line-height: 1.9;
+}
+
+.product-order-notice strong {
+  color: #fb923c;
+  font-weight: 700;
+}
+
 .product-tags {
   display: flex;
   flex-wrap: wrap;

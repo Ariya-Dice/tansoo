@@ -74,6 +74,14 @@ const CartPage: React.FC = () => {
                     <p className="cart-item-price">
                       {item.product.price.toLocaleString('fa-IR')} <small>تومان</small>
                     </p>
+
+                    <p className="cart-item-notice">
+  <strong>توجه:</strong> لطفا توجه داشته باشید که سیستم فروش آربی، سفارش‌محور
+  می‌باشد. آماده‌سازی و ارسال سفارش با توجه به تعداد سفارش، حدود
+  <strong> ۳ تا ۱۰ روز کاری </strong>
+  زمان خواهد برد.
+</p>
+
                   </div>
                   <div className="cart-item-actions">
                     <div className="cart-qty" role="group" aria-label="تعداد">

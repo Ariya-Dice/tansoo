@@ -18,11 +18,21 @@
   color: #f8fafc;
   margin-bottom: 0.75rem;
 }
-
-.bulk-order-header p {
-  color: #94a3b8;
+/* توضیح اصلی */
+.bulk-order-header p:first-of-type {
+  color: #38bdf8;
   line-height: 1.8;
   font-size: 0.9375rem;
+  margin-bottom: 0.75rem;
+}
+
+/* نکته مهم */
+.bulk-order-header p:last-of-type {
+  color: #f97316;
+  line-height: 1.9;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
 }
 
 .bulk-order-card {
