@@ -70,14 +70,22 @@ const ProductDetailPage: React.FC = () => {
           {product.brand && (
             <p className="product-brand">برند: {product.brand}</p>
           )}
-          <p className="product-price">
-            {product.price.toLocaleString("fa-IR")} تومان
-          </p>
-          <span
-            className={`product-availability-badge product-availability-badge--${
-              available ? "in" : "out"
-            }`}
-          >
+<p className="product-price">
+  {product.price.toLocaleString("fa-IR")} تومان
+</p>
+
+<p className="product-order-notice">
+  <strong>توجه:</strong> لطفا توجه داشته باشید که سیستم فروش آربی، سفارش‌محور
+  می‌باشد. آماده‌سازی و ارسال سفارش با توجه به تعداد سفارش، حدود
+  <strong> ۳ تا ۱۰ روز کاری </strong>
+  زمان خواهد برد.
+</p>
+
+<span
+  className={`product-availability-badge product-availability-badge--${
+    available ? "in" : "out"
+  }`}
+>
             {availability}
           </span>
           {product.description && (

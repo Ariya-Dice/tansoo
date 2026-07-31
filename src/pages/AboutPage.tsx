@@ -24,10 +24,6 @@ const AboutPage: React.FC = () => {
 
         <header className="about-hero">
 
-          <div className="about-watermark">
-            ARIA
-          </div>
-
           <div className="about-badge">
 
             <Award size={18} />
@@ -64,9 +60,6 @@ const AboutPage: React.FC = () => {
               <h2>
                 شعار ما؛ از کوره ریخته‌گری تا خانه‌های شما
               </h2>
-
-              <span>
-تاسیس 1404              </span>
 
             </div>
 

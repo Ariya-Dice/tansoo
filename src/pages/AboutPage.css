@@ -2,11 +2,6 @@
    About Page
 ===================================================== */
 
-.about-page {
-  min-height: 100vh;
-  padding: 2rem 1rem 4rem;
-  animation: aria-fade-in .35s ease;
-}
 
 .about-page .container {
   max-width: 1180px;
