@@ -105,7 +105,178 @@
   overscroll-behavior: contain;
 }
 
+/* ================================
+   Mobile Navigation
+================================ */
+
+.admin-mobile-nav {
+  display: none;
+}
+
+
+/* ================================
+   Mobile
+================================ */
+
+@media (max-width: 768px) {
+
+  /* حذف Sidebar در موبایل */
+  .admin-sidebar {
+    display: none;
+  }
+
+  .admin-layout {
+    display: block;
+    min-height: 100vh;
+  }
+
+  .admin-main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /*
+   * تب‌های محصولات / سفارشات
+   */
+  .admin-mobile-nav {
+    display: flex;
+    width: 100%;
+    padding: 0.6rem;
+    gap: 0.5rem;
+
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .admin-mobile-nav-link {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+
+    border-radius: 0.6rem;
+
+    color: #94a3b8;
+    text-decoration: none;
+
+    font-size: 0.9rem;
+    font-weight: 700;
+
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .admin-mobile-nav-link.active {
+    color: #ffffff;
+
+    background: rgba(0, 229, 255, 0.12);
+
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 229, 255, 0.25),
+      0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+
+  .admin-mobile-nav-link:active {
+    transform: scale(0.98);
+  }
+
+  .admin-content {
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .admin-sidebar { width: 160px; }
   .admin-content { padding: 0.5rem; }
+}
+
+@media (max-width: 768px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-height: 100%;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .admin-layout {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .admin-main {
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .admin-content {
+    width: 100%;
+    min-height: auto;
+    height: auto;
+    overflow: visible;
+    padding: 1rem;
+  }
+
+  /* منوی موبایل */
+  .admin-mobile-nav {
+    display: flex;
+    width: 100%;
+    padding: 0.6rem;
+    gap: 0.5rem;
+
+    background: rgba(15, 23, 42, 0.97);
+    border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .admin-mobile-nav-link {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+
+    border-radius: 0.6rem;
+
+    color: #94a3b8;
+    text-decoration: none;
+
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .admin-mobile-nav-link.active {
+    color: #fff;
+    background: rgba(0, 229, 255, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(0, 229, 255, 0.25);
+  }
+
+  .admin-sidebar {
+    display: none;
+  }
 }

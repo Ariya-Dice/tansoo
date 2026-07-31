@@ -86,7 +86,7 @@ const HomePage: React.FC = () => {
 
             <div className="banner-feature">
               <span className="feature-check">✔</span>
-              <span>آلیاژ برنج سنگین استاندارد</span>
+              <span>آلیاژ برنج بهداشتی و استاندارد</span>
             </div>
 
             <div className="banner-feature">

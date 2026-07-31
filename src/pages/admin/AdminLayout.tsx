@@ -16,31 +16,56 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="admin-layout">
-      {/* Sidebar */}
+      {/* Sidebar - Desktop */}
       <aside className="admin-sidebar">
         <div className="admin-sidebar-header">{STORE_NAME}</div>
+
         <nav className="admin-sidebar-nav">
           <NavLink to="/admin/products" className="admin-nav-link">
             محصولات
           </NavLink>
+
           <NavLink to="/admin/orders" className="admin-nav-link">
             سفارشات
           </NavLink>
         </nav>
       </aside>
 
-      {/* Content */}
+      {/* Main */}
       <div className="admin-main">
+
         <header className="admin-header">
           <button onClick={handleLogout} className="admin-logout-btn">
             خروج
           </button>
         </header>
 
+        {/* Mobile Navigation */}
+        <nav className="admin-mobile-nav">
+          <NavLink
+            to="/admin/products"
+            className={({ isActive }) =>
+              `admin-mobile-nav-link ${isActive ? 'active' : ''}`
+            }
+          >
+            محصولات
+          </NavLink>
+
+          <NavLink
+            to="/admin/orders"
+            className={({ isActive }) =>
+              `admin-mobile-nav-link ${isActive ? 'active' : ''}`
+            }
+          >
+            سفارشات
+          </NavLink>
+        </nav>
+
         <main className="admin-content">
           <AdminStockAlerts />
           {children}
         </main>
+
       </div>
     </div>
   );
