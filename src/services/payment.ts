@@ -45,7 +45,7 @@ export async function requestPayment(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          customerDetails,
+          customer: customerDetails,
           items,
         }),
       },
