@@ -19,33 +19,58 @@ export interface RequestPaymentResult {
 interface PaymentErrorBody {
   error?: string;
 }
-
 export async function requestPayment(
   customerDetails: PaymentCustomerDetails,
   cart: CartItem[],
 ): Promise<RequestPaymentResult> {
-  const supabase = getSupabaseClient();
+  const apiUrl = import.meta.env.VITE_API_URL?.trim();
+
+  if (!apiUrl) {
+    throw new Error('Payment API URL is not configured');
+  }
 
   const items = cart.map((item) => ({
     productId: item.product.id,
     quantity: item.quantity,
   }));
 
-  const { data, error } = await supabase.functions.invoke<RequestPaymentResult>(
-    'request-payment',
-    {
-      body: { customerDetails, items },
-    },
-  );
+  let response: Response;
 
-  if (error) {
-    throw new Error(error.message || 'خطا در اتصال به درگاه پرداخت');
+  try {
+    response = await fetch(
+      `${apiUrl.replace(/\/+$/, '')}/api/payment/request`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerDetails,
+          items,
+        }),
+      },
+    );
+  } catch {
+    throw new Error('Unable to connect to the payment server');
   }
 
-  if (!data?.paymentUrl) {
-    const errBody = data as PaymentErrorBody | null;
-    throw new Error(errBody?.error || 'پاسخ نامعتبر از سرور پرداخت');
+  const data = (await response.json()) as
+    | RequestPaymentResult
+    | PaymentErrorBody;
+
+  if (!response.ok) {
+    const errorData = data as PaymentErrorBody;
+
+    throw new Error(
+      errorData.error || 'Payment request failed',
+    );
   }
 
-  return data;
+  const paymentData = data as RequestPaymentResult;
+
+  if (!paymentData.paymentUrl) {
+    throw new Error('Invalid payment server response');
+  }
+
+  return paymentData;
 }
