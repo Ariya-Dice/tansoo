@@ -1,5 +1,4 @@
 import { CartItem } from '../types';
-import { getSupabaseClient } from '../lib/supabaseClient';
 
 export interface PaymentCustomerDetails {
   name: string;
@@ -19,6 +18,7 @@ export interface RequestPaymentResult {
 interface PaymentErrorBody {
   error?: string;
 }
+
 export async function requestPayment(
   customerDetails: PaymentCustomerDetails,
   cart: CartItem[],
@@ -45,7 +45,7 @@ export async function requestPayment(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          customerDetails,
+          customer: customerDetails,
           items,
         }),
       },
