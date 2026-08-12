@@ -96,7 +96,7 @@ const CheckoutPage: React.FC = () => {
               </button>
             </form>
             <p className="checkout-hint">
-              مبلغ نهایی در سرور محاسبه می‌شود. برای سفارش‌های عمده از{' '}
+             برای سفارش‌های عمده از{' '}
               <Link to="/bulk-order">صفحه خرید عمده</Link> استفاده کنید.
             </p>
           </section>
