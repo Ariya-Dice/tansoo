@@ -2,6 +2,7 @@
 
 import React, { useRef } from 'react';
 import ProductCard from '../components/ProductCard';
+import ReplacementProgramBanner from '../components/ReplacementProgramBanner';
 import { useAppContext } from '../context/AppContext';
 import { getApiErrorHint } from '../utils/apiError';
 import './HomePage.css';
@@ -134,6 +135,12 @@ const HomePage: React.FC = () => {
         </div>
       ) : (
         <>
+
+          <section className="home-section home-section-banner">
+            <div className="container">
+              <ReplacementProgramBanner />
+            </div>
+          </section>
 
           {/* ==========================
                 محصولات جدید

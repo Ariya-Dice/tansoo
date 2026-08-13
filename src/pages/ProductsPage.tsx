@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ProductCard from '../components/ProductCard';
+import ReplacementProgramBanner from '../components/ReplacementProgramBanner';
 import { Product } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { MODELS, TYPES, COLORS, TAGS } from '../constants';
@@ -149,6 +150,8 @@ const ProductsPage: React.FC = () => {
             </select>
           </div>
         </div>
+
+        <ReplacementProgramBanner />
 
         {/* لیست محصولات */}
         {filteredAndSortedProducts.length === 0 ? (

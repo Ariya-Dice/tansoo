@@ -8,7 +8,7 @@ import { requestPayment } from '../services/payment';
 import './CheckoutPage.css';
 
 const CheckoutPage: React.FC = () => {
-  const { cart, cartTotal, showToast, getImage } = useAppContext();
+  const { cart, cartTotal, showToast, getImage, replacementProgramSelected } = useAppContext();
   const navigate = useNavigate();
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
@@ -42,7 +42,17 @@ const CheckoutPage: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      const result = await requestPayment(customerDetails, cart);
+      const replacementNote = replacementProgramSelected
+        ? 'طرح تعویض شیرآلات کهنه با نو: بله'
+        : '';
+      const combinedNote = [replacementNote, customerDetails.note.trim()]
+        .filter(Boolean)
+        .join('\n');
+
+      const result = await requestPayment(
+        { ...customerDetails, note: combinedNote },
+        cart,
+      );
 
       if (!result?.paymentUrl) {
         throw new Error('آدرس درگاه پرداخت دریافت نشد.');

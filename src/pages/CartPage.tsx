@@ -7,10 +7,20 @@ import { TrashIcon } from '../components/icons';
 import './CartPage.css';
 
 const BULK_THRESHOLD = 20;
+const REPLACEMENT_PROGRAM_CHECKBOX_ID = 'replacement-program-opt-in';
 
 const CartPage: React.FC = () => {
-  const { cart, updateQuantity, removeFromCart, cartTotal, clearCart, getImage, cartCount } =
-    useAppContext();
+  const {
+    cart,
+    updateQuantity,
+    removeFromCart,
+    cartTotal,
+    clearCart,
+    getImage,
+    cartCount,
+    replacementProgramSelected,
+    setReplacementProgramSelected,
+  } = useAppContext();
 
   const totalQty = cart.reduce((s, i) => s + i.quantity, 0);
   const suggestBulk = totalQty >= BULK_THRESHOLD;
@@ -47,15 +57,16 @@ const CartPage: React.FC = () => {
         )}
 
         <div className="cart-grid">
-          <div className="cart-items">
-            {cart.map((item) => {
-              const imageSrc = item.product.image
-                ? getImage(item.product.image)
-                : getDefaultImage(item.product.model);
-              const goodsType = getProductGoodsType(item.product);
+          <div className="cart-main">
+            <div className="cart-items">
+              {cart.map((item) => {
+                const imageSrc = item.product.image
+                  ? getImage(item.product.image)
+                  : getDefaultImage(item.product.model);
+                const goodsType = getProductGoodsType(item.product);
 
-              return (
-                <article key={item.product.id} className="cart-item">
+                return (
+                  <article key={item.product.id} className="cart-item">
                   <Link to={`/product/${item.product.id}`} className="cart-item-image-link">
                     <img
                       src={imageSrc}
@@ -89,55 +100,77 @@ const CartPage: React.FC = () => {
                     {(item.product.price * item.quantity).toLocaleString('fa-IR')} تومان
                   </p>
                 </article>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            <div className="cart-replacement-program">
+              <label className="cart-replacement-program-label" htmlFor={REPLACEMENT_PROGRAM_CHECKBOX_ID}>
+                <input
+                  id={REPLACEMENT_PROGRAM_CHECKBOX_ID}
+                  type="checkbox"
+                  className="cart-replacement-program-checkbox"
+                  checked={replacementProgramSelected}
+                  onChange={(e) => setReplacementProgramSelected(e.target.checked)}
+                />
+                <span className="cart-replacement-program-text">
+                  مایل به استفاده از طرح تعویض شیرآلات کهنه با نو هستم.
+                </span>
+              </label>
+              <p className="cart-replacement-program-terms">
+                با انتخاب این گزینه، شرایط طرح را می‌پذیرم.{' '}
+                <Link to="/replacement-program" className="cart-replacement-program-link">
+                  مشاهده شرایط طرح
+                </Link>
+              </p>
+            </div>
           </div>
+
           <aside className="cart-summary">
-  <h2 className="cart-summary-title">خلاصه سفارش</h2>
+            <h2 className="cart-summary-title">خلاصه سفارش</h2>
 
-  <div className="cart-summary-row">
-    <span>تعداد اقلام</span>
-    <span>{totalQty} عدد</span>
-  </div>
+            <div className="cart-summary-row">
+              <span>تعداد اقلام</span>
+              <span>{totalQty} عدد</span>
+            </div>
 
-  <div className="cart-summary-row cart-summary-total">
-    <span>جمع کل</span>
-    <span>{cartTotal.toLocaleString('fa-IR')} تومان</span>
-  </div>
+            <div className="cart-summary-row cart-summary-total">
+              <span>جمع کل</span>
+              <span>{cartTotal.toLocaleString('fa-IR')} تومان</span>
+            </div>
 
-  <Link
-    to="/checkout"
-    className="cart-btn cart-btn-primary cart-btn-block"
-  >
-    ادامه و تسویه حساب
-  </Link>
+            <Link
+              to="/checkout"
+              className="cart-btn cart-btn-primary cart-btn-block"
+            >
+              ادامه و تسویه حساب
+            </Link>
 
-  <Link
-    to="/bulk-order"
-    className="cart-btn cart-btn-secondary cart-btn-block"
-  >
-    خرید عمده
-  </Link>
+            <Link
+              to="/bulk-order"
+              className="cart-btn cart-btn-secondary cart-btn-block"
+            >
+              خرید عمده
+            </Link>
 
-  <button
-    type="button"
-    onClick={clearCart}
-    className="cart-btn cart-btn-ghost cart-btn-block"
-  >
-    خالی کردن سبد
-  </button>
+            <button
+              type="button"
+              onClick={clearCart}
+              className="cart-btn cart-btn-ghost cart-btn-block"
+            >
+              خالی کردن سبد
+            </button>
 
-  {/* توضیح مهم سفارش */}
-  <div className="cart-order-notice">
-    <strong>توجه:</strong>
-    <span>
-      لطفا توجه داشته باشید که سیستم فروش آربی، سفارش‌محور می‌باشد.
-      آماده‌سازی و ارسال سفارش با توجه به تعداد سفارش، حدود
-      <strong> ۳ تا ۱۰ روز کاری </strong>
-      زمان خواهد برد.
-    </span>
-  </div>
-</aside>
+            <div className="cart-order-notice">
+              <strong>توجه:</strong>
+              <span>
+                لطفا توجه داشته باشید که سیستم فروش آربی، سفارش‌محور می‌باشد.
+                آماده‌سازی و ارسال سفارش با توجه به تعداد سفارش، حدود
+                <strong> ۳ تا ۱۰ روز کاری </strong>
+                زمان خواهد برد.
+              </span>
+            </div>
+          </aside>
         </div>
       </div>
     </div>

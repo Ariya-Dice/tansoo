@@ -149,6 +149,14 @@
   margin: 0 auto 3rem;
 }
 
+.home-section-banner {
+  margin-bottom: 1.5rem;
+}
+
+.home-section-banner .replacement-program-banner {
+  margin-bottom: 0;
+}
+
 .section-title {
   text-align: center;
 

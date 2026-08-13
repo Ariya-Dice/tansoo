@@ -48,6 +48,8 @@ interface AppContextType {
   updateQuantity: (productId: number, quantity: number) => void;
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
+  replacementProgramSelected: boolean;
+  setReplacementProgramSelected: (selected: boolean) => void;
   adjustProductStock: (id: number, payload: { stock?: number; delta?: number }) => Promise<Product | void>;
   showToast: (msg: string) => void;
   getImage: (filename: string) => string;
@@ -74,6 +76,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [replacementProgramSelected, setReplacementProgramSelected] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({
@@ -443,6 +446,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const clearCart = () => {
     setCart([]);
+    setReplacementProgramSelected(false);
     showToast("سبد خرید خالی شد");
   };
 
@@ -519,6 +523,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateQuantity,
         removeFromCart,
         clearCart,
+        replacementProgramSelected,
+        setReplacementProgramSelected,
         adjustProductStock,
         showToast,
         getImage,
