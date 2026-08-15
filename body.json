@@ -1,0 +1,15 @@
+﻿{
+  "customer": {
+    "name": "mehdi bahrami novin",
+    "phone": "09149886592",
+    "email": "abdollahiyansaeed@gmail.com",
+    "address": "Tehran Test Address 123",
+    "note": "test"
+  },
+  "items": [
+    {
+      "productId": 19,
+      "quantity": 1
+    }
+  ]
+}
