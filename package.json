@@ -39,6 +39,6 @@
     "@vitejs/plugin-react": "^4.2.1",
     "baseline-browser-mapping": "^2.11.14",
     "typescript": "^5.2.2",
-    "vite": "^8.2.1"
+    "vite": "^7.3.6"
   }
 }
