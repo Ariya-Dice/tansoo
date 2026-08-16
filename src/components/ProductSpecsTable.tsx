@@ -45,7 +45,7 @@ const ProductSpecsTable: React.FC<ProductSpecsTableProps> = ({ product }) => {
         <table className="product-specs-table">
           <thead>
             <tr>
-              <th scope="col">مشخصه</th>
+              <th scope="col">مشخصات</th>
               <th scope="col">مقدار</th>
             </tr>
           </thead>

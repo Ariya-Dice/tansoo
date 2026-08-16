@@ -47,58 +47,61 @@ const HomePage: React.FC = () => {
   return (
     <div className="home-page">
 
-      {/* ==========================
-            Hero Banner
-      =========================== */}
+ {/* ==========================
+      Hero Banner
+=========================== */}
 
-      <section className="home-banner">
-        <div className="banner-container">
+<section className="home-banner">
+  <div className="banner-container">
 
-          <div className="banner-badge">
-            <span className="badge-icon">✨</span>
-            <span>بدون واسطه از تولیدکننده خرید کنید</span>
-          </div>
+    <div className="banner-badge">
+      <img
+        src="/indust.svg"
+        alt=""
+        className="badge-icon"
+      />
+      <span>بدون واسطه از تولیدکننده خرید کنید</span>
+    </div>
 
-          <h1 className="banner-title">
+    <h1 className="banner-title">
+      <span className="banner-title-dark">
+        خرید مدرن، کیفیتی پایدار
+      </span>
 
-            <span className="banner-title-dark">
-              خرید مدرن، کیفیتی پایدار
-            </span>
+      <span className="banner-title-blue">
+        با خرید شیرآلات اهرمی ( تانسو ) از فروشگاه آربی
+      </span>
+    </h1>
 
-            <span className="banner-title-blue">
-با خرید شیرآلات اهرمی ( تانسو ) از فروشگاه آربی            </span>
+    <p className="banner-description">
+      فروشگاه کوچک ما متعهد به فروش شیرآلات با کیفیت با آلیاژ برنج آنالیز شده،
+      بدون سرب و آبکاری میکرونی است.
+      ثبت سفارش به صورت مستقیم از تولید کننده و بدون واسطه انجام می‌شود.
+    </p>
 
-          </h1>
+    <div className="banner-divider" />
 
-          <p className="banner-description">
-            فروشگاه کوچک ما متعهد به فروش شیرآلات با کیفیت با آلیاژ برنج آنالیز شده،
-            بدون سرب و آبکاری میکرونی است.
-            ثبت سفارش به صورت مستقیم از تولید کننده و بدون واسطه انجام می‌شود.
-          </p>
+    <div className="banner-features">
 
-          <div className="banner-divider" />
+      <div className="banner-feature">
+        <span className="feature-check">✔</span>
+        <span>۵ سال گارانتی تعویض کتبی</span>
+      </div>
 
-          <div className="banner-features">
+      <div className="banner-feature">
+        <span className="feature-check">✔</span>
+        <span>آلیاژ برنج بهداشتی و استاندارد</span>
+      </div>
 
-            <div className="banner-feature">
-              <span className="feature-check">✔</span>
-              <span>۵ سال گارانتی تعویض کتبی</span>
-            </div>
+      <div className="banner-feature">
+        <span className="feature-check">✔</span>
+        <span>ارسال سریع سراسری</span>
+      </div>
 
-            <div className="banner-feature">
-              <span className="feature-check">✔</span>
-              <span>آلیاژ برنج بهداشتی و استاندارد</span>
-            </div>
+    </div>
 
-            <div className="banner-feature">
-              <span className="feature-check">✔</span>
-              <span>ارسال سریع سراسری</span>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
+  </div>
+</section>
 
       {/* ==========================
             Loading
