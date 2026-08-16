@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import { Product } from "../../types";
-import { MODELS, TAGS, BRANDS, getDefaultImage } from "../../constants";
+import { MODELS, TAGS, getDefaultImage } from "../../constants";
 import {
   PRODUCT_SPEC_FIELDS,
   emptyProduct,
@@ -12,12 +12,6 @@ import {
 } from "../../productSpecs";
 import { productsApiHeaders } from "../../utils/api";
 import { formatPriceInput, parsePriceInput } from "../../utils/priceFormat";
-import {
-  getAvailabilityLabel,
-  isProductAvailable,
-  stockFromAvailability,
-  type AvailabilityLabel,
-} from "../../utils/availability";
 import "./AdminProductsPage.css";
 
 const AdminProductsPage: React.FC = () => {
@@ -26,41 +20,48 @@ const AdminProductsPage: React.FC = () => {
     addProduct,
     updateProduct,
     deleteProduct,
-    adjustProductStock,
     getImage,
     showToast,
     loading,
     fetchProducts,
   } = useAppContext();
 
-  const [pricePercent, setPricePercent] = useState('');
-  const [priceCategory, setPriceCategory] = useState('all');
+  const [pricePercent, setPricePercent] = useState("");
+  const [priceCategory, setPriceCategory] = useState("all");
   const [adjustingPrices, setAdjustingPrices] = useState(false);
   const [customSpecs, setCustomSpecs] = useState<Record<string, string>>({});
-  const [newProduct, setNewProduct] = useState<Omit<Product, "id">>(emptyProduct());
+
+  const [newProduct, setNewProduct] =
+    useState<Omit<Product, "id">>(emptyProduct());
   const [editId, setEditId] = useState<number | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [sortBy, setSortBy] = useState<'model' | 'price' | 'tags'>('model');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<"model" | "price" | "tags">("model");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [customModel, setCustomModel] = useState("");
-  const [customBrand, setCustomBrand] = useState("");
   const [priceDisplay, setPriceDisplay] = useState("");
-  const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityLabel>("موجود");
-  const [stockCount, setStockCount] = useState("1");
-  const [togglingAvailabilityId, setTogglingAvailabilityId] = useState<number | null>(null);
+
+  const [tablePriceValues, setTablePriceValues] = useState<
+    Record<number, string>
+  >({});
+  const [savingTablePriceId, setSavingTablePriceId] = useState<number | null>(
+    null,
+  );
 
   const duplicateWarning = useMemo(() => {
     const model = newProduct.model.trim();
     const goodsType = getProductGoodsType(newProduct as Product);
     if (!model || !goodsType) return null;
+
     const duplicate = products.find(
       (p) =>
         p.id !== editId &&
         p.model.trim() === model &&
         getProductGoodsType(p) === goodsType,
     );
+
     if (!duplicate) return null;
+
     return `محصول «${model} ${goodsType}» قبلاً اضافه شده است.`;
   }, [newProduct.model, newProduct.goodsType, products, editId]);
 
@@ -68,36 +69,57 @@ const AdminProductsPage: React.FC = () => {
     setNewProduct(emptyProduct());
     setEditId(null);
     setCustomModel("");
-    setCustomBrand("");
     setCustomSpecs({});
     setPriceDisplay("");
-    setAvailabilityStatus("موجود");
-    setStockCount("1");
   };
 
   const handleBulkPriceAdjust = async () => {
     const percent = parseFloat(pricePercent);
+
     if (!Number.isFinite(percent) || percent === 0) {
-      showToast('درصد معتبر وارد کنید (مثلاً 8 یا -5)');
+      showToast("درصد معتبر وارد کنید (مثلاً 8 یا -5)");
       return;
     }
-    if (!window.confirm(`قیمت ${priceCategory === 'all' ? 'همه محصولات' : priceCategory} ${percent > 0 ? 'افزایش' : 'کاهش'} ${Math.abs(percent)}٪ شود؟`)) {
+
+    if (
+      !window.confirm(
+        `قیمت ${
+          priceCategory === "all" ? "همه محصولات" : priceCategory
+        } ${percent > 0 ? "افزایش" : "کاهش"} ${Math.abs(percent)}٪ شود؟`,
+      )
+    ) {
       return;
     }
+
     setAdjustingPrices(true);
+
     try {
-      const res = await fetch('/api/products/bulk-price', {
-        method: 'POST',
+      const res = await fetch("/api/products/bulk-price", {
+        method: "POST",
         headers: productsApiHeaders(true),
-        body: JSON.stringify({ percent, goodsType: priceCategory === 'all' ? undefined : priceCategory }),
+        body: JSON.stringify({
+          percent,
+          goodsType:
+            priceCategory === "all" ? undefined : priceCategory,
+        }),
       });
+
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || 'خطا در به‌روزرسانی قیمت');
-      showToast(`قیمت ${body.updated} محصول به‌روز شد ✅`);
+
+      if (!res.ok) {
+        throw new Error(body.error || "خطا در به‌روزرسانی قیمت");
+      }
+
+      showToast(`قیمت ${body.updated} محصول به‌روز شد`);
       await fetchProducts();
-      setPricePercent('');
+      setPricePercent("");
+      setTablePriceValues({});
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'خطا در به‌روزرسانی قیمت');
+      showToast(
+        err instanceof Error
+          ? err.message
+          : "خطا در به‌روزرسانی قیمت",
+      );
     } finally {
       setAdjustingPrices(false);
     }
@@ -112,18 +134,27 @@ const AdminProductsPage: React.FC = () => {
 
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true);
+
     try {
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
+
         reader.onload = () => resolve(reader.result as string);
         reader.onerror = reject;
+
         reader.readAsDataURL(file);
       });
+
       const uploadHeaders: Record<string, string> = {
         "Content-Type": "application/json",
       };
+
       const apiSecret = import.meta.env.VITE_PRODUCTS_API_SECRET;
-      if (apiSecret) uploadHeaders["X-Api-Secret"] = apiSecret;
+
+      if (apiSecret) {
+        uploadHeaders["X-Api-Secret"] = apiSecret;
+      }
+
       const res = await fetch("/api/upload-image", {
         method: "POST",
         headers: uploadHeaders,
@@ -133,93 +164,57 @@ const AdminProductsPage: React.FC = () => {
           type: file.type,
         }),
       });
-      if (!res.ok) throw new Error("خطا در آپلود تصویر");
+
+      if (!res.ok) {
+        throw new Error("خطا در آپلود تصویر");
+      }
+
       const data = await res.json();
+
       updateField("image", data.url || data.filename);
-      showToast("تصویر با موفقیت آپلود شد ✅");
+      showToast("تصویر با موفقیت آپلود شد");
     } catch (err) {
-      console.error("❌ Upload error:", err);
-      showToast("خطا در آپلود تصویر ❌");
+      console.error("Upload error:", err);
+      showToast("خطا در آپلود تصویر");
     } finally {
       setUploadingImage(false);
     }
   };
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setSaving(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  try {
-    const brand = newProduct.brand.trim();
-    if (!brand) {
-      showToast("برند محصول را انتخاب یا وارد کنید");
+    setSaving(true);
+
+    try {
+      const productToSave = {
+        ...newProduct,
+        type: newProduct.goodsType,
+        image:
+          newProduct.image ||
+          (newProduct.model
+            ? getDefaultImage(newProduct.model)
+            : ""),
+      };
+
+      if (editId) {
+        await updateProduct(editId, productToSave);
+      } else {
+        await addProduct(productToSave);
+      }
+
+      resetForm();
+    } catch (err) {
+      console.error("Error saving product:", err);
+      showToast("خطا در ذخیره محصول");
+    } finally {
       setSaving(false);
-      return;
     }
-
-    const stock = availabilityStatus === "ناموجود"
-      ? 0
-      : Math.max(1, parseInt(stockCount, 10) || 1);
-
-    const confirmed = window.confirm(
-      `تأیید ${editId ? "ویرایش" : "ثبت"} محصول
-
-مدل:
-${newProduct.model}
-
-نوع:
-${getProductGoodsType(newProduct as Product)}
-
-برند:
-${brand}
-
-وضعیت:
-${availabilityStatus}${availabilityStatus === "موجود" ? ` (${stock.toLocaleString("fa-IR")} عدد)` : ""}
-
-قیمت:
-${newProduct.price.toLocaleString("fa-IR")} تومان
-
-آیا مطمئن هستید؟`
-    );
-
-    if (!confirmed) {
-      setSaving(false);
-      return;
-    }
-
-    const productToSave = {
-      ...newProduct,
-      brand,
-      stock,
-      type: newProduct.goodsType,
-      image:
-        newProduct.image ||
-        (newProduct.model ? getDefaultImage(newProduct.model) : ""),
-    };
-
-    if (editId) {
-      await updateProduct(editId, productToSave);
-    } else {
-      await addProduct(productToSave);
-    }
-
-    await fetchProducts();
-
-    resetForm();
-
-    showToast(editId ? "محصول ویرایش شد ✅" : "محصول ثبت شد ✅");
-  } catch (err) {
-    console.error("❌ Error saving product:", err);
-    showToast("خطا در ذخیره محصول ❌");
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   const handleDelete = async (id: number) => {
     if (window.confirm("آیا از حذف محصول مطمئن هستید؟")) {
       await deleteProduct(id);
-      await fetchProducts(); // رفع مشکل عدم به‌روزرسانی لیست
     }
   };
 
@@ -230,45 +225,63 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
       goodsType: getProductGoodsType(p),
       type: getProductGoodsType(p),
     });
-  
+
     setEditId(p.id);
     setPriceDisplay(formatPriceInput(p.price));
-  
-    // Custom model
-    setCustomModel(
-      MODELS.includes(p.model) ? "" : p.model
-    );
 
-    setCustomBrand(
-      BRANDS.includes(p.brand as typeof BRANDS[number]) ? "" : p.brand
-    );
-
-    const available = isProductAvailable(p);
-    setAvailabilityStatus(getAvailabilityLabel(p));
-    setStockCount(available ? String(Math.max(1, p.stock)) : "1");
-  
-    // Custom select fields
-    const specs: Record<string, string> = {};
-  
-    PRODUCT_SPEC_FIELDS.forEach((field) => {
-      if (field.type !== "select") return;
-  
-      const value = String(p[field.key] ?? "");
-  
-      if (
-        value &&
-        !field.options?.includes(value)
-      ) {
-        specs[field.key] = value;
-      }
-    });
-  
-    setCustomSpecs(specs);
-  
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  const handleTablePriceChange = (
+    productId: number,
+    value: string,
+  ) => {
+    const parsed = parsePriceInput(value);
+
+    setTablePriceValues((prev) => ({
+      ...prev,
+      [productId]:
+        value === "" ? "" : formatPriceInput(parsed),
+    }));
+  };
+
+  const handleTablePriceSave = async (product: Product) => {
+    const currentValue =
+      tablePriceValues[product.id] ??
+      formatPriceInput(product.price);
+
+    const parsedPrice = parsePriceInput(currentValue);
+
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      showToast("قیمت معتبر وارد کنید.");
+      return;
+    }
+
+    setSavingTablePriceId(product.id);
+
+    try {
+      const { id, ...productData } = product;
+
+      await updateProduct(id, {
+        ...productData,
+        price: parsedPrice,
+      });
+
+      setTablePriceValues((prev) => ({
+        ...prev,
+        [product.id]: formatPriceInput(parsedPrice),
+      }));
+
+      showToast("قیمت با موفقیت به‌روز شد.");
+    } catch (err) {
+      console.error("Error updating table price:", err);
+      showToast("خطا در به‌روزرسانی قیمت.");
+    } finally {
+      setSavingTablePriceId(null);
+    }
   };
 
   const toggleTag = (tag: string) => {
@@ -280,152 +293,137 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
     }));
   };
 
-  const handleAvailabilityChange = (status: AvailabilityLabel) => {
-    setAvailabilityStatus(status);
-    if (status === "ناموجود") {
-      updateField("stock", 0);
-      return;
-    }
-    const nextStock = stockFromAvailability(status, Number(stockCount) || newProduct.stock);
-    setStockCount(String(nextStock));
-    updateField("stock", nextStock);
-  };
-
-  const handleStockCountChange = (value: string) => {
-    const digits = value.replace(/\D/g, "");
-    setStockCount(digits);
-    if (availabilityStatus === "موجود" && digits) {
-      updateField("stock", Math.max(1, parseInt(digits, 10) || 1));
-    }
-  };
-
-  const handleToggleTableAvailability = async (product: Product) => {
-    const nextStock = isProductAvailable(product) ? 0 : Math.max(1, product.stock);
-    setTogglingAvailabilityId(product.id);
-    try {
-      await adjustProductStock(product.id, { stock: nextStock });
-    } catch {
-      // toast handled in context
-    } finally {
-      setTogglingAvailabilityId(null);
-    }
-  };
-
   const sortedProducts = [...products].sort((a, b) => {
     let comparison = 0;
-    if (sortBy === 'model') comparison = a.model.localeCompare(b.model, 'fa');
-    else if (sortBy === 'price') comparison = a.price - b.price;
-    else if (sortBy === 'tags') comparison = a.tags.join('').localeCompare(b.tags.join(''), 'fa');
-    return sortOrder === 'asc' ? comparison : -comparison;
+
+    if (sortBy === "model") {
+      comparison = a.model.localeCompare(b.model, "fa");
+    } else if (sortBy === "price") {
+      comparison = a.price - b.price;
+    } else if (sortBy === "tags") {
+      comparison = a.tags
+        .join("")
+        .localeCompare(b.tags.join(""), "fa");
+    }
+
+    return sortOrder === "asc"
+      ? comparison
+      : -comparison;
   });
 
   const previewImage = newProduct.image
     ? getImage(newProduct.image)
-    : (newProduct.model ? getDefaultImage(newProduct.model) : '/loading.gif');
+    : newProduct.model
+      ? getDefaultImage(newProduct.model)
+      : "/loading.gif";
 
-  const renderSpecField = (field: typeof PRODUCT_SPEC_FIELDS[number]) => {
-    const rawValue = String(newProduct[field.key] ?? '');
-    const options = field.options ?? [];
-    const showOther = field.type === 'select' && (
-      rawValue === OTHER_OPTION || isOtherValue(rawValue, options)
+  const renderSpecField = (
+    field: typeof PRODUCT_SPEC_FIELDS[number],
+  ) => {
+    const rawValue = String(
+      newProduct[field.key] ?? "",
     );
-    const selectValue = showOther && rawValue !== OTHER_OPTION
-      ? OTHER_OPTION
-      : (options.includes(rawValue) ? rawValue : (rawValue ? OTHER_OPTION : ''));
 
-      if (field.type === "select" && field.options) {
-        const customValue = customSpecs[field.key] ?? "";
-      
-        return (
-          <div
-            className="admin-products-form-group"
-            key={field.key}
-          >
-            <label className="admin-products-form-label">
-              {field.label}
-            </label>
-      
-            <select
-              value={
-                field.options.includes(rawValue)
-                  ? rawValue
-                  : rawValue
-                  ? OTHER_OPTION
-                  : ""
-              }
-              onChange={(e) => {
-                const value = e.target.value;
-      
-                if (value === OTHER_OPTION) {
-                  updateField(field.key, OTHER_OPTION);
-      
-                  setCustomSpecs((prev) => ({
-                    ...prev,
-                    [field.key]: "",
-                  }));
-      
-                  return;
-                }
-      
-                updateField(field.key, value);
-      
+    const options = field.options ?? [];
+
+    const showOther =
+      field.type === "select" &&
+      (rawValue === OTHER_OPTION ||
+        isOtherValue(rawValue, options));
+
+    const selectValue =
+      showOther && rawValue !== OTHER_OPTION
+        ? OTHER_OPTION
+        : options.includes(rawValue)
+          ? rawValue
+          : rawValue
+            ? OTHER_OPTION
+            : "";
+
+    if (field.type === "select" && field.options) {
+      return (
+        <div
+          className="admin-products-form-group"
+          key={field.key}
+        >
+          <label className="admin-products-form-label">
+            {field.label}
+          </label>
+
+          <select
+            value={selectValue}
+            onChange={(e) => {
+              const v = e.target.value;
+
+              if (v === OTHER_OPTION) {
+                updateField(field.key, OTHER_OPTION);
+              } else {
+                updateField(field.key, v);
+
                 setCustomSpecs((prev) => {
                   const next = { ...prev };
                   delete next[field.key];
                   return next;
                 });
-              }}
-              className="admin-products-form-input"
-            >
-              <option value="">—</option>
-      
-              {field.options.map((opt) => (
-                <option
-                  key={opt}
-                  value={opt}
-                >
-                  {opt}
-                </option>
-              ))}
-      
-              <option value={OTHER_OPTION}>
-                {OTHER_OPTION}
+              }
+            }}
+            className="admin-products-form-input"
+          >
+            <option value="">—</option>
+
+            {field.options.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
               </option>
-            </select>
-      
-            {(rawValue === OTHER_OPTION ||
-              customValue !== "") && (
-              <input
-                type="text"
-                placeholder={`${field.label} را وارد کنید`}
-                value={customValue}
-                onChange={(e) => {
-                  setCustomSpecs((prev) => ({
-                    ...prev,
-                    [field.key]: e.target.value,
-                  }));
-                }}
-                onBlur={() => {
-                  updateField(
-                    field.key,
-                    customValue.trim() as never
-                  );
-                }}
-                className="admin-products-form-input custom-input"
-              />
-            )}
-          </div>
-        );
-      }
+            ))}
+          </select>
+
+          {showOther && (
+            <input
+              type="text"
+              placeholder={`${field.label} را وارد کنید`}
+              value={
+                customSpecs[field.key] ??
+                (rawValue !== OTHER_OPTION
+                  ? rawValue
+                  : "")
+              }
+              onChange={(e) => {
+                setCustomSpecs((prev) => ({
+                  ...prev,
+                  [field.key]: e.target.value,
+                }));
+
+                updateField(
+                  field.key,
+                  e.target.value,
+                );
+              }}
+              className="admin-products-form-input custom-input"
+            />
+          )}
+        </div>
+      );
+    }
+
     return (
-      <div className="admin-products-form-group" key={field.key}>
+      <div
+        className="admin-products-form-group"
+        key={field.key}
+      >
         <label className="admin-products-form-label">
           {field.label}
         </label>
+
         <input
           type="text"
           value={rawValue}
-          onChange={(e) => updateField(field.key, e.target.value)}
+          onChange={(e) =>
+            updateField(
+              field.key,
+              e.target.value,
+            )
+          }
           className="admin-products-form-input"
           placeholder={field.placeholder}
         />
@@ -436,260 +434,277 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
   return (
     <div className="admin-products">
       <div className="admin-products-toolbar">
-        <h1 className="admin-products-title">مدیریت محصولات</h1>
+        <h1 className="admin-products-title">
+          مدیریت محصولات
+        </h1>
+
         <div className="admin-products-toolbar-actions">
-          <button type="button" className="admin-products-add-btn" onClick={resetForm}>
+          <button
+            type="button"
+            className="admin-products-add-btn"
+            onClick={resetForm}
+          >
             محصول جدید
           </button>
         </div>
       </div>
 
       <div className="admin-bulk-price-panel">
-        <span className="admin-bulk-price-title">تغییر قیمت گروهی</span>
+        <span className="admin-bulk-price-title">
+          تغییر قیمت گروهی
+        </span>
+
         <div className="admin-bulk-price-row">
           <input
             type="number"
             step="0.1"
             placeholder="درصد"
             value={pricePercent}
-            onChange={(e) => setPricePercent(e.target.value)}
+            onChange={(e) =>
+              setPricePercent(e.target.value)
+            }
             className="admin-products-form-input"
-            style={{ maxWidth: '5rem' }}
+            style={{ maxWidth: "5rem" }}
           />
+
           <select
             value={priceCategory}
-            onChange={(e) => setPriceCategory(e.target.value)}
+            onChange={(e) =>
+              setPriceCategory(e.target.value)
+            }
             className="admin-products-form-input"
-            style={{ maxWidth: '9rem' }}
+            style={{ maxWidth: "9rem" }}
           >
             <option value="all">همه</option>
+
             {GOODS_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t} value={t}>
+                {t}
+              </option>
             ))}
           </select>
+
           <button
             type="button"
             onClick={handleBulkPriceAdjust}
             disabled={adjustingPrices}
             className="admin-bulk-price-btn"
           >
-            {adjustingPrices ? '...' : 'اعمال'}
+            {adjustingPrices ? "..." : "اعمال"}
           </button>
         </div>
       </div>
 
       <div className="admin-products-form-panel">
-        <form onSubmit={handleSubmit} className="admin-products-form">
+        <form
+          onSubmit={handleSubmit}
+          className="admin-products-form"
+        >
           <h2 className="admin-products-form-title">
-            {editId ? "ویرایش محصول" : "ثبت محصول"}
+            {editId
+              ? "ویرایش محصول"
+              : "ثبت محصول"}
           </h2>
+
           {duplicateWarning && (
-            <div className="admin-products-duplicate-warning" role="status">
+            <div
+              className="admin-products-duplicate-warning"
+              role="status"
+            >
               {duplicateWarning}
             </div>
           )}
+
           <div className="admin-products-form-grid">
-          <div className="admin-products-form-group">
-  <label className="admin-products-form-label">مدل</label>
-
-  <select
-    value={
-      MODELS.includes(newProduct.model)
-        ? newProduct.model
-        : OTHER_OPTION
-    }
-    onChange={(e) => {
-      const value = e.target.value;
-
-      if (value === OTHER_OPTION) {
-        setCustomModel("");
-        updateField("model", OTHER_OPTION);
-        return;
-      }
-
-      const updatedImage =
-        (!newProduct.image && value)
-          ? getDefaultImage(value)
-          : newProduct.image;
-
-      setCustomModel("");
-
-      setNewProduct((prev) => ({
-        ...prev,
-        model: value,
-        image: updatedImage,
-      }));
-    }}
-    className="admin-products-form-input"
-  >
-    <option value="">—</option>
-
-    {MODELS.map((model) => (
-      <option key={model} value={model}>
-        {model}
-      </option>
-    ))}
-
-    <option value={OTHER_OPTION}>
-      {OTHER_OPTION}
-    </option>
-  </select>
-
-  {(newProduct.model === OTHER_OPTION ||
-    customModel !== "") && (
-    <input
-      type="text"
-      placeholder="نام مدل"
-      value={customModel}
-      onChange={(e) => {
-        setCustomModel(e.target.value);
-      }}
-      onBlur={() => {
-        updateField("model", customModel.trim());
-      }}
-      className="admin-products-form-input custom-input"
-    />
-  )}
-</div>
             <div className="admin-products-form-group">
-              <label className="admin-products-form-label">برند</label>
+              <label className="admin-products-form-label">
+                مدل
+              </label>
+
               <select
-                value={
-                  BRANDS.includes(newProduct.brand as typeof BRANDS[number])
-                    ? newProduct.brand
-                    : newProduct.brand
-                    ? OTHER_OPTION
-                    : ""
-                }
+                value={newProduct.model}
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (value === OTHER_OPTION) {
-                    setCustomBrand("");
-                    updateField("brand", OTHER_OPTION);
-                    return;
-                  }
-                  setCustomBrand("");
-                  updateField("brand", value);
+
+                  const updatedImage =
+                    !newProduct.image &&
+                    value &&
+                    value !== "سایر"
+                      ? getDefaultImage(value)
+                      : newProduct.image;
+
+                  setNewProduct((prev) => ({
+                    ...prev,
+                    model: value,
+                    image: updatedImage,
+                  }));
                 }}
                 className="admin-products-form-input"
-                required
               >
                 <option value="">—</option>
-                {BRANDS.map((brand) => (
-                  <option key={brand} value={brand}>
-                    {brand}
+
+                {MODELS.map((model) => (
+                  <option key={model} value={model}>
+                    {model}
                   </option>
                 ))}
-                <option value={OTHER_OPTION}>{OTHER_OPTION}</option>
               </select>
-              {(newProduct.brand === OTHER_OPTION || customBrand !== "") && (
+
+              {newProduct.model === "سایر" && (
                 <input
                   type="text"
-                  placeholder="نام برند"
-                  value={customBrand}
-                  onChange={(e) => setCustomBrand(e.target.value)}
-                  onBlur={() => updateField("brand", customBrand.trim())}
+                  placeholder="نام مدل"
+                  value={customModel}
+                  onChange={(e) => {
+                    setCustomModel(e.target.value);
+                    updateField(
+                      "model",
+                      e.target.value,
+                    );
+                  }}
                   className="admin-products-form-input custom-input"
-                  maxLength={100}
                 />
               )}
             </div>
+
             {PRODUCT_SPEC_FIELDS.map(renderSpecField)}
+
             <div className="admin-products-form-group">
-              <label className="admin-products-form-label">قیمت (تومان)</label>
+              <label className="admin-products-form-label">
+                قیمت (تومان)
+              </label>
+
               <input
                 type="text"
                 inputMode="numeric"
                 dir="ltr"
                 value={priceDisplay}
                 onChange={(e) => {
-                  const parsed = parsePriceInput(e.target.value);
-                  setPriceDisplay(e.target.value === '' ? '' : formatPriceInput(parsed));
-                  updateField("price", parsed);
+                  const parsed = parsePriceInput(
+                    e.target.value,
+                  );
+
+                  setPriceDisplay(
+                    e.target.value === ""
+                      ? ""
+                      : formatPriceInput(parsed),
+                  );
+
+                  updateField(
+                    "price",
+                    parsed,
+                  );
                 }}
                 className="admin-products-form-input admin-products-price-input"
                 placeholder="۱٬۲۵۰٬۰۰۰"
               />
             </div>
-            <div className="admin-products-form-group">
-              <label className="admin-products-form-label">وضعیت موجودی</label>
-              <select
-                value={availabilityStatus}
-                onChange={(e) => handleAvailabilityChange(e.target.value as AvailabilityLabel)}
-                className="admin-products-form-input"
-              >
-                <option value="موجود">موجود</option>
-                <option value="ناموجود">ناموجود</option>
-              </select>
-            </div>
-            {availabilityStatus === "موجود" && (
-              <div className="admin-products-form-group">
-                <label className="admin-products-form-label">تعداد موجودی</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  dir="ltr"
-                  value={stockCount}
-                  onChange={(e) => handleStockCountChange(e.target.value)}
-                  className="admin-products-form-input"
-                  placeholder="۱"
-                  min={1}
-                />
-              </div>
-            )}
+
             <div className="admin-products-form-group admin-products-tags-group">
-              <label className="admin-products-form-label">تگ‌ها</label>
+              <label className="admin-products-form-label">
+                تگ‌ها
+              </label>
+
               <div className="admin-products-tags">
                 {TAGS.map((tag) => (
-                  <label key={tag} className="admin-products-tag-label">
+                  <label
+                    key={tag}
+                    className="admin-products-tag-label"
+                  >
                     <input
                       type="checkbox"
-                      checked={newProduct.tags.includes(tag)}
-                      onChange={() => toggleTag(tag)}
+                      checked={newProduct.tags.includes(
+                        tag,
+                      )}
+                      onChange={() =>
+                        toggleTag(tag)
+                      }
                     />
+
                     <span>{tag}</span>
                   </label>
                 ))}
               </div>
             </div>
+
             <div className="admin-products-form-group admin-products-form-group-full">
-              <label className="admin-products-form-label">توضیحات</label>
+              <label className="admin-products-form-label">
+                توضیحات
+              </label>
+
               <textarea
                 value={newProduct.description}
-                onChange={(e) => updateField("description", e.target.value)}
+                onChange={(e) =>
+                  updateField(
+                    "description",
+                    e.target.value,
+                  )
+                }
                 className="admin-products-form-textarea"
                 rows={2}
               />
             </div>
+
             <div className="admin-products-form-group admin-products-form-group-full">
-              <label className="admin-products-form-label">تصویر</label>
+              <label className="admin-products-form-label">
+                تصویر
+              </label>
+
               <div className="admin-products-image-row">
                 <div className="admin-products-image-preview">
                   {uploadingImage ? (
-                    <img src="/loading.gif" alt="..." />
+                    <img
+                      src="/loading.gif"
+                      alt="..."
+                    />
                   ) : (
-                    <img src={previewImage} alt="پیش‌نمایش" />
+                    <img
+                      src={previewImage}
+                      alt="پیش‌نمایش"
+                    />
                   )}
                 </div>
+
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleImageUpload(file);
+                    const file =
+                      e.target.files?.[0];
+
+                    if (file) {
+                      handleImageUpload(file);
+                    }
                   }}
                   className="admin-products-image-input"
                 />
-                <span className="admin-products-image-hint">پیش‌فرض: تصویر مدل</span>
+
+                <span className="admin-products-image-hint">
+                  پیش‌فرض: تصویر مدل
+                </span>
               </div>
             </div>
           </div>
+
           <div className="admin-products-form-actions">
-            <button type="submit" className="admin-products-form-submit" disabled={saving || loading}>
-              {saving ? 'ذخیره...' : editId ? 'ذخیره' : 'ثبت'}
+            <button
+              type="submit"
+              className="admin-products-form-submit"
+              disabled={saving || loading}
+            >
+              {saving
+                ? "ذخیره..."
+                : editId
+                  ? "ذخیره"
+                  : "ثبت"}
             </button>
+
             {editId && (
-              <button type="button" onClick={resetForm} className="admin-products-form-cancel">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="admin-products-form-cancel"
+              >
                 لغو
               </button>
             )}
@@ -700,33 +715,42 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
       <section className="admin-products-list-panel">
         <div className="admin-products-table-header">
           <h2>لیست ({products.length})</h2>
+
           <div className="admin-products-sort">
             <label>مرتب:</label>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
+
+            <select
+              value={sortBy}
+              onChange={(e) =>
+                setSortBy(
+                  e.target.value as typeof sortBy,
+                )
+              }
+            >
               <option value="model">مدل</option>
               <option value="price">قیمت</option>
               <option value="tags">تگ</option>
             </select>
+
             <button
               type="button"
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              onClick={() =>
+                setSortOrder(
+                  sortOrder === "asc"
+                    ? "desc"
+                    : "asc",
+                )
+              }
               className="admin-products-sort-btn"
             >
-              {sortOrder === 'asc' ? '↑' : '↓'}
+              {sortOrder === "asc"
+                ? "↑"
+                : "↓"}
             </button>
           </div>
         </div>
 
-        <div 
-          className="admin-products-table-scroll"
-          style={{ 
-            overflowY: 'auto', 
-            maxHeight: 'calc(100vh - 150px)', 
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            background: '#fff'
-          }}
-        >
+        <div className="admin-products-table-scroll">
           {loading && products.length === 0 ? (
             <div className="admin-products-loading">
               <p>در حال بارگذاری...</p>
@@ -742,21 +766,41 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
                   <th>تصویر</th>
                   <th>مدل</th>
                   <th>نوع کالا</th>
-                  <th>برند</th>
                   <th>رنگ</th>
                   <th>قیمت</th>
-                  <th>موجودی</th>
                   <th>تگ‌ها</th>
                   <th>عملیات</th>
                 </tr>
               </thead>
+
               <tbody>
                 {sortedProducts.map((product) => {
-                  const productImage = product.image
-                    ? getImage(product.image)
-                    : getDefaultImage(product.model);
-                  const goodsType = getProductGoodsType(product);
-                  const availability = getAvailabilityLabel(product);
+                  const productImage =
+                    product.image
+                      ? getImage(
+                          product.image,
+                        )
+                      : getDefaultImage(
+                          product.model,
+                        );
+
+                  const goodsType =
+                    getProductGoodsType(
+                      product,
+                    );
+
+                  const tablePrice =
+                    tablePriceValues[
+                      product.id
+                    ] ??
+                    formatPriceInput(
+                      product.price,
+                    );
+
+                  const isSavingPrice =
+                    savingTablePriceId ===
+                    product.id;
+
                   return (
                     <tr key={product.id}>
                       <td>
@@ -766,51 +810,91 @@ ${newProduct.price.toLocaleString("fa-IR")} تومان
                           className="admin-products-table-image"
                         />
                       </td>
+
+                      <td>{product.model}</td>
+
+                      <td>{goodsType}</td>
+
+                      <td>{product.color}</td>
+
                       <td>
-                        <div className="admin-products-product-name">
-                          <span>{product.model}</span>
-                          {product.brand && (
-                            <span className="admin-products-product-brand">
-                              برند: {product.brand}
-                            </span>
+                        <div className="admin-products-inline-price">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            dir="ltr"
+                            value={tablePrice}
+                            onChange={(e) =>
+                              handleTablePriceChange(
+                                product.id,
+                                e.target.value,
+                              )
+                            }
+                            className="admin-products-inline-price-input"
+                            aria-label={`قیمت ${product.model}`}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleTablePriceSave(
+                                product,
+                              )
+                            }
+                            disabled={
+                              isSavingPrice
+                            }
+                            className="admin-products-inline-price-btn"
+                          >
+                            {isSavingPrice
+                              ? "..."
+                              : "ثبت"}
+                          </button>
+                        </div>
+
+                        <span className="admin-products-inline-price-unit">
+                          تومان
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="admin-products-table-tags">
+                          {product.tags.map(
+                            (tag) => (
+                              <span
+                                key={tag}
+                                className="admin-products-table-tag"
+                              >
+                                {tag}
+                              </span>
+                            ),
                           )}
                         </div>
                       </td>
-                      <td>{goodsType}</td>
-                      <td>{product.brand || "—"}</td>
-                      <td>{product.color}</td>
-                      <td>{product.price.toLocaleString('fa-IR')} تومان</td>
-                      <td>
-                        <button
-                          type="button"
-                          className={`admin-products-availability-badge admin-products-availability-badge--${
-                            availability === "موجود" ? "in" : "out"
-                          }`}
-                          onClick={() => handleToggleTableAvailability(product)}
-                          disabled={togglingAvailabilityId === product.id}
-                          title="کلیک برای تغییر وضعیت"
-                        >
-                          {togglingAvailabilityId === product.id ? "..." : availability}
-                        </button>
-                        {availability === "موجود" && (
-                          <span className="admin-products-stock-value">
-                            {product.stock.toLocaleString("fa-IR")}
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="admin-products-table-tags">
-                          {product.tags.map((tag) => (
-                            <span key={tag} className="admin-products-table-tag">{tag}</span>
-                          ))}
-                        </div>
-                      </td>
+
                       <td>
                         <div className="admin-products-table-actions">
-                          <button type="button" onClick={() => handleEdit(product)} className="admin-products-table-edit">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleEdit(
+                                product,
+                              )
+                            }
+                            className="admin-products-table-edit"
+                          >
                             ویرایش
                           </button>
-                          <button type="button" onClick={() => handleDelete(product.id)} className="admin-products-table-delete">
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDelete(
+                                product.id,
+                              )
+                            }
+                            className="admin-products-table-delete"
+                          >
                             حذف
                           </button>
                         </div>
