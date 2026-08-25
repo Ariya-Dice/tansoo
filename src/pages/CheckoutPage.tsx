@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { getDefaultImage } from '../constants';
 import { getProductGoodsType } from '../productSpecs';
@@ -16,6 +16,8 @@ const CheckoutPage: React.FC = () => {
     replacementProgramSelected,
   } = useAppContext();
 
+  const navigate = useNavigate();
+
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
     phone: '',
@@ -26,12 +28,8 @@ const CheckoutPage: React.FC = () => {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [addressWarningVisible, setAddressWarningVisible] = useState(true);
-  const [nameWarningVisible, setNameWarningVisible] = useState(true);
 
-  /**
-   * تبدیل اعداد فارسی و عربی به انگلیسی
-   */
-  const normalizeDigits = (value: string): string => {
+  const normalizeDigits = (value: string) => {
     return value
       .replace(/[۰-۹]/g, (digit) =>
         String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)),
@@ -41,10 +39,7 @@ const CheckoutPage: React.FC = () => {
       );
   };
 
-  /**
-   * یکسان‌سازی حروف فارسی
-   */
-  const normalizePersianText = (value: string): string => {
+  const normalizePersianText = (value: string) => {
     return value
       .replace(/ي/g, 'ی')
       .replace(/ى/g, 'ی')
@@ -52,17 +47,7 @@ const CheckoutPage: React.FC = () => {
       .replace(/\u200c+/g, '\u200c');
   };
 
-  /**
-   * فیلتر نام
-   *
-   * فقط:
-   * - حروف فارسی
-   * - فاصله
-   * - نیم‌فاصله
-   *
-   * مجاز هستند.
-   */
-  const filterName = (value: string): string => {
+  const filterName = (value: string) => {
     const normalized = normalizePersianText(value);
 
     return normalized.replace(
@@ -71,47 +56,17 @@ const CheckoutPage: React.FC = () => {
     );
   };
 
-  /**
-   * فیلتر شماره موبایل
-   *
-   * اعداد فارسی و عربی ابتدا به انگلیسی
-   * تبدیل می‌شوند.
-   */
-  const filterPhone = (value: string): string => {
+  const filterPhone = (value: string) => {
     const normalized = normalizeDigits(value);
 
-    return normalized
-      .replace(/\D/g, '')
-      .slice(0, 11);
+    return normalized.replace(/\D/g, '').slice(0, 11);
   };
 
-  /**
-   * فیلتر آدرس
-   *
-   * مجاز:
-   * - حروف فارسی
-   * - حروف انگلیسی
-   * - اعداد انگلیسی
-   * - اعداد فارسی
-   * - فاصله
-   * - نیم‌فاصله
-   * - علائم رایج آدرس
-   *
-   * بنابراین آدرس‌هایی مثل:
-   *
-   * تهران، خیابان آزادی، پلاک 25
-   *
-   * یا:
-   *
-   * تهران، خیابان آزادی، پلاک ۲۵
-   *
-   * هر دو قابل ورود هستند.
-   */
-  const filterAddress = (value: string): string => {
+  const filterAddress = (value: string) => {
     const normalized = normalizePersianText(value);
 
     return normalized.replace(
-      /[^A-Za-z\u0600-\u06FF0-9۰-۹\u200C\s،,.\-_/()#]/g,
+      /[^\u0600-\u06FF\u200C\s0-9]/g,
       '',
     );
   };
@@ -123,45 +78,18 @@ const CheckoutPage: React.FC = () => {
 
     let filteredValue = value;
 
-    /**
-     * نام
-     */
     if (name === 'name') {
       filteredValue = filterName(value);
-
-      /*
-       * به محض وارد کردن اولین کاراکتر فارسی،
-       * اخطار داخل فیلد حذف می‌شود.
-       */
-      if (
-        nameWarningVisible &&
-        /[\u0600-\u06FF]/.test(filteredValue)
-      ) {
-        setNameWarningVisible(false);
-      }
     }
 
-    /**
-     * شماره تماس
-     */
     if (name === 'phone') {
       filteredValue = filterPhone(value);
     }
 
-    /**
-     * آدرس
-     */
     if (name === 'address') {
       filteredValue = filterAddress(value);
 
-      /*
-       * به محض شروع تایپ آدرس،
-       * پیام راهنما حذف می‌شود.
-       */
-      if (
-        addressWarningVisible &&
-        filteredValue.length > 0
-      ) {
+      if (addressWarningVisible && filteredValue.length > 0) {
         setAddressWarningVisible(false);
       }
     }
@@ -172,7 +100,7 @@ const CheckoutPage: React.FC = () => {
     }));
   };
 
-  const validateName = (name: string): string => {
+  const validateName = (name: string) => {
     const value = normalizePersianText(name.trim());
 
     if (!value) {
@@ -196,7 +124,7 @@ const CheckoutPage: React.FC = () => {
     return '';
   };
 
-  const validatePhone = (phone: string): string => {
+  const validatePhone = (phone: string) => {
     const normalized = normalizeDigits(phone.trim());
 
     if (!normalized) {
@@ -210,7 +138,7 @@ const CheckoutPage: React.FC = () => {
     return '';
   };
 
-  const validateEmail = (email: string): string => {
+  const validateEmail = (email: string) => {
     const value = email.trim();
 
     if (!value) {
@@ -224,7 +152,7 @@ const CheckoutPage: React.FC = () => {
     return '';
   };
 
-  const validateAddress = (address: string): string => {
+  const validateAddress = (address: string) => {
     const value = normalizePersianText(address.trim());
 
     if (!value) {
@@ -232,7 +160,7 @@ const CheckoutPage: React.FC = () => {
     }
 
     if (!/[\u0600-\u06FF]/.test(value)) {
-      return 'آدرس باید شامل حروف فارسی باشد.';
+      return 'آدرس باید به زبان فارسی وارد شود.';
     }
 
     if (value.length < 15) {
@@ -311,9 +239,6 @@ const CheckoutPage: React.FC = () => {
         throw new Error('آدرس درگاه پرداخت دریافت نشد.');
       }
 
-      /*
-       * انتقال مستقیم مرورگر به درگاه
-       */
       window.location.assign(result.paymentUrl);
     } catch (err) {
       const message =
@@ -330,9 +255,7 @@ const CheckoutPage: React.FC = () => {
     <div className="checkout-page">
       <div className="container">
         <header className="checkout-header">
-          <h1 className="checkout-title">
-            تسویه حساب
-          </h1>
+          <h1 className="checkout-title">تسویه حساب</h1>
 
           <p className="checkout-subtitle">
             اطلاعات ارسال را تکمیل کنید
@@ -351,8 +274,6 @@ const CheckoutPage: React.FC = () => {
               noValidate
             >
               <div className="checkout-form-row">
-
-                {/* نام */}
                 <div className="checkout-form-group">
                   <label
                     className="checkout-form-label"
@@ -372,15 +293,9 @@ const CheckoutPage: React.FC = () => {
                     className="checkout-form-input"
                     value={customerDetails.name}
                     onChange={handleInputChange}
-                    placeholder={
-                      nameWarningVisible
-                        ? 'لطفاً نام و نام خانوادگی را فارسی وارد کنید'
-                        : ''
-                    }
                   />
                 </div>
 
-                {/* شماره تماس */}
                 <div className="checkout-form-group">
                   <label
                     className="checkout-form-label"
@@ -406,7 +321,6 @@ const CheckoutPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* ایمیل */}
               <div className="checkout-form-group">
                 <label
                   className="checkout-form-label"
@@ -428,7 +342,6 @@ const CheckoutPage: React.FC = () => {
                 />
               </div>
 
-              {/* آدرس */}
               <div className="checkout-form-group">
                 <label
                   className="checkout-form-label"
@@ -458,11 +371,9 @@ const CheckoutPage: React.FC = () => {
                   className="checkout-form-textarea"
                   value={customerDetails.address}
                   onChange={handleInputChange}
-                  placeholder="مثلاً تهران، خیابان آزادی، پلاک ۲۵"
                 />
               </div>
 
-              {/* توضیحات */}
               <div className="checkout-form-group">
                 <label
                   className="checkout-form-label"
@@ -481,7 +392,6 @@ const CheckoutPage: React.FC = () => {
                 />
               </div>
 
-              {/* ثبت پرداخت */}
               <button
                 type="submit"
                 disabled={isProcessing}
@@ -504,7 +414,6 @@ const CheckoutPage: React.FC = () => {
             </p>
           </section>
 
-          {/* خلاصه سفارش */}
           <aside className="checkout-order-section">
             <h2 className="checkout-order-title">
               خلاصه سفارش
@@ -555,7 +464,7 @@ const CheckoutPage: React.FC = () => {
 
             <div className="checkout-order-summary">
               <div className="checkout-order-total">
-                <span>مبلغ پرداختی</span>
+                <span>مبلغ تقریبی</span>
 
                 <span>
                   {cartTotal.toLocaleString('fa-IR')} تومان
@@ -563,7 +472,7 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               <p className="checkout-order-note">
-                هزینه ارسال: به صورت پس کرایه.
+                هزینه ارسال پس از هماهنگی محاسبه می‌شود.
               </p>
             </div>
           </aside>
