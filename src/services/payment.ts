@@ -19,32 +19,14 @@ interface PaymentErrorBody {
   error?: string;
 }
 
-interface PaymentSuccessBody {
-  orderId?: string;
-  orderNumber?: string;
-  trackId?: number;
-  paymentUrl?: string;
-}
-
-const PAYMENT_API_BASE_URL =
-  import.meta.env.VITE_API_URL?.trim() || '';
-
-function getPaymentApiUrl(): string {
-  const baseUrl = PAYMENT_API_BASE_URL.replace(/\/+$/, '');
-
-  if (!baseUrl) {
-    throw new Error('آدرس سرویس پرداخت تنظیم نشده است.');
-  }
-
-  return `${baseUrl}/api/payment/request`;
-}
-
 export async function requestPayment(
   customerDetails: PaymentCustomerDetails,
   cart: CartItem[],
 ): Promise<RequestPaymentResult> {
-  if (!cart.length) {
-    throw new Error('سبد خرید خالی است.');
+  const apiUrl = import.meta.env.VITE_API_URL?.trim();
+
+  if (!apiUrl) {
+    throw new Error('Payment API URL is not configured');
   }
 
   const items = cart.map((item) => ({
@@ -52,113 +34,43 @@ export async function requestPayment(
     quantity: item.quantity,
   }));
 
-  const apiUrl = getPaymentApiUrl();
-
   let response: Response;
 
   try {
-    response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        customer: {
-          name: customerDetails.name.trim(),
-          phone: customerDetails.phone.trim(),
-          email: customerDetails.email?.trim() || '',
-          address: customerDetails.address.trim(),
-          note: customerDetails.note?.trim() || '',
+    response = await fetch(
+      `${apiUrl.replace(/\/+$/, '')}/api/payment/request`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        items,
-      }),
-    });
-  } catch (error) {
-    console.error('Payment request network error:', error);
-
-    throw new Error(
-      'ارتباط با سرور پرداخت برقرار نشد. لطفاً دوباره تلاش کنید.',
+        body: JSON.stringify({
+          customer: customerDetails,
+          items,
+        }),
+      },
     );
-  }
-
-  let data:
-    | PaymentSuccessBody
-    | PaymentErrorBody
-    | null = null;
-
-  try {
-    data = (await response.json()) as
-      | PaymentSuccessBody
-      | PaymentErrorBody;
   } catch {
-    console.error(
-      'Payment server returned invalid JSON:',
-      response.status,
-      response.statusText,
-    );
-
-    throw new Error(
-      `پاسخ نامعتبر از سرور پرداخت دریافت شد. (${response.status})`,
-    );
+    throw new Error('Unable to connect to the payment server');
   }
+
+  const data = (await response.json()) as
+    | RequestPaymentResult
+    | PaymentErrorBody;
 
   if (!response.ok) {
     const errorData = data as PaymentErrorBody;
 
-    console.error('Payment server error:', {
-      status: response.status,
-      statusText: response.statusText,
-      data,
-    });
-
     throw new Error(
-      errorData.error ||
-        `خطا در درخواست پرداخت (${response.status})`,
+      errorData.error || 'Payment request failed',
     );
   }
 
-  const paymentData = data as PaymentSuccessBody;
+  const paymentData = data as RequestPaymentResult;
 
   if (!paymentData.paymentUrl) {
-    console.error(
-      'Payment server response does not contain paymentUrl:',
-      paymentData,
-    );
-
-    throw new Error(
-      'آدرس درگاه پرداخت از سرور دریافت نشد.',
-    );
+    throw new Error('Invalid payment server response');
   }
 
-  if (!paymentData.orderId) {
-    console.error(
-      'Payment server response does not contain orderId:',
-      paymentData,
-    );
-
-    throw new Error(
-      'شناسه سفارش از سرور دریافت نشد.',
-    );
-  }
-
-  if (
-    paymentData.trackId === undefined ||
-    paymentData.trackId === null
-  ) {
-    console.error(
-      'Payment server response does not contain trackId:',
-      paymentData,
-    );
-
-    throw new Error(
-      'شناسه پرداخت از سرور دریافت نشد.',
-    );
-  }
-
-  return {
-    orderId: paymentData.orderId,
-    orderNumber: paymentData.orderNumber,
-    trackId: Number(paymentData.trackId),
-    paymentUrl: paymentData.paymentUrl,
-  };
+  return paymentData;
 }
