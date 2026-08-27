@@ -86,21 +86,30 @@ export async function requestPayment(
     | PaymentErrorBody
     | null = null;
 
-  try {
-    data = (await response.json()) as
-      | PaymentSuccessBody
-      | PaymentErrorBody;
-  } catch {
-    console.error(
-      'Payment server returned invalid JSON:',
-      response.status,
-      response.statusText,
-    );
+    const rawResponse = await response.text();
 
-    throw new Error(
-      `پاسخ نامعتبر از سرور پرداخت دریافت شد. (${response.status})`,
-    );
-  }
+    console.log('[PAYMENT] RESPONSE', {
+      status: response.status,
+      statusText: response.statusText,
+      contentType: response.headers.get('content-type'),
+      body: rawResponse,
+    });
+    
+    try {
+      data = JSON.parse(rawResponse) as
+        | PaymentSuccessBody
+        | PaymentErrorBody;
+    } catch {
+      console.error('[PAYMENT] INVALID JSON', {
+        status: response.status,
+        statusText: response.statusText,
+        body: rawResponse,
+      });
+    
+      throw new Error(
+        `پاسخ نامعتبر از سرور پرداخت دریافت شد. (${response.status})`,
+      );
+    }
 
   if (!response.ok) {
     const errorData = data as PaymentErrorBody;
