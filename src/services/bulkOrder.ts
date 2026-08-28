@@ -94,7 +94,7 @@ async function extractFunctionError(error: unknown): Promise<string> {
 export async function fetchBulkOrderDepositAmount(): Promise<number> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.functions.invoke('submit-bulk-order', {
-    method: 'GET',
+    body: { action: 'getConfig' },
   });
 
   if (error) {

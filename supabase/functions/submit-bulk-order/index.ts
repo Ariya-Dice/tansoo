@@ -14,6 +14,7 @@ import {
 const PHONE_RE = /^09\d{9}$/;
 
 interface BulkOrderBody {
+  action?: string;
   name?: string;
   phone?: string;
   company?: string;
@@ -21,6 +22,16 @@ interface BulkOrderBody {
   quantity?: string;
   note?: string;
   idempotencyKey?: string;
+}
+
+function depositConfigResponse(requestId: string): Response {
+  try {
+    const depositAmount = getBulkOrderDepositAmountTomans();
+    return jsonResponse({ depositAmount });
+  } catch {
+    console.error(`[ BULK_ORDER ] CONFIG requestId=${requestId} deposit not configured`);
+    return jsonResponse({ error: 'تنظیمات سپرده ثبت‌نام پیکربندی نشده است.' }, 500);
+  }
 }
 
 interface BulkOrderRow {
@@ -189,17 +200,22 @@ Deno.serve(async (req) => {
   if (cors) return cors;
 
   if (req.method === 'GET') {
-    try {
-      const depositAmount = getBulkOrderDepositAmountTomans();
-      return jsonResponse({ depositAmount });
-    } catch {
-      console.error(`[ BULK_ORDER ] CONFIG requestId=${requestId} deposit not configured`);
-      return jsonResponse({ error: 'تنظیمات سپرده ثبت‌نام پیکربندی نشده است.' }, 500);
-    }
+    return depositConfigResponse(requestId);
   }
 
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
+  let body: BulkOrderBody;
+  try {
+    body = (await req.json()) as BulkOrderBody;
+  } catch {
+    return jsonResponse({ error: 'درخواست نامعتبر است.' }, 400);
+  }
+
+  if (body.action === 'getConfig') {
+    return depositConfigResponse(requestId);
   }
 
   console.log(`[ BULK_ORDER ] START requestId=${requestId}`);
@@ -218,8 +234,6 @@ Deno.serve(async (req) => {
       console.error(`[ BULK_ORDER ] CONFIG requestId=${requestId} BULK_ORDER_DEPOSIT_AMOUNT missing`);
       return jsonResponse({ error: 'تنظیمات سپرده ثبت‌نام پیکربندی نشده است.' }, 500);
     }
-
-    const body = (await req.json()) as BulkOrderBody;
     const name = String(body.name ?? '').trim();
     const company = String(body.company ?? '').trim();
     const goodsType = String(body.goodsType ?? '').trim();
