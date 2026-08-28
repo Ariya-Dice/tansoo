@@ -8,7 +8,9 @@
 }
 
 
-/* Header */
+/* =========================
+   Header
+========================= */
 
 .bulk-order-header {
   text-align: right;
@@ -22,26 +24,26 @@
   margin-bottom: 0.75rem;
 }
 
+.bulk-order-header p {
+  line-height: 1.9;
+  font-size: 0.9375rem;
+  margin: 0 0 0.75rem;
+}
 
 .bulk-order-header p:first-of-type {
   color: #38bdf8;
-  line-height: 1.8;
-  font-size: 0.9375rem;
-  margin-bottom: 0.75rem;
 }
-
 
 .bulk-order-header p:last-of-type {
   color: #f97316;
-  line-height: 1.9;
-  font-size: 0.9375rem;
   font-weight: 600;
   margin-top: 0.5rem;
 }
 
 
-
-/* Card */
+/* =========================
+   Card
+========================= */
 
 .bulk-order-card {
   background: rgba(15, 23, 42, 0.85);
@@ -53,7 +55,6 @@
     0 12px 40px rgba(0, 0, 0, 0.25);
 }
 
-
 .bulk-order-form {
   display: flex;
   flex-direction: column;
@@ -61,8 +62,9 @@
 }
 
 
-
-/* دو ستونه */
+/* =========================
+   دو ستونه
+========================= */
 
 .bulk-order-row {
   display: grid;
@@ -71,343 +73,521 @@
 }
 
 
-
-/* Fields */
+/* =========================
+   Fields
+========================= */
 
 .bulk-order-field label {
   display: block;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: #cbd5e1;
   margin-bottom: 0.4rem;
 }
-
 
 .bulk-order-field input,
 .bulk-order-field select,
 .bulk-order-field textarea {
-
   width: 100%;
-
   padding: 0.75rem 1rem;
 
   border: 1px solid rgba(0, 229, 255, 0.25);
-
   border-radius: 0.625rem;
 
-  background:
-    rgba(2, 6, 23, 0.55);
-
+  background: rgba(2, 6, 23, 0.55);
   color: #f1f5f9;
 
   font-family: inherit;
-
   font-size: 0.9375rem;
 
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-
+.bulk-order-field input::placeholder,
+.bulk-order-field textarea::placeholder {
+  color: #64748b;
+}
 
 .bulk-order-field input:focus,
 .bulk-order-field select:focus,
 .bulk-order-field textarea:focus {
-
   outline: none;
-
   border-color: #00e5ff;
 
   box-shadow:
-    0 0 0 3px rgba(0,229,255,0.1);
-
+    0 0 0 3px rgba(0, 229, 255, 0.1);
 }
 
 
+/* =========================
+   Select / Option
+========================= */
+
+.bulk-order-field select {
+  cursor: pointer;
+}
+
+.bulk-order-field select option,
+.bulk-order-field select optgroup {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+.bulk-order-field select optgroup {
+  font-weight: 700;
+}
 
 
-/* محصولات سفارش */
+/* =========================
+   محصولات سفارش
+========================= */
 
 .bulk-products-section {
-
   margin-top: 0.75rem;
-
   padding: 1rem;
 
   border-radius: 0.75rem;
 
-  border:
-
-    1px solid rgba(0,229,255,0.15);
-
-  background:
-
-    rgba(2,6,23,0.35);
-
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  background: rgba(2, 6, 23, 0.35);
 }
-
-
 
 .bulk-products-section h3 {
-
-  color:#f8fafc;
-
-  font-size:1rem;
-
-  margin-bottom:1rem;
-
+  color: #f8fafc;
+  font-size: 1rem;
+  margin-bottom: 1rem;
 }
 
 
-
-
-/* هر ردیف محصول */
+/* =========================
+   ردیف انتخاب محصول
+========================= */
 
 .bulk-product-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr auto;
 
-  display:grid;
+  gap: 0.75rem;
+  align-items: end;
 
-  grid-template-columns:
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
 
-    1.4fr 0.8fr auto;
-
-  gap:0.75rem;
-
-  align-items:end;
-
-  padding-bottom:1rem;
-
-  margin-bottom:1rem;
-
-  border-bottom:
-
-    1px dashed rgba(148,163,184,0.2);
-
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.2);
 }
-
-
 
 .bulk-product-row:last-child {
-
-  border-bottom:none;
-
+  border-bottom: none;
 }
 
 
+/* =========================
+   نمایش تعداد کارتن
+========================= */
+
+.bulk-carton-preview {
+  min-width: 90px;
+  min-height: 42px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.4rem 0.75rem;
+
+  border-radius: 0.625rem;
+
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+
+  text-align: center;
+}
+
+.bulk-carton-preview strong {
+  color: #f8fafc;
+  font-size: 0.85rem;
+}
+
+.bulk-carton-preview small {
+  color: #38bdf8;
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+}
 
 
-/* افزودن محصول */
+/* =========================
+   توضیح ظرفیت کارتن
+========================= */
+
+.bulk-carton-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.75rem;
+
+  border-radius: 0.625rem;
+
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.bulk-carton-info strong {
+  color: #fbbf24;
+  font-size: 0.85rem;
+}
+
+.bulk-carton-info span {
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+
+/* =========================
+   افزودن محصول
+========================= */
 
 .add-product-btn {
+  width: 100%;
 
-  width:100%;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
 
-  margin-top:0.5rem;
+  border-radius: 0.625rem;
 
-  padding:0.75rem;
+  border: 1px dashed #38bdf8;
 
-  border-radius:0.625rem;
+  background: rgba(56, 189, 248, 0.08);
 
-  border:
+  color: #38bdf8;
 
-    1px dashed #38bdf8;
+  font-weight: 700;
 
-  background:
-
-    rgba(56,189,248,0.08);
-
-  color:#38bdf8;
-
-  font-weight:700;
-
-  cursor:pointer;
-
-  transition:all .2s ease;
-
-}
-
-
-
-.add-product-btn:hover {
-
-  background:
-
-    rgba(56,189,248,0.18);
-
-}
-
-
-
-
-/* حذف محصول */
-
-.remove-product-btn {
-
-  height:42px;
-
-  padding:0 1rem;
-
-  border:none;
-
-  border-radius:0.625rem;
-
-  background:
-
-    rgba(239,68,68,0.15);
-
-  color:#f87171;
-
-  font-weight:700;
-
-  cursor:pointer;
-
-  transition:.2s;
-
-}
-
-
-
-.remove-product-btn:hover {
-
-  background:
-
-    rgba(239,68,68,0.3);
-
-}
-
-
-
-
-/* Submit */
-
-.bulk-order-submit {
-
-  margin-top:0.5rem;
-
-  padding:0.875rem;
-
-  border:none;
-
-  border-radius:0.625rem;
-
-  background:
-
-    linear-gradient(135deg,#c55900,#e67e22);
-
-  color:#fff;
-
-  font-weight:700;
-
-  font-size:1rem;
-
-  cursor:pointer;
+  cursor: pointer;
 
   transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
 
-    transform .15s,
-
-    box-shadow .15s;
-
+.add-product-btn:hover {
+  background: rgba(56, 189, 248, 0.18);
+  transform: translateY(-1px);
 }
 
 
+/* =========================
+   محصولات انتخاب شده
+========================= */
 
-.bulk-order-submit:hover:not(:disabled) {
+.bulk-selected-products {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
 
-  transform:translateY(-1px);
+.bulk-selected-product {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
 
-  box-shadow:
+  gap: 0.75rem;
+  align-items: center;
 
-    0 8px 24px rgba(197,89,0,.35);
+  padding: 0.85rem;
 
+  border-radius: 0.625rem;
+
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.bulk-selected-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.bulk-selected-product-info strong {
+  color: #f8fafc;
+  font-size: 0.9rem;
+}
+
+.bulk-selected-product-info span {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.bulk-selected-product-info small {
+  color: #38bdf8;
+  font-size: 0.75rem;
 }
 
 
+/* =========================
+   کنترل تعداد
+========================= */
 
-.bulk-order-submit:disabled {
-
-  opacity:.7;
-
-  cursor:wait;
-
+.bulk-product-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
+
+.bulk-product-controls button {
+  width: 32px;
+  height: 32px;
+
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 0.5rem;
+
+  background: rgba(56, 189, 248, 0.08);
+
+  color: #38bdf8;
+
+  font-size: 1.1rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.bulk-product-controls button:hover {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+.bulk-product-controls span {
+  min-width: 28px;
+  text-align: center;
+
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+
+/* =========================
+   حذف محصول
+========================= */
+
+.remove-product-btn {
+  height: 42px;
+
+  padding: 0 1rem;
+
+  border: none;
+  border-radius: 0.625rem;
+
+  background: rgba(239, 68, 68, 0.15);
+
+  color: #f87171;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.remove-product-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+
+/* =========================
+   جمع سفارش
+========================= */
+
+.bulk-order-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+
+  border-radius: 0.625rem;
+
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+}
+
+.bulk-order-total span {
+  color: #cbd5e1;
+  font-size: 0.85rem;
+}
+
+.bulk-order-total strong {
+  color: #38bdf8;
+  font-size: 0.95rem;
+}
+
+
+/* =========================
+   سپرده ثبت درخواست
+========================= */
 
 
 
 .bulk-order-deposit-notice {
   padding: 1rem 1.1rem;
+
   border-radius: 12px;
-  background: rgba(197, 89, 0, 0.08);
-  border: 1px solid rgba(197, 89, 0, 0.18);
+
+  background: rgba(30, 41, 59, 0.9);
+
+  border: 1px solid rgba(251, 191, 36, 0.35);
+
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.18);
 }
 
 .bulk-order-deposit-notice h3 {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.65rem;
+
+  color: #fbbf24;
+
   font-size: 1rem;
+  font-weight: 800;
 }
 
 .bulk-order-deposit-notice p {
-  margin: 0.35rem 0;
-  line-height: 1.7;
-  color: #4a4038;
+  margin: 0.4rem 0;
+
+  line-height: 1.8;
+
+  color: #e2e8f0;
+
+  font-size: 0.875rem;
+}
+
+.bulk-order-deposit-notice strong {
+  color: #fbbf24;
+  font-weight: 800;
 }
 
 .bulk-order-deposit-error {
-  color: #b45309;
-  font-weight: 600;
+  color: #f87171 !important;
+  font-weight: 700;
 }
 
 
+/* =========================
+   Submit
+========================= */
+
+.bulk-order-submit {
+  margin-top: 0.5rem;
+
+  padding: 0.875rem;
+
+  border: none;
+  border-radius: 0.625rem;
+
+  background:
+    linear-gradient(135deg, #c55900, #e67e22);
+
+  color: #fff;
+
+  font-weight: 700;
+  font-size: 1rem;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.bulk-order-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 24px rgba(197, 89, 0, 0.35);
+}
+
+.bulk-order-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
 
 
+/* =========================
+   Mobile
+========================= */
 
-/* Mobile */
-
-@media(max-width:700px){
-
+@media (max-width: 700px) {
 
   .bulk-order-row {
-
-    grid-template-columns:1fr;
-
+    grid-template-columns: 1fr;
   }
-
-
 
   .bulk-product-row {
-
-    grid-template-columns:1fr;
-
-    gap:0.75rem;
-
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
+  .bulk-carton-preview {
+    width: 100%;
+  }
 
+  .bulk-selected-product {
+    grid-template-columns: 1fr;
+  }
+
+  .bulk-product-controls {
+    justify-content: center;
+  }
 
   .remove-product-btn {
-
-    width:100%;
-
+    width: 100%;
   }
 
-
+  .bulk-order-total {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
 
 
+@media (max-width: 560px) {
 
-@media(max-width:560px){
-
+  .bulk-order-page {
+    padding: 1.25rem 0 2rem;
+  }
 
   .bulk-order-card {
-
-    padding:1rem;
-
+    padding: 1rem;
   }
-
 
   .bulk-order-header h1 {
-
-    font-size:1.4rem;
-
+    font-size: 1.4rem;
   }
 
+  .bulk-order-header p {
+    font-size: 0.875rem;
+  }
 
+  .bulk-products-section {
+    padding: 0.85rem;
+  }
+
+  .bulk-order-deposit-notice {
+    padding: 0.9rem;
+  }
+
+  .bulk-order-deposit-notice p {
+    font-size: 0.825rem;
+  }
 }
