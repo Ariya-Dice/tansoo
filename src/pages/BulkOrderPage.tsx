@@ -36,6 +36,7 @@ const BulkOrderPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [depositAmount, setDepositAmount] = useState<number | null>(null);
   const [depositLoading, setDepositLoading] = useState(true);
+  const [depositError, setDepositError] = useState<string | null>(null);
   const idempotencyKeyRef = useRef(crypto.randomUUID());
 
   const selectedProduct = products.find(
@@ -141,10 +142,16 @@ const BulkOrderPage: React.FC = () => {
         const amount = await fetchBulkOrderDepositAmount();
         if (!cancelled) {
           setDepositAmount(amount);
+          setDepositError(null);
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
           setDepositAmount(null);
+          setDepositError(
+            error instanceof Error
+              ? error.message
+              : 'مبلغ سپرده از سرور دریافت نشد.',
+          );
         }
       } finally {
         if (!cancelled) {
@@ -584,9 +591,9 @@ const BulkOrderPage: React.FC = () => {
                   </p>
                 </>
               ) : (
-                <p>
-                  مبلغ سپرده در حال حاضر قابل نمایش نیست. در صورت تکمیل فرم،
-                  مبلغ از سمت سرور تعیین می‌شود.
+                <p className="bulk-order-deposit-error">
+                  {depositError ??
+                    'مبلغ سپرده در حال حاضر قابل نمایش نیست. لطفاً بعداً تلاش کنید.'}
                 </p>
               )}
             </div>
@@ -598,7 +605,9 @@ const BulkOrderPage: React.FC = () => {
               className="bulk-order-submit"
               disabled={
                 submitting ||
-                selectedProducts.length === 0
+                selectedProducts.length === 0 ||
+                depositLoading ||
+                depositAmount == null
               }
             >
               {submitting

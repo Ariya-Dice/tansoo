@@ -55,3 +55,26 @@ export async function zibalVerify(payload: {
 export function zibalStartUrl(trackId: number): string {
   return `${ZIBAL_BASE}/start/${trackId}`;
 }
+
+/** User-facing Persian message for Zibal /request result codes. */
+export function zibalRequestErrorMessage(result: number, message?: string): string {
+  const map: Record<number, string> = {
+    102: 'کد درگاه (merchant) در زیبال یافت نشد. ZIBAL_MERCHANT را در Secrets بررسی کنید.',
+    103: 'درگاه زیبال غیرفعال است. قرارداد درگاه را در پنل زیبال تکمیل کنید.',
+    104: 'کد درگاه (merchant) نامعتبر است.',
+    105: 'مبلغ سپرده کمتر از حداقل مجاز زیبال (۱٬۰۰۰ ریال) است. BULK_ORDER_DEPOSIT_AMOUNT را افزایش دهید.',
+    106: 'آدرس callback نامعتبر است. در پنل زیبال این آدرس را تأیید کنید.',
+    113: 'مبلغ سپرده بیش از سقف مجاز تراکنش در زیبال است.',
+    115: 'IP سرور در پنل زیبال ثبت نشده است.',
+  };
+
+  if (map[result]) {
+    return map[result];
+  }
+
+  if (message?.trim()) {
+    return `خطا در ایجاد تراکنش پرداخت (کد ${result}): ${message.trim()}`;
+  }
+
+  return `خطا در ایجاد تراکنش پرداخت (کد ${result}). لطفاً دوباره تلاش کنید.`;
+}

@@ -97,11 +97,17 @@ export async function fetchBulkOrderDepositAmount(): Promise<number> {
     body: { action: 'getConfig' },
   });
 
+  const payload = data as { depositAmount?: number; error?: string } | null;
+
+  if (payload?.error) {
+    throw new Error(payload.error);
+  }
+
   if (error) {
     throw new Error(await extractFunctionError(error));
   }
 
-  const depositAmount = Number((data as { depositAmount?: number })?.depositAmount);
+  const depositAmount = Number(payload?.depositAmount);
   if (!Number.isFinite(depositAmount) || depositAmount <= 0) {
     throw new Error('مبلغ سپرده از سرور دریافت نشد.');
   }
@@ -125,31 +131,32 @@ export async function submitBulkOrderRequest(
     },
   });
 
-  if (error) {
-    throw new Error(await extractFunctionError(error));
-  }
-
-  const result = data as {
+  const payload = data as {
     paymentUrl?: string;
     bulkOrderId?: number;
     trackId?: number;
     depositAmount?: number;
     error?: string;
-  };
+    zibalCode?: number;
+  } | null;
 
-  if (result.error) {
-    throw new Error(result.error);
+  if (payload?.error) {
+    throw new Error(payload.error);
   }
 
-  if (!result.paymentUrl || result.bulkOrderId == null || result.trackId == null) {
+  if (error) {
+    throw new Error(await extractFunctionError(error));
+  }
+
+  if (!payload?.paymentUrl || payload.bulkOrderId == null || payload.trackId == null) {
     throw new Error('آدرس درگاه پرداخت از سرور دریافت نشد.');
   }
 
   return {
-    bulkOrderId: Number(result.bulkOrderId),
-    trackId: Number(result.trackId),
-    paymentUrl: result.paymentUrl,
-    depositAmount: Number(result.depositAmount ?? 0),
+    bulkOrderId: Number(payload.bulkOrderId),
+    trackId: Number(payload.trackId),
+    paymentUrl: payload.paymentUrl,
+    depositAmount: Number(payload.depositAmount ?? 0),
   };
 }
 

@@ -39,6 +39,10 @@ const Footer: React.FC = () => {
                 alt="نماد اعتماد الکترونیکی"
                 className="enamad-logo"
                 data-code="kZTiAGVwyLU8KgsOi6cRNBOjLIaAWi0g"
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             </a>
           </div>

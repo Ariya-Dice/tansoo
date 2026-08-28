@@ -1,6 +1,6 @@
 import { handleCors, corsHeaders } from '../_shared/cors.ts';
 import { getSupabaseAdmin } from '../_shared/supabaseAdmin.ts';
-import { zibalRequest, zibalStartUrl } from '../_shared/zibal.ts';
+import { zibalRequest, zibalStartUrl, zibalRequestErrorMessage } from '../_shared/zibal.ts';
 import {
   getBulkOrderDepositAmountTomans,
   getPaymentExpiryMinutes,
@@ -402,6 +402,7 @@ Deno.serve(async (req) => {
     });
 
     if (zibal.result !== 100 || !zibal.trackId) {
+      const zibalError = zibalRequestErrorMessage(zibal.result, zibal.message);
       console.error(
         `[ BULK_ORDER ] PAYMENT_CREATED requestId=${requestId} failed`,
         zibal.result,
@@ -412,10 +413,7 @@ Deno.serve(async (req) => {
         .update({ status: 'expired' })
         .eq('id', order.id);
 
-      return jsonResponse(
-        { error: 'خطا در ایجاد تراکنش پرداخت. لطفاً دوباره تلاش کنید.' },
-        502,
-      );
+      return jsonResponse({ error: zibalError, zibalCode: zibal.result }, 502);
     }
 
     const { data: updated, error: updateError } = await supabase
