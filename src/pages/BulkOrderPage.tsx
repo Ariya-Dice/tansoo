@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { submitBulkOrderRequest } from '../services/bulkOrder';
+import {
+  fetchBulkOrderDepositAmount,
+  formatTomans,
+  submitBulkOrderRequest,
+} from '../services/bulkOrder';
 import { isSupabaseConfigured } from '../lib/supabaseClient';
 import './BulkOrderPage.css';
 
@@ -17,7 +20,6 @@ interface SelectedProduct {
 
 const BulkOrderPage: React.FC = () => {
   const { products, showToast } = useAppContext();
-  const navigate = useNavigate();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -32,6 +34,9 @@ const BulkOrderPage: React.FC = () => {
   >([]);
 
   const [submitting, setSubmitting] = useState(false);
+  const [depositAmount, setDepositAmount] = useState<number | null>(null);
+  const [depositLoading, setDepositLoading] = useState(true);
+  const idempotencyKeyRef = useRef(crypto.randomUUID());
 
   const selectedProduct = products.find(
     (product) => String(product.id) === selectedProductId,
@@ -123,6 +128,38 @@ const BulkOrderPage: React.FC = () => {
 
   const totalPieces = totalCartons * CARTON_SIZE;
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDeposit() {
+      if (!isSupabaseConfigured()) {
+        setDepositLoading(false);
+        return;
+      }
+
+      try {
+        const amount = await fetchBulkOrderDepositAmount();
+        if (!cancelled) {
+          setDepositAmount(amount);
+        }
+      } catch {
+        if (!cancelled) {
+          setDepositAmount(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setDepositLoading(false);
+        }
+      }
+    }
+
+    loadDeposit();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -175,7 +212,7 @@ const BulkOrderPage: React.FC = () => {
         .filter(Boolean)
         .join('\n');
 
-      await submitBulkOrderRequest({
+      const result = await submitBulkOrderRequest({
         name: name.trim(),
         phone: phone.trim(),
         company: company.trim(),
@@ -193,14 +230,14 @@ const BulkOrderPage: React.FC = () => {
         quantity: `${totalCartons} کارتن (${totalPieces} عدد)`,
 
         note: orderNote,
+        idempotencyKey: idempotencyKeyRef.current,
       });
 
-      navigate('/bulk-order/success', {
-        state: {
-          name,
-          phone,
-        },
-      });
+      if (!result.paymentUrl) {
+        throw new Error('آدرس درگاه پرداخت دریافت نشد.');
+      }
+
+      window.location.assign(result.paymentUrl);
     } catch (error) {
       showToast(
         error instanceof Error
@@ -529,6 +566,31 @@ const BulkOrderPage: React.FC = () => {
 
             </div>
 
+            {/* سپرده ثبت‌نام */}
+
+            <div className="bulk-order-deposit-notice">
+              <h3>سپرده ثبت درخواست</h3>
+              {depositLoading ? (
+                <p>در حال دریافت مبلغ سپرده...</p>
+              ) : depositAmount != null ? (
+                <>
+                  <p>
+                    برای ثبت درخواست خرید عمده، پرداخت سپرده به مبلغ{' '}
+                    <strong>{formatTomans(depositAmount)}</strong> الزامی است.
+                  </p>
+                  <p>
+                    این مبلغ هزینه اضافه نیست؛ سپرده ثبت‌نام پس از نهایی شدن
+                    سفارش عمده، از مبلغ فاکتور نهایی کسر خواهد شد.
+                  </p>
+                </>
+              ) : (
+                <p>
+                  مبلغ سپرده در حال حاضر قابل نمایش نیست. در صورت تکمیل فرم،
+                  مبلغ از سمت سرور تعیین می‌شود.
+                </p>
+              )}
+            </div>
+
             {/* ثبت */}
 
             <button
@@ -540,8 +602,10 @@ const BulkOrderPage: React.FC = () => {
               }
             >
               {submitting
-                ? 'در حال ثبت سفارش...'
-                : 'ثبت سفارش'}
+                ? 'در حال انتقال به درگاه پرداخت...'
+                : depositAmount != null
+                  ? `پرداخت سپرده و ثبت درخواست (${formatTomans(depositAmount)})`
+                  : 'پرداخت سپرده و ثبت درخواست'}
             </button>
 
           </form>

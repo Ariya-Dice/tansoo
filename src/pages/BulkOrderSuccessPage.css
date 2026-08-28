@@ -52,6 +52,12 @@
   margin-bottom: 1.5rem;
 }
 
+.bulk-success-order-id {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  margin-top: -0.75rem;
+}
+
 .bulk-success-actions {
   display: flex;
   flex-direction: column;

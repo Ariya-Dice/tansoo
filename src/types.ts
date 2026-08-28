@@ -62,7 +62,13 @@ export type OrderStatus =
   | 'cancelled'
   | 'failed';
 
-export type BulkOrderStatus = 'pending' | 'contacted' | 'completed' | 'cancelled';
+export type BulkOrderStatus =
+  | 'pending_payment'
+  | 'pending'
+  | 'contacted'
+  | 'completed'
+  | 'cancelled'
+  | 'expired';
 
 export interface Order {
   id: string;
@@ -111,6 +117,10 @@ export interface BulkOrderRequest {
   note: string;
   status: BulkOrderStatus;
   created_at: string;
+  zibal_track_id?: number | null;
+  payment_amount?: number | null;
+  payment_expires_at?: string | null;
+  paid_at?: string | null;
 }
 
 export interface OrderWithItems extends Order {

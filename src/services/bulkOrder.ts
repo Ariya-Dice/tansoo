@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { getSupabaseClient } from '../lib/supabaseClient';
 import {
   BulkOrderRequest,
@@ -14,6 +15,14 @@ export interface BulkOrderFormInput {
   goodsType: string;
   quantity: string;
   note?: string;
+  idempotencyKey: string;
+}
+
+export interface BulkOrderSubmitResult {
+  bulkOrderId: number;
+  trackId: number;
+  paymentUrl: string;
+  depositAmount: number;
 }
 
 export interface BulkOrdersQueryParams {
@@ -24,10 +33,12 @@ export interface BulkOrdersQueryParams {
 }
 
 const BULK_STATUS_LABELS: Record<BulkOrderStatus, string> = {
+  pending_payment: 'در انتظار پرداخت سپرده',
   pending: 'در انتظار تماس',
   contacted: 'تماس گرفته شده',
   completed: 'تکمیل شده',
   cancelled: 'لغو شده',
+  expired: 'منقضی شده',
 };
 
 export { BULK_STATUS_LABELS };
@@ -47,19 +58,62 @@ function mapBulkOrder(row: Record<string, unknown>): BulkOrderRequest {
     note: String(row.note ?? ''),
     status: row.status as BulkOrderStatus,
     created_at: String(row.created_at ?? ''),
+    zibal_track_id:
+      row.zibal_track_id != null ? Number(row.zibal_track_id) : null,
+    payment_amount:
+      row.payment_amount != null ? Number(row.payment_amount) : null,
+    payment_expires_at:
+      row.payment_expires_at != null
+        ? String(row.payment_expires_at)
+        : null,
+    paid_at: row.paid_at != null ? String(row.paid_at) : null,
   };
 }
 
-function friendlyError(message: string): string {
-  if (message.includes('JWT') || message.includes('permission')) {
-    return 'دسترسی مجاز نیست.';
+async function extractFunctionError(error: unknown): Promise<string> {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const body = (await error.context.json()) as { error?: string };
+      if (body.error) {
+        return body.error;
+      }
+    } catch {
+      // fall through
+    }
   }
+
+  if (error instanceof Error && error.message) {
+    if (error.message.includes('JWT') || error.message.includes('permission')) {
+      return 'دسترسی مجاز نیست.';
+    }
+  }
+
   return 'خطا در ثبت درخواست. لطفاً دوباره تلاش کنید.';
 }
 
-export async function submitBulkOrderRequest(form: BulkOrderFormInput): Promise<void> {
+export async function fetchBulkOrderDepositAmount(): Promise<number> {
   const supabase = getSupabaseClient();
-  const { error } = await supabase.functions.invoke('submit-bulk-order', {
+  const { data, error } = await supabase.functions.invoke('submit-bulk-order', {
+    method: 'GET',
+  });
+
+  if (error) {
+    throw new Error(await extractFunctionError(error));
+  }
+
+  const depositAmount = Number((data as { depositAmount?: number })?.depositAmount);
+  if (!Number.isFinite(depositAmount) || depositAmount <= 0) {
+    throw new Error('مبلغ سپرده از سرور دریافت نشد.');
+  }
+
+  return depositAmount;
+}
+
+export async function submitBulkOrderRequest(
+  form: BulkOrderFormInput,
+): Promise<BulkOrderSubmitResult> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.functions.invoke('submit-bulk-order', {
     body: {
       name: form.name,
       phone: form.phone,
@@ -67,12 +121,36 @@ export async function submitBulkOrderRequest(form: BulkOrderFormInput): Promise<
       goodsType: form.goodsType,
       quantity: form.quantity,
       note: form.note ?? '',
+      idempotencyKey: form.idempotencyKey,
     },
   });
 
   if (error) {
-    throw new Error(friendlyError(error.message));
+    throw new Error(await extractFunctionError(error));
   }
+
+  const result = data as {
+    paymentUrl?: string;
+    bulkOrderId?: number;
+    trackId?: number;
+    depositAmount?: number;
+    error?: string;
+  };
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+
+  if (!result.paymentUrl || result.bulkOrderId == null || result.trackId == null) {
+    throw new Error('آدرس درگاه پرداخت از سرور دریافت نشد.');
+  }
+
+  return {
+    bulkOrderId: Number(result.bulkOrderId),
+    trackId: Number(result.trackId),
+    paymentUrl: result.paymentUrl,
+    depositAmount: Number(result.depositAmount ?? 0),
+  };
 }
 
 export async function fetchBulkOrders(
@@ -103,7 +181,7 @@ export async function fetchBulkOrders(
   const { data, error, count } = await query.range(from, to);
 
   if (error) {
-    throw new Error(friendlyError(error.message));
+    throw new Error('خطا در بارگذاری درخواست‌ها.');
   }
 
   return {
@@ -127,11 +205,15 @@ export async function updateBulkOrderStatusInDb(
     .maybeSingle();
 
   if (error) {
-    throw new Error(friendlyError(error.message));
+    throw new Error('خطا در به‌روزرسانی وضعیت.');
   }
   if (!data) {
     throw new Error('درخواست یافت نشد.');
   }
 
   return mapBulkOrder(data as Record<string, unknown>);
+}
+
+export function formatTomans(amount: number): string {
+  return `${amount.toLocaleString('fa-IR')} تومان`;
 }

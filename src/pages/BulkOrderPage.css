@@ -332,6 +332,26 @@
 
 
 
+.bulk-order-deposit-notice {
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background: rgba(197, 89, 0, 0.08);
+  border: 1px solid rgba(197, 89, 0, 0.18);
+}
+
+.bulk-order-deposit-notice h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.bulk-order-deposit-notice p {
+  margin: 0.35rem 0;
+  line-height: 1.7;
+  color: #4a4038;
+}
+
+
+
 
 
 /* Mobile */

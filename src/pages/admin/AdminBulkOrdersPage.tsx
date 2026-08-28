@@ -9,10 +9,12 @@ const PAGE_SIZE = 20;
 
 const BULK_STATUS_OPTIONS: Array<{ value: BulkOrderStatus | 'all'; label: string }> = [
   { value: 'all', label: 'همه' },
+  { value: 'pending_payment', label: BULK_STATUS_LABELS.pending_payment },
   { value: 'pending', label: BULK_STATUS_LABELS.pending },
   { value: 'contacted', label: BULK_STATUS_LABELS.contacted },
   { value: 'completed', label: BULK_STATUS_LABELS.completed },
   { value: 'cancelled', label: BULK_STATUS_LABELS.cancelled },
+  { value: 'expired', label: BULK_STATUS_LABELS.expired },
 ];
 
 const AdminBulkOrdersPage: React.FC = () => {

@@ -1,10 +1,12 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import './BulkOrderSuccessPage.css';
 
 const BulkOrderSuccessPage: React.FC = () => {
   const location = useLocation();
+  const [params] = useSearchParams();
   const state = location.state as { name?: string; phone?: string } | null;
+  const bulkOrderId = params.get('bulkOrderId');
 
   return (
     <div className="bulk-success-page">
@@ -15,9 +17,17 @@ const BulkOrderSuccessPage: React.FC = () => {
           <p className="bulk-success-greeting">{state.name} عزیز،</p>
         )}
         <p>
-          درخواست خرید عمده شما دریافت شد. کارشناس فروشگاه در اسرع وقت
+          {bulkOrderId
+            ? 'سپرده ثبت درخواست با موفقیت پرداخت شد و درخواست خرید عمده شما ثبت گردید.'
+            : 'درخواست خرید عمده شما دریافت شد.'}{' '}
+          کارشناس فروشگاه در اسرع وقت
           {state?.phone ? ` با شماره ${state.phone}` : ''} تماس می‌گیرد و جزئیات سفارش، قیمت و ارسال را هماهنگ می‌کند.
         </p>
+        {bulkOrderId && (
+          <p className="bulk-success-order-id">
+            شماره درخواست: <span dir="ltr">{bulkOrderId}</span>
+          </p>
+        )}
         <div className="bulk-success-actions">
           <Link to="/products" className="bulk-success-btn bulk-success-btn-primary">بازگشت به محصولات</Link>
           <Link to="/" className="bulk-success-btn bulk-success-btn-secondary">صفحه اصلی</Link>
