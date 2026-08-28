@@ -8,8 +8,6 @@ import {
 import { isSupabaseConfigured } from '../lib/supabaseClient';
 import './BulkOrderPage.css';
 
-const CARTON_SIZE = 12;
-
 interface SelectedProduct {
   productId: number;
   model: string;
@@ -17,6 +15,33 @@ interface SelectedProduct {
   color: string;
   cartons: number;
 }
+
+const PRODUCT_TYPES = ['ظرفشویی', 'روشویی', 'حمام', 'توالت'];
+
+const getCartonSize = (model: string): number => {
+  return model.trim().includes('بامبو') ? 8 : 12;
+};
+
+const getProductLabel = (
+  model: string,
+  goodsType: string,
+  color?: string,
+): string => {
+  const parts = [model, goodsType];
+
+  if (color) {
+    parts.push(color);
+  }
+
+  return parts.join(' - ');
+};
+
+const normalizeText = (value: string): string => {
+  return value
+    .trim()
+    .replace(/ي/g, 'ی')
+    .replace(/ك/g, 'ک');
+};
 
 const BulkOrderPage: React.FC = () => {
   const { products, showToast } = useAppContext();
@@ -37,11 +62,79 @@ const BulkOrderPage: React.FC = () => {
   const [depositAmount, setDepositAmount] = useState<number | null>(null);
   const [depositLoading, setDepositLoading] = useState(true);
   const [depositError, setDepositError] = useState<string | null>(null);
+
   const idempotencyKeyRef = useRef(crypto.randomUUID());
 
   const selectedProduct = products.find(
     (product) => String(product.id) === selectedProductId,
   );
+
+  /*
+   * محصولات را بر اساس مدل گروه‌بندی می‌کنیم.
+   *
+   * مثال:
+   *
+   * شیر اردکی
+   *   ├── ظرفشویی
+   *   ├── روشویی
+   *   ├── حمام
+   *   └── توالت
+   *
+   * شیر لاله
+   *   ├── ظرفشویی
+   *   ├── روشویی
+   *   ├── حمام
+   *   └── توالت
+   */
+  const groupedProducts = products.reduce<
+    Record<string, typeof products>
+  >((groups, product) => {
+    const model = product.model?.trim() || 'سایر';
+
+    if (!groups[model]) {
+      groups[model] = [];
+    }
+
+    groups[model].push(product);
+
+    return groups;
+  }, {});
+
+  /*
+   * مدل‌ها را مرتب می‌کنیم.
+   * ترتیب گروه‌های مصرف نیز مشخص است:
+   * ظرفشویی → روشویی → حمام → توالت
+   */
+  const sortedProductGroups = Object.entries(groupedProducts)
+    .map(([model, modelProducts]) => {
+      const sortedProducts = [...modelProducts].sort((a, b) => {
+        const aType = normalizeText(a.goodsType || '');
+        const bType = normalizeText(b.goodsType || '');
+
+        const aIndex = PRODUCT_TYPES.findIndex(
+          (type) => normalizeText(type) === aType,
+        );
+
+        const bIndex = PRODUCT_TYPES.findIndex(
+          (type) => normalizeText(type) === bType,
+        );
+
+        const safeAIndex = aIndex === -1 ? 999 : aIndex;
+        const safeBIndex = bIndex === -1 ? 999 : bIndex;
+
+        if (safeAIndex !== safeBIndex) {
+          return safeAIndex - safeBIndex;
+        }
+
+        return aType.localeCompare(bType, 'fa');
+      });
+
+      return {
+        model,
+        products: sortedProducts,
+      };
+    })
+    .sort((a, b) => a.model.localeCompare(b.model, 'fa'));
 
   const addProduct = () => {
     if (!selectedProduct) {
@@ -122,12 +215,26 @@ const BulkOrderPage: React.FC = () => {
     );
   };
 
+  /*
+   * مجموع کارتن‌ها
+   */
   const totalCartons = selectedProducts.reduce(
     (sum, item) => sum + item.cartons,
     0,
   );
 
-  const totalPieces = totalCartons * CARTON_SIZE;
+  /*
+   * مجموع تعداد واقعی قطعات.
+   *
+   * مهم:
+   * دیگر totalCartons * 12 نداریم،
+   * چون بامبو ۸ عددی است.
+   */
+  const totalPieces = selectedProducts.reduce((sum, item) => {
+    const cartonSize = getCartonSize(item.model);
+
+    return sum + item.cartons * cartonSize;
+  }, 0);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,6 +247,7 @@ const BulkOrderPage: React.FC = () => {
 
       try {
         const amount = await fetchBulkOrderDepositAmount();
+
         if (!cancelled) {
           setDepositAmount(amount);
           setDepositError(null);
@@ -190,15 +298,22 @@ const BulkOrderPage: React.FC = () => {
     try {
       const firstProduct = selectedProducts[0];
 
+      /*
+       * جزئیات تمام محصولات سفارش
+       *
+       * برای هر محصول ظرفیت واقعی کارتن نوشته می‌شود.
+       */
       const productsText = selectedProducts
         .map((item, index) => {
-          const pieces = item.cartons * CARTON_SIZE;
+          const cartonSize = getCartonSize(item.model);
+          const pieces = item.cartons * cartonSize;
 
           return [
             `${index + 1}. ${item.model}`,
             `نوع کالا: ${item.goodsType}`,
             item.color ? `رنگ: ${item.color}` : '',
             `تعداد: ${item.cartons} کارتن`,
+            `ظرفیت هر کارتن: ${cartonSize} عدد`,
             `تعداد کل: ${pieces} عدد`,
           ]
             .filter(Boolean)
@@ -214,7 +329,9 @@ const BulkOrderPage: React.FC = () => {
         `مجموع: ${totalCartons} کارتن`,
         `مجموع تعداد: ${totalPieces} عدد`,
         '',
-        note.trim() ? `توضیحات مشتری:\n${note.trim()}` : '',
+        note.trim()
+          ? `توضیحات مشتری:\n${note.trim()}`
+          : '',
       ]
         .filter(Boolean)
         .join('\n');
@@ -237,6 +354,7 @@ const BulkOrderPage: React.FC = () => {
         quantity: `${totalCartons} کارتن (${totalPieces} عدد)`,
 
         note: orderNote,
+
         idempotencyKey: idempotencyKeyRef.current,
       });
 
@@ -264,16 +382,20 @@ const BulkOrderPage: React.FC = () => {
           <h1>خرید عمده / تعداد بالا</h1>
 
           <p>
-            برای سفارش‌های با تعداد بالا، محصولات مورد
-            نظر خود را انتخاب کنید. سفارش عمده فقط به
-            صورت کارتن ۱۲ عددی ثبت می‌شود.
+            برای سفارش‌های با تعداد بالا، محصولات مورد نظر خود را
+            انتخاب کنید. سفارش عمده بر اساس تعداد کارتن هر محصول ثبت
+            می‌شود.
           </p>
 
           <p>
-            لطفا توجه داشته باشید که سیستم فروش آربی،
-            سفارش محور میباشد. آماده سازی و ارسال سفارش
-            با توجه به تعداد سفارش، حدود 3 تا 10 روز
-            کاری زمان خواهد برد.
+            ظرفیت کارتن محصولات متفاوت است؛ محصولات بامبو در کارتن
+            ۸ عددی و سایر محصولات در کارتن ۱۲ عددی عرضه می‌شوند.
+          </p>
+
+          <p>
+            لطفا توجه داشته باشید که سیستم فروش آربی، سفارش محور
+            میباشد. آماده سازی و ارسال سفارش با توجه به تعداد سفارش،
+            حدود 3 تا 10 روز کاری زمان خواهد برد.
           </p>
         </header>
 
@@ -298,9 +420,7 @@ const BulkOrderPage: React.FC = () => {
                   name="name"
                   required
                   value={name}
-                  onChange={(e) =>
-                    setName(e.target.value)
-                  }
+                  onChange={(e) => setName(e.target.value)}
                 />
               </div>
 
@@ -315,9 +435,7 @@ const BulkOrderPage: React.FC = () => {
                   type="tel"
                   required
                   value={phone}
-                  onChange={(e) =>
-                    setPhone(e.target.value)
-                  }
+                  onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
 
@@ -332,9 +450,7 @@ const BulkOrderPage: React.FC = () => {
                 id="company"
                 name="company"
                 value={company}
-                onChange={(e) =>
-                  setCompany(e.target.value)
-                }
+                onChange={(e) => setCompany(e.target.value)}
               />
             </div>
 
@@ -357,25 +473,38 @@ const BulkOrderPage: React.FC = () => {
                     id="product"
                     value={selectedProductId}
                     onChange={(e) =>
-                      setSelectedProductId(
-                        e.target.value,
-                      )
+                      setSelectedProductId(e.target.value)
                     }
                   >
                     <option value="">
                       انتخاب محصول...
                     </option>
 
-                    {products.map((product) => (
-                      <option
-                        key={product.id}
-                        value={product.id}
+                    {sortedProductGroups.map((group) => (
+                      <optgroup
+                        key={group.model}
+                        label={group.model}
                       >
-                        {product.model}
-                        {product.color
-                          ? ` - ${product.color}`
-                          : ''}
-                      </option>
+                        {group.products.map((product) => {
+                          const cartonSize = getCartonSize(
+                            product.model,
+                          );
+
+                          return (
+                            <option
+                              key={product.id}
+                              value={product.id}
+                            >
+                              {getProductLabel(
+                                product.model,
+                                product.goodsType,
+                                product.color,
+                              )}
+                              {` — کارتن ${cartonSize} عددی`}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
                     ))}
                   </select>
                 </div>
@@ -392,13 +521,10 @@ const BulkOrderPage: React.FC = () => {
                     step="1"
                     value={cartons}
                     onChange={(e) => {
-                      const value = Number(
-                        e.target.value,
-                      );
+                      const value = Number(e.target.value);
 
                       setCartons(
-                        Number.isInteger(value) &&
-                          value >= 1
+                        Number.isInteger(value) && value >= 1
                           ? value
                           : 1,
                       );
@@ -412,23 +538,41 @@ const BulkOrderPage: React.FC = () => {
                   </strong>
 
                   <small>
-                    {cartons * CARTON_SIZE} عدد
+                    {selectedProduct
+                      ? cartons *
+                        getCartonSize(selectedProduct.model)
+                      : 0}{' '}
+                    عدد
                   </small>
                 </div>
 
               </div>
 
               <div className="bulk-carton-info">
-                <strong>
-                  هر کارتن = ۱۲ عدد
-                </strong>
+                {selectedProduct ? (
+                  <>
+                    <strong>
+                      هر کارتن ={' '}
+                      {getCartonSize(selectedProduct.model)} عدد
+                    </strong>
 
-                {selectedProduct && (
-                  <span>
-                    {selectedProduct.model} —{' '}
-                    {cartons} کارتن × ۱۲ عدد ={' '}
-                    {cartons * CARTON_SIZE} عدد
-                  </span>
+                    <span>
+                      {selectedProduct.model} —{' '}
+                      {selectedProduct.goodsType}
+                      {selectedProduct.color
+                        ? ` — ${selectedProduct.color}`
+                        : ''}{' '}
+                      — {cartons} کارتن ×{' '}
+                      {getCartonSize(selectedProduct.model)} عدد ={' '}
+                      {cartons *
+                        getCartonSize(selectedProduct.model)}{' '}
+                      عدد
+                    </span>
+                  </>
+                ) : (
+                  <strong>
+                    لطفاً محصول مورد نظر را انتخاب کنید.
+                  </strong>
                 )}
               </div>
 
@@ -454,8 +598,12 @@ const BulkOrderPage: React.FC = () => {
                 <div className="bulk-selected-products">
 
                   {selectedProducts.map((item) => {
+                    const cartonSize = getCartonSize(
+                      item.model,
+                    );
+
                     const pieces =
-                      item.cartons * CARTON_SIZE;
+                      item.cartons * cartonSize;
 
                     return (
                       <div
@@ -477,8 +625,9 @@ const BulkOrderPage: React.FC = () => {
                           </span>
 
                           <small>
-                            {item.cartons} کارتن × ۱۲
-                            عدد = {pieces} عدد
+                            {item.cartons} کارتن ×{' '}
+                            {cartonSize} عدد ={' '}
+                            {pieces} عدد
                           </small>
 
                         </div>
@@ -565,9 +714,7 @@ const BulkOrderPage: React.FC = () => {
                 name="note"
                 rows={4}
                 value={note}
-                onChange={(e) =>
-                  setNote(e.target.value)
-                }
+                onChange={(e) => setNote(e.target.value)}
                 placeholder="مدل، رنگ، زمان تحویل و ..."
               />
 
@@ -576,18 +723,30 @@ const BulkOrderPage: React.FC = () => {
             {/* سپرده ثبت‌نام */}
 
             <div className="bulk-order-deposit-notice">
-              <h3>سپرده ثبت درخواست</h3>
+
+              <h3>
+                سپرده ثبت درخواست
+              </h3>
+
               {depositLoading ? (
-                <p>در حال دریافت مبلغ سپرده...</p>
+                <p>
+                  در حال دریافت مبلغ سپرده...
+                </p>
               ) : depositAmount != null ? (
                 <>
                   <p>
-                    برای ثبت درخواست خرید عمده، پرداخت سپرده به مبلغ{' '}
-                    <strong>{formatTomans(depositAmount)}</strong> الزامی است.
+                    برای ثبت درخواست خرید عمده، پرداخت سپرده به
+                    مبلغ{' '}
+                    <strong>
+                      {formatTomans(depositAmount)}
+                    </strong>{' '}
+                    الزامی است.
                   </p>
+
                   <p>
-                    این مبلغ هزینه اضافه نیست؛ سپرده ثبت‌نام پس از نهایی شدن
-                    سفارش عمده، از مبلغ فاکتور نهایی کسر خواهد شد.
+                    این مبلغ هزینه اضافه نیست؛ سپرده ثبت‌نام پس از
+                    نهایی شدن سفارش عمده، از مبلغ فاکتور نهایی کسر
+                    خواهد شد.
                   </p>
                 </>
               ) : (
@@ -596,6 +755,7 @@ const BulkOrderPage: React.FC = () => {
                     'مبلغ سپرده در حال حاضر قابل نمایش نیست. لطفاً بعداً تلاش کنید.'}
                 </p>
               )}
+
             </div>
 
             {/* ثبت */}
@@ -613,7 +773,9 @@ const BulkOrderPage: React.FC = () => {
               {submitting
                 ? 'در حال انتقال به درگاه پرداخت...'
                 : depositAmount != null
-                  ? `پرداخت سپرده و ثبت درخواست (${formatTomans(depositAmount)})`
+                  ? `پرداخت سپرده و ثبت درخواست (${formatTomans(
+                      depositAmount,
+                    )})`
                   : 'پرداخت سپرده و ثبت درخواست'}
             </button>
 
