@@ -14,7 +14,6 @@ code
 *code
 code*
 *.local
-rbshop-api
 .env
 .env.local
 .env.*.local
