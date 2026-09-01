@@ -1,7 +1,10 @@
 .header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 50;
+  right: 0;
+  left: 0;
+
+  z-index: 1000;
 
   width: 100%;
 
@@ -11,9 +14,12 @@
 
   box-shadow: var(--aria-shadow-sm);
 
-  padding: 0.625rem 0;
+  padding: 0.5rem 0;
 
   direction: rtl;
+
+  /* هدر همیشه بالای صفحه باقی می‌ماند */
+  box-sizing: border-box;
 }
 
 .header-container {
@@ -21,7 +27,7 @@
 
   margin: 0 auto;
 
-  padding: 0 1rem;
+  padding: 0 4rem;
 }
 
 .header-content {
@@ -333,6 +339,7 @@
 }
 
 /* Make menu SVG perfectly centered */
+
 .header-nav-mobile button svg {
   display: block;
 
@@ -415,6 +422,14 @@
   .header-logo-link {
     font-size: 1.25rem;
   }
+
+  /*
+   * ایجاد فضای هدر برای جلوگیری از قرار گرفتن
+   * محتوای صفحه زیر هدر
+   */
+  body {
+    padding-top: 5rem;
+  }
 }
 
 /* ==========================================
@@ -440,6 +455,13 @@
   .header-nav-mobile button {
     width: 2.5rem;
     height: 2.5rem;
+  }
+
+  /*
+   * فضای لازم برای هدر ثابت در موبایل
+   */
+  body {
+    padding-top: 5rem;
   }
 }
 

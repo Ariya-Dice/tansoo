@@ -8,6 +8,7 @@ import './Header.css';
 const Header: React.FC = () => {
   const { cartCount } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const hasItems = cartCount > 0;
 
   const navLinks = [
@@ -22,54 +23,104 @@ const Header: React.FC = () => {
     <header className="header">
       <div className="header-container">
         <div className="header-content">
+
+          {/* لوگو */}
           <div className="header-logo">
-            <Link to="/" className="header-logo-link">{STORE_NAME}</Link>
+            <Link
+              to="/"
+              className="header-logo-link"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {STORE_NAME}
+            </Link>
           </div>
 
+          {/* منوی دسکتاپ */}
           <nav className="header-nav">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
-                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+                className={({ isActive }) =>
+                  isActive
+                    ? 'nav-link active'
+                    : 'nav-link'
+                }
               >
                 {link.name}
               </NavLink>
             ))}
           </nav>
 
+          {/* عملیات هدر */}
           <div className="header-actions">
+
+            {/* سبد خرید */}
             <div className="header-cart">
               <Link
                 to="/cart"
-                className={`header-cart-link${hasItems ? ' header-cart-link--active' : ''}`}
-                aria-label={`سبد خرید${hasItems ? `، ${cartCount} قلم` : ''}`}
+                className={`header-cart-link${
+                  hasItems
+                    ? ' header-cart-link--active'
+                    : ''
+                }`}
+                aria-label={`سبد خرید${
+                  hasItems
+                    ? `، ${cartCount} قلم`
+                    : ''
+                }`}
               >
-                <span className={`cart-icon-wrap${hasItems ? ' cart-icon-wrap--shake' : ''}`}>
+                <span
+                  className={`cart-icon-wrap${
+                    hasItems
+                      ? ' cart-icon-wrap--shake'
+                      : ''
+                  }`}
+                >
                   <ShoppingBagIcon filled={hasItems} />
                 </span>
+
                 {hasItems && (
-                  <span className="cart-badge" aria-live="polite">
-                    {cartCount > 99 ? '99+' : cartCount}
+                  <span
+                    className="cart-badge"
+                    aria-live="polite"
+                  >
+                    {cartCount > 99
+                      ? '99+'
+                      : cartCount}
                   </span>
                 )}
               </Link>
             </div>
 
+            {/* منوی موبایل */}
             <div className="header-nav-mobile">
               <button
                 type="button"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                aria-label={isMenuOpen ? 'بستن منو' : 'باز کردن منو'}
+                className="mobile-menu-toggle"
+                onClick={() =>
+                  setIsMenuOpen((prev) => !prev)
+                }
+                aria-label={
+                  isMenuOpen
+                    ? 'بستن منو'
+                    : 'باز کردن منو'
+                }
                 aria-expanded={isMenuOpen}
               >
-                {isMenuOpen ? <XIcon /> : <MenuIcon />}
+                {isMenuOpen ? (
+                  <XIcon />
+                ) : (
+                  <MenuIcon />
+                )}
               </button>
             </div>
+
           </div>
         </div>
       </div>
 
+      {/* منوی موبایل */}
       {isMenuOpen && (
         <div className="mobile-menu">
           <nav className="mobile-menu-nav">
@@ -77,8 +128,14 @@ const Header: React.FC = () => {
               <NavLink
                 key={link.path}
                 to={link.path}
-                className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}
-                onClick={() => setIsMenuOpen(false)}
+                className={({ isActive }) =>
+                  isActive
+                    ? 'mobile-menu-link active'
+                    : 'mobile-menu-link'
+                }
+                onClick={() =>
+                  setIsMenuOpen(false)
+                }
               >
                 {link.name}
               </NavLink>
