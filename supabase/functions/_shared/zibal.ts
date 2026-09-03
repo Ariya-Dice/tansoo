@@ -64,7 +64,9 @@ export async function zibalRequest(payload: {
 
   if (!res.ok) {
     throw new Error(
-      `Zibal request HTTP ${res.status}: ${responseText || 'empty response'}`,
+      `Zibal request HTTP ${res.status}: ${
+        responseText || 'empty response'
+      }`,
     );
   }
 
@@ -136,7 +138,9 @@ export async function zibalVerify(payload: {
 
   if (!res.ok) {
     throw new Error(
-      `Zibal verify HTTP ${res.status}: ${responseText || 'empty response'}`,
+      `Zibal verify HTTP ${res.status}: ${
+        responseText || 'empty response'
+      }`,
     );
   }
 
