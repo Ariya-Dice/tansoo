@@ -1,3 +1,4 @@
+```ts
 const ZIBAL_BASE = 'https://gateway.zibal.ir';
 
 export interface ZibalRequestResponse {
@@ -22,34 +23,150 @@ export async function zibalRequest(payload: {
   orderId?: string;
   mobile?: string;
 }): Promise<ZibalRequestResponse> {
-  const res = await fetch(`${ZIBAL_BASE}/v1/request`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+  console.log('[ZIBAL] Request started', {
+    endpoint: `${ZIBAL_BASE}/v1/request`,
+    amount: payload.amount,
+    callbackUrl: payload.callbackUrl,
+    description: payload.description,
+    orderId: payload.orderId,
+    mobile: payload.mobile,
+  });
+
+  let res: Response;
+
+  try {
+    res = await fetch(`${ZIBAL_BASE}/v1/request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.error('[ZIBAL] Request network error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    throw new Error(
+      `Zibal request network error: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
+
+  const responseText = await res.text();
+
+  console.log('[ZIBAL] Request response', {
+    httpStatus: res.status,
+    ok: res.ok,
+    body: responseText,
   });
 
   if (!res.ok) {
-    throw new Error(`Zibal request HTTP ${res.status}`);
+    throw new Error(
+      `Zibal request HTTP ${res.status}: ${responseText || 'empty response'}`,
+    );
   }
 
-  return (await res.json()) as ZibalRequestResponse;
+  let data: ZibalRequestResponse;
+
+  try {
+    data = JSON.parse(responseText) as ZibalRequestResponse;
+  } catch (error) {
+    console.error('[ZIBAL] Invalid JSON response', {
+      httpStatus: res.status,
+      body: responseText,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    throw new Error(
+      `Zibal request returned invalid JSON: ${
+        responseText || 'empty response'
+      }`,
+    );
+  }
+
+  console.log('[ZIBAL] Request parsed result', {
+    result: data.result,
+    message: data.message,
+    trackId: data.trackId,
+  });
+
+  return data;
 }
 
 export async function zibalVerify(payload: {
   merchant: string;
   trackId: number;
 }): Promise<ZibalVerifyResponse> {
-  const res = await fetch(`${ZIBAL_BASE}/v1/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+  console.log('[ZIBAL] Verify started', {
+    endpoint: `${ZIBAL_BASE}/v1/verify`,
+    trackId: payload.trackId,
+  });
+
+  let res: Response;
+
+  try {
+    res = await fetch(`${ZIBAL_BASE}/v1/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.error('[ZIBAL] Verify network error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    throw new Error(
+      `Zibal verify network error: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
+
+  const responseText = await res.text();
+
+  console.log('[ZIBAL] Verify response', {
+    httpStatus: res.status,
+    ok: res.ok,
+    body: responseText,
   });
 
   if (!res.ok) {
-    throw new Error(`Zibal verify HTTP ${res.status}`);
+    throw new Error(
+      `Zibal verify HTTP ${res.status}: ${responseText || 'empty response'}`,
+    );
   }
 
-  return (await res.json()) as ZibalVerifyResponse;
+  let data: ZibalVerifyResponse;
+
+  try {
+    data = JSON.parse(responseText) as ZibalVerifyResponse;
+  } catch (error) {
+    console.error('[ZIBAL] Invalid verify JSON response', {
+      httpStatus: res.status,
+      body: responseText,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    throw new Error(
+      `Zibal verify returned invalid JSON: ${
+        responseText || 'empty response'
+      }`,
+    );
+  }
+
+  console.log('[ZIBAL] Verify parsed result', {
+    result: data.result,
+    message: data.message,
+    refNumber: data.refNumber,
+    amount: data.amount,
+    orderId: data.orderId,
+  });
+
+  return data;
 }
 
 export function zibalStartUrl(trackId: number): string {
@@ -57,7 +174,10 @@ export function zibalStartUrl(trackId: number): string {
 }
 
 /** User-facing Persian message for Zibal /request result codes. */
-export function zibalRequestErrorMessage(result: number, message?: string): string {
+export function zibalRequestErrorMessage(
+  result: number,
+  message?: string,
+): string {
   const map: Record<number, string> = {
     102: 'کد درگاه (merchant) در زیبال یافت نشد. ZIBAL_MERCHANT را در Secrets بررسی کنید.',
     103: 'درگاه زیبال غیرفعال است. قرارداد درگاه را در پنل زیبال تکمیل کنید.',
@@ -78,3 +198,4 @@ export function zibalRequestErrorMessage(result: number, message?: string): stri
 
   return `خطا در ایجاد تراکنش پرداخت (کد ${result}). لطفاً دوباره تلاش کنید.`;
 }
+```
