@@ -12,6 +12,12 @@ import {
 } from "../../productSpecs";
 import { productsApiHeaders } from "../../utils/api";
 import { formatPriceInput, parsePriceInput } from "../../utils/priceFormat";
+import {
+  getAvailabilityLabel,
+  isProductAvailable,
+  stockFromAvailability,
+  type AvailabilityLabel,
+} from "../../utils/availability";
 import "./AdminProductsPage.css";
 
 const AdminProductsPage: React.FC = () => {
@@ -30,6 +36,8 @@ const AdminProductsPage: React.FC = () => {
   const [priceCategory, setPriceCategory] = useState("all");
   const [adjustingPrices, setAdjustingPrices] = useState(false);
   const [customSpecs, setCustomSpecs] = useState<Record<string, string>>({});
+  const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityLabel>("موجود");
+  const [stockCount, setStockCount] = useState("1");
 
   const [newProduct, setNewProduct] =
     useState<Omit<Product, "id">>(emptyProduct());
@@ -70,6 +78,8 @@ const AdminProductsPage: React.FC = () => {
     setEditId(null);
     setCustomModel("");
     setCustomSpecs({});
+    setAvailabilityStatus("موجود");
+    setStockCount("1");
     setPriceDisplay("");
   };
 
@@ -187,8 +197,14 @@ const AdminProductsPage: React.FC = () => {
     setSaving(true);
 
     try {
+      const stock =
+        availabilityStatus === "ناموجود"
+          ? 0
+          : Math.max(1, parseInt(stockCount, 10) || 1);
+
       const productToSave = {
         ...newProduct,
+        stock,
         type: newProduct.goodsType,
         image:
           newProduct.image ||
@@ -227,6 +243,9 @@ const AdminProductsPage: React.FC = () => {
     });
 
     setEditId(p.id);
+    const available = isProductAvailable(p);
+    setAvailabilityStatus(getAvailabilityLabel(p));
+    setStockCount(available ? String(Math.max(1, p.stock)) : "1");
     setPriceDisplay(formatPriceInput(p.price));
 
     window.scrollTo({
@@ -281,6 +300,48 @@ const AdminProductsPage: React.FC = () => {
       showToast("خطا در به‌روزرسانی قیمت.");
     } finally {
       setSavingTablePriceId(null);
+    }
+  };
+
+  const handleAvailabilityChange = (status: AvailabilityLabel) => {
+    setAvailabilityStatus(status);
+
+    if (status === "ناموجود") {
+      updateField("stock", 0);
+      return;
+    }
+
+    const nextStock = stockFromAvailability(
+      status,
+      Number(stockCount) || newProduct.stock,
+    );
+    setStockCount(String(nextStock));
+    updateField("stock", nextStock);
+  };
+
+  const handleStockCountChange = (value: string) => {
+    const digits = value.replace(/\\D/g, "");
+    setStockCount(digits);
+
+    if (availabilityStatus === "موجود" && digits) {
+      updateField("stock", Math.max(1, parseInt(digits, 10) || 1));
+    }
+  };
+
+  const handleTableAvailabilityToggle = async (product: Product) => {
+    const nextStock = isProductAvailable(product)
+      ? 0
+      : Math.max(1, product.stock);
+
+    try {
+      const { id, ...productData } = product;
+      await updateProduct(id, {
+        ...productData,
+        stock: nextStock,
+      });
+    } catch (err) {
+      console.error("Error updating product stock:", err);
+      showToast("خطا در به‌روزرسانی موجودی.");
     }
   };
 
@@ -600,6 +661,39 @@ const AdminProductsPage: React.FC = () => {
               />
             </div>
 
+            <div className="admin-products-form-group">
+              <label className="admin-products-form-label">
+                وضعیت موجودی
+              </label>
+
+              <select
+                value={availabilityStatus}
+                onChange={(e) =>
+                  handleAvailabilityChange(
+                    e.target.value as AvailabilityLabel,
+                  )
+                }
+                className="admin-products-form-input"
+              >
+                <option value="موجود">موجود</option>
+                <option value="ناموجود">ناموجود</option>
+              </select>
+
+              {availabilityStatus === "موجود" && (
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  dir="ltr"
+                  min={1}
+                  value={stockCount}
+                  onChange={(e) => handleStockCountChange(e.target.value)}
+                  className="admin-products-form-input"
+                  placeholder="تعداد موجودی"
+                  aria-label="تعداد موجودی"
+                />
+              )}
+            </div>
+
             <div className="admin-products-form-group admin-products-tags-group">
               <label className="admin-products-form-label">
                 تگ‌ها
@@ -768,6 +862,7 @@ const AdminProductsPage: React.FC = () => {
                   <th>نوع کالا</th>
                   <th>رنگ</th>
                   <th>قیمت</th>
+                  <th>موجودی</th>
                   <th>تگ‌ها</th>
                   <th>عملیات</th>
                 </tr>
@@ -856,6 +951,122 @@ const AdminProductsPage: React.FC = () => {
                           تومان
                         </span>
                       </td>
+
+                      <td>
+  <div className="admin-products-inline-stock-control">
+
+    <select
+      value={
+        isProductAvailable(product)
+          ? "موجود"
+          : "ناموجود"
+      }
+      onChange={async (e) => {
+        const status =
+          e.target.value as AvailabilityLabel;
+
+        const nextStock =
+          status === "ناموجود"
+            ? 0
+            : Math.max(
+                1,
+                Number(product.stock) || 1,
+              );
+
+        try {
+          const { id, ...productData } = product;
+
+          await updateProduct(id, {
+            ...productData,
+            stock: nextStock,
+          });
+        } catch (err) {
+          console.error(
+            "Error updating product availability:",
+            err,
+          );
+
+          showToast(
+            "خطا در به‌روزرسانی موجودی.",
+          );
+        }
+      }}
+      className="admin-products-inline-availability-select"
+      aria-label={`وضعیت موجودی ${product.model}`}
+    >
+      <option value="موجود">
+        موجود
+      </option>
+
+      <option value="ناموجود">
+        ناموجود
+      </option>
+    </select>
+
+    {isProductAvailable(product) && (
+      <input
+        type="text"
+        inputMode="numeric"
+        dir="ltr"
+        min={1}
+        defaultValue={Math.max(
+          1,
+          Number(product.stock) || 1,
+        )}
+        key={`${product.id}-${product.stock}`}
+        onBlur={async (e) => {
+          const digits =
+            e.target.value.replace(/\D/g, "");
+
+          const nextStock = Math.max(
+            1,
+            parseInt(digits, 10) || 1,
+          );
+
+          if (
+            nextStock ===
+            Number(product.stock)
+          ) {
+            e.target.value =
+              String(nextStock);
+            return;
+          }
+
+          try {
+            const {
+              id,
+              ...productData
+            } = product;
+
+            await updateProduct(id, {
+              ...productData,
+              stock: nextStock,
+            });
+
+            e.target.value =
+              String(nextStock);
+          } catch (err) {
+            console.error(
+              "Error updating product stock:",
+              err,
+            );
+
+            e.target.value =
+              String(product.stock);
+
+            showToast(
+              "خطا در به‌روزرسانی تعداد موجودی.",
+            );
+          }
+        }}
+        className="admin-products-inline-stock-input"
+        placeholder="تعداد"
+        aria-label={`تعداد موجودی ${product.model}`}
+      />
+    )}
+
+  </div>
+</td>
 
                       <td>
                         <div className="admin-products-table-tags">
