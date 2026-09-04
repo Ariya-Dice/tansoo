@@ -1,4 +1,3 @@
-```ts
 const ZIBAL_BASE = 'https://gateway.zibal.ir';
 
 export interface ZibalRequestResponse {
@@ -202,4 +201,3 @@ export function zibalRequestErrorMessage(
 
   return `خطا در ایجاد تراکنش پرداخت (کد ${result}). لطفاً دوباره تلاش کنید.`;
 }
-```

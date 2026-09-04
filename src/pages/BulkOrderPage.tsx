@@ -1,20 +1,40 @@
 import React, {
-  useEffect,
   useRef,
   useState,
 } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
 import { useAppContext } from '../context/AppContext';
 
 import {
-  fetchBulkOrderDepositAmount,
-  formatTomans,
   submitBulkOrderRequest,
 } from '../services/bulkOrder';
 
 import { isSupabaseConfigured } from '../lib/supabaseClient';
 
+import {
+  filterPersianName,
+  filterPersianText,
+  filterPersianNote,
+  filterPhone,
+  validateName,
+  validatePhone,
+  validateCompany,
+  validateNote,
+} from '../utils/persianValidation';
+
+import { getErrorMessage } from '../utils/appErrors';
+
 import './BulkOrderPage.css';
+
+interface FieldErrors {
+  name?: string;
+  phone?: string;
+  company?: string;
+  note?: string;
+  products?: string;
+}
 
 interface SelectedProduct {
   productId: number;
@@ -78,6 +98,8 @@ const normalizeText = (
 };
 
 const BulkOrderPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const {
     products,
     showToast,
@@ -115,17 +137,121 @@ const BulkOrderPage: React.FC = () => {
   const [submitting, setSubmitting] =
     useState(false);
 
+  const [fieldErrors, setFieldErrors] =
+    useState<FieldErrors>({});
+
+  const [touched, setTouched] =
+    useState<Partial<Record<keyof FieldErrors, boolean>>>({});
+
   /*
-   * مبلغ سپرده
+   * اعتبارسنجی فیلدها
    */
-  const [depositAmount, setDepositAmount] =
-    useState<number | null>(null);
+  const validateField = (
+    field: keyof FieldErrors,
+    values?: {
+      name: string;
+      phone: string;
+      company: string;
+      note: string;
+      productsCount: number;
+    },
+  ): string => {
+    const v = values ?? {
+      name,
+      phone,
+      company,
+      note,
+      productsCount: selectedProducts.length,
+    };
 
-  const [depositLoading, setDepositLoading] =
-    useState(true);
+    switch (field) {
+      case 'name':
+        return validateName(v.name);
+      case 'phone':
+        return validatePhone(v.phone);
+      case 'company':
+        return validateCompany(v.company);
+      case 'note':
+        return validateNote(v.note);
+      case 'products':
+        return v.productsCount === 0
+          ? 'حداقل یک محصول به سفارش اضافه کنید.'
+          : '';
+      default:
+        return '';
+    }
+  };
 
-  const [depositError, setDepositError] =
-    useState<string | null>(null);
+  const clearFieldError = (field: keyof FieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const handleFieldBlur = (field: keyof FieldErrors) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    const error = validateField(field);
+    if (error) {
+      setFieldErrors((prev) => ({ ...prev, [field]: error }));
+    } else {
+      clearFieldError(field);
+    }
+  };
+
+  const handleNameChange = (value: string) => {
+    setName(filterPersianName(value));
+    clearFieldError('name');
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setPhone(filterPhone(value));
+    clearFieldError('phone');
+  };
+
+  const handleCompanyChange = (value: string) => {
+    setCompany(filterPersianText(value));
+    clearFieldError('company');
+  };
+
+  const handleNoteChange = (value: string) => {
+    setNote(filterPersianNote(value));
+    clearFieldError('note');
+  };
+
+  const validateAllFields = (): boolean => {
+    const errors: FieldErrors = {};
+
+    const fields: Array<keyof FieldErrors> = [
+      'name',
+      'phone',
+      'company',
+      'note',
+      'products',
+    ];
+
+    for (const field of fields) {
+      const error = validateField(field);
+      if (error) {
+        errors[field] = error;
+      }
+    }
+
+    setFieldErrors(errors);
+    setTouched({
+      name: true,
+      phone: true,
+      company: true,
+      note: true,
+      products: true,
+    });
+
+    return Object.keys(errors).length === 0;
+  };
 
   /*
    * جلوگیری از ثبت دوباره سفارش
@@ -328,6 +454,7 @@ const BulkOrderPage: React.FC = () => {
 
     setSelectedProductId('');
     setCartons(1);
+    clearFieldError('products');
 
     showToast(
       'محصول به سفارش اضافه شد.',
@@ -436,71 +563,6 @@ const BulkOrderPage: React.FC = () => {
     );
 
   /*
-   * دریافت مبلغ سپرده
-   */
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadDeposit =
-      async () => {
-        /*
-         * بررسی تنظیم بودن Supabase
-         */
-        if (
-          !isSupabaseConfigured()
-        ) {
-          if (!cancelled) {
-            setDepositLoading(
-              false,
-            );
-
-            setDepositError(
-              'سیستم پرداخت پیکربندی نشده است.',
-            );
-          }
-
-          return;
-        }
-
-        try {
-          const amount =
-            await fetchBulkOrderDepositAmount();
-
-          if (cancelled) {
-            return;
-          }
-
-          setDepositAmount(amount);
-          setDepositError(null);
-        } catch (error) {
-          if (cancelled) {
-            return;
-          }
-
-          setDepositAmount(null);
-
-          setDepositError(
-            error instanceof Error
-              ? error.message
-              : 'مبلغ سپرده از سرور دریافت نشد.',
-          );
-        } finally {
-          if (!cancelled) {
-            setDepositLoading(
-              false,
-            );
-          }
-        }
-      };
-
-    loadDeposit();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  /*
    * ثبت سفارش
    */
   const handleSubmit = async (
@@ -512,35 +574,7 @@ const BulkOrderPage: React.FC = () => {
       return;
     }
 
-    /*
-     * اعتبارسنجی نام
-     */
-    if (!name.trim()) {
-      showToast(
-        'لطفاً نام و نام خانوادگی را وارد کنید.',
-      );
-      return;
-    }
-
-    /*
-     * اعتبارسنجی شماره تماس
-     */
-    if (!phone.trim()) {
-      showToast(
-        'لطفاً شماره تماس را وارد کنید.',
-      );
-      return;
-    }
-
-    /*
-     * حداقل یک محصول
-     */
-    if (
-      selectedProducts.length === 0
-    ) {
-      showToast(
-        'حداقل یک محصول به سفارش اضافه کنید.',
-      );
+    if (!validateAllFields()) {
       return;
     }
 
@@ -552,17 +586,6 @@ const BulkOrderPage: React.FC = () => {
     ) {
       showToast(
         'سیستم ثبت درخواست پیکربندی نشده است.',
-      );
-      return;
-    }
-
-    /*
-     * بدون دریافت مبلغ سپرده
-     * اجازه ثبت سفارش داده نمی‌شود.
-     */
-    if (depositAmount === null) {
-      showToast(
-        'مبلغ سپرده از سرور دریافت نشده است.',
       );
       return;
     }
@@ -690,66 +713,67 @@ const BulkOrderPage: React.FC = () => {
       /*
        * ارسال سفارش به Edge Function
        */
-      const result =
-        await submitBulkOrderRequest(
-          {
-            name: name.trim(),
+      await submitBulkOrderRequest(
+        {
+          name: name.trim(),
 
-            phone: phone.trim(),
+          phone: phone.trim(),
 
-            company:
-              company.trim(),
+          company:
+            company.trim(),
 
-            goodsType:
-              selectedProducts.length ===
-              1
-                ? firstProduct.goodsType
-                : 'سفارش چند محصولی',
+          goodsType:
+            selectedProducts.length ===
+            1
+              ? firstProduct.goodsType
+              : 'سفارش چند محصولی',
 
-            quantity:
-              String(
-                totalCartons,
-              ) +
-              ' کارتن (' +
-              String(
-                totalPieces,
-              ) +
-              ' عدد)',
+          quantity:
+            String(
+              totalCartons,
+            ) +
+            ' کارتن (' +
+            String(
+              totalPieces,
+            ) +
+            ' عدد)',
 
-            note: orderNote,
+          note: orderNote,
 
-            idempotencyKey:
-              idempotencyKeyRef.current,
-          },
-        );
-
-      /*
-       * بررسی آدرس پرداخت
-       */
-      if (
-        !result ||
-        !result.paymentUrl
-      ) {
-        throw new Error(
-          'آدرس درگاه پرداخت دریافت نشد.',
-        );
-      }
-
-      /*
-       * انتقال به درگاه
-       */
-      window.location.assign(
-        result.paymentUrl,
+          idempotencyKey:
+            idempotencyKeyRef.current,
+        },
       );
+
+      navigate('/bulk-order/success', {
+        state: {
+          name: name.trim(),
+          phone: phone.trim(),
+        },
+      });
     } catch (error) {
-      showToast(
-        error instanceof Error
-          ? error.message
-          : 'خطا در ثبت سفارش',
-      );
+      showToast(getErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const getFieldError = (
+    field: keyof FieldErrors,
+  ): string | undefined => {
+    if (!touched[field] || !fieldErrors[field]) {
+      return undefined;
+    }
+
+    return fieldErrors[field];
+  };
+
+  const getFieldClassName = (
+    field: keyof FieldErrors,
+  ): string => {
+    return getFieldError(field)
+      ? 'bulk-order-field has-error'
+      : 'bulk-order-field';
   };
 
   return (
@@ -797,7 +821,7 @@ const BulkOrderPage: React.FC = () => {
 
             <div className="bulk-order-row">
 
-              <div className="bulk-order-field">
+              <div className={getFieldClassName('name')}>
 
                 <label htmlFor="name">
                   نام و نام خانوادگی *
@@ -807,18 +831,37 @@ const BulkOrderPage: React.FC = () => {
                   id="name"
                   name="name"
                   type="text"
-                  required
+                  autoComplete="name"
                   value={name}
+                  aria-invalid={Boolean(getFieldError('name'))}
+                  aria-describedby={
+                    getFieldError('name')
+                      ? 'name-error'
+                      : undefined
+                  }
                   onChange={(e) =>
-                    setName(
+                    handleNameChange(
                       e.target.value,
                     )
                   }
+                  onBlur={() =>
+                    handleFieldBlur('name')
+                  }
                 />
+
+                {getFieldError('name') && (
+                  <p
+                    id="name-error"
+                    className="bulk-order-field-error"
+                    role="alert"
+                  >
+                    {getFieldError('name')}
+                  </p>
+                )}
 
               </div>
 
-              <div className="bulk-order-field">
+              <div className={getFieldClassName('phone')}>
 
                 <label htmlFor="phone">
                   شماره تماس *
@@ -828,15 +871,34 @@ const BulkOrderPage: React.FC = () => {
                   id="phone"
                   name="phone"
                   type="tel"
-                  required
                   inputMode="tel"
+                  autoComplete="tel"
                   value={phone}
+                  aria-invalid={Boolean(getFieldError('phone'))}
+                  aria-describedby={
+                    getFieldError('phone')
+                      ? 'phone-error'
+                      : undefined
+                  }
                   onChange={(e) =>
-                    setPhone(
+                    handlePhoneChange(
                       e.target.value,
                     )
                   }
+                  onBlur={() =>
+                    handleFieldBlur('phone')
+                  }
                 />
+
+                {getFieldError('phone') && (
+                  <p
+                    id="phone-error"
+                    className="bulk-order-field-error"
+                    role="alert"
+                  >
+                    {getFieldError('phone')}
+                  </p>
+                )}
 
               </div>
 
@@ -844,7 +906,7 @@ const BulkOrderPage: React.FC = () => {
 
             {/* شرکت / فروشگاه */}
 
-            <div className="bulk-order-field">
+            <div className={getFieldClassName('company')}>
 
               <label htmlFor="company">
                 نام شرکت / فروشگاه
@@ -855,13 +917,33 @@ const BulkOrderPage: React.FC = () => {
                 id="company"
                 name="company"
                 type="text"
+                autoComplete="organization"
                 value={company}
+                aria-invalid={Boolean(getFieldError('company'))}
+                aria-describedby={
+                  getFieldError('company')
+                    ? 'company-error'
+                    : undefined
+                }
                 onChange={(e) =>
-                  setCompany(
+                  handleCompanyChange(
                     e.target.value,
                   )
                 }
+                onBlur={() =>
+                  handleFieldBlur('company')
+                }
               />
+
+              {getFieldError('company') && (
+                <p
+                  id="company-error"
+                  className="bulk-order-field-error"
+                  role="alert"
+                >
+                  {getFieldError('company')}
+                </p>
+              )}
 
             </div>
 
@@ -1073,6 +1155,16 @@ const BulkOrderPage: React.FC = () => {
                 + افزودن محصول به سفارش
               </button>
 
+              {getFieldError('products') && (
+                <p
+                  id="products-error"
+                  className="bulk-order-field-error bulk-order-section-error"
+                  role="alert"
+                >
+                  {getFieldError('products')}
+                </p>
+              )}
+
             </section>
 
             {/* محصولات انتخاب‌شده */}
@@ -1226,7 +1318,7 @@ const BulkOrderPage: React.FC = () => {
 
             {/* توضیحات */}
 
-            <div className="bulk-order-field">
+            <div className={getFieldClassName('note')}>
 
               <label htmlFor="note">
                 توضیحات
@@ -1237,57 +1329,30 @@ const BulkOrderPage: React.FC = () => {
                 name="note"
                 rows={4}
                 value={note}
+                aria-invalid={Boolean(getFieldError('note'))}
+                aria-describedby={
+                  getFieldError('note')
+                    ? 'note-error'
+                    : undefined
+                }
                 onChange={(e) =>
-                  setNote(
+                  handleNoteChange(
                     e.target.value,
                   )
+                }
+                onBlur={() =>
+                  handleFieldBlur('note')
                 }
                 placeholder="مدل، رنگ، زمان تحویل و ..."
               />
 
-            </div>
-
-            {/* سپرده */}
-
-            <div className="bulk-order-deposit-notice">
-
-              <h3>
-                سپرده ثبت درخواست
-              </h3>
-
-              {depositLoading ? (
-                <p>
-                  در حال دریافت مبلغ سپرده...
-                </p>
-              ) : depositAmount !==
-                null ? (
-                <>
-                  <p>
-                    برای ثبت درخواست خرید
-                    عمده، پرداخت سپرده به
-                    مبلغ{' '}
-
-                    <strong>
-                      {formatTomans(
-                        depositAmount,
-                      )}
-                    </strong>
-
-                    {' '}الزامی است.
-                  </p>
-
-                  <p>
-                    این مبلغ هزینه اضافه
-                    نیست؛ سپرده ثبت‌نام پس
-                    از نهایی شدن سفارش عمده،
-                    از مبلغ فاکتور نهایی
-                    کسر خواهد شد.
-                  </p>
-                </>
-              ) : (
-                <p className="bulk-order-deposit-error">
-                  {depositError ||
-                    'مبلغ سپرده در حال حاضر قابل نمایش نیست.'}
+              {getFieldError('note') && (
+                <p
+                  id="note-error"
+                  className="bulk-order-field-error"
+                  role="alert"
+                >
+                  {getFieldError('note')}
                 </p>
               )}
 
@@ -1298,22 +1363,11 @@ const BulkOrderPage: React.FC = () => {
             <button
               type="submit"
               className="bulk-order-submit"
-              disabled={
-                submitting ||
-                selectedProducts.length ===
-                  0 ||
-                depositAmount === null
-              }
+              disabled={submitting}
             >
               {submitting
-                ? 'در حال انتقال به درگاه پرداخت...'
-                : depositAmount !== null
-                  ? 'پرداخت سپرده و ثبت درخواست (' +
-                    formatTomans(
-                      depositAmount,
-                    ) +
-                    ')'
-                  : 'ثبت درخواست و پرداخت سپرده'}
+                ? 'در حال ثبت درخواست...'
+                : 'ثبت درخواست'}
             </button>
 
           </form>

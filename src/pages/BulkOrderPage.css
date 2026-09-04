@@ -120,6 +120,35 @@
     0 0 0 3px rgba(0, 229, 255, 0.1);
 }
 
+.bulk-order-field.has-error input,
+.bulk-order-field.has-error select,
+.bulk-order-field.has-error textarea {
+  border-color: #f87171;
+
+  box-shadow:
+    0 0 0 3px rgba(248, 113, 113, 0.12);
+}
+
+.bulk-order-field.has-error input:focus,
+.bulk-order-field.has-error select:focus,
+.bulk-order-field.has-error textarea:focus {
+  border-color: #f87171;
+
+  box-shadow:
+    0 0 0 3px rgba(248, 113, 113, 0.18);
+}
+
+.bulk-order-field-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #fca5a5;
+}
+
+.bulk-order-section-error {
+  margin-top: 0.75rem;
+}
+
 
 /* =========================
    Select / Option
