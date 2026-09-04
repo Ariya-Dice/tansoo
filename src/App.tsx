@@ -34,7 +34,6 @@ import { useAppContext } from './context/AppContext';
 
 const App: React.FC = () => {
   const { isAdmin, authLoading } = useAppContext();
-const DEV_ADMIN_BYPASS = import.meta.env.DEV;
 
   return (
     <HashRouter>
@@ -147,78 +146,64 @@ interface AdminRoutesProps {
 const AdminRoutes: React.FC<AdminRoutesProps> = ({
   isAdminLoggedIn,
   authLoading,
-}) => {
-  const hasAdminAccess =
-    DEV_ADMIN_BYPASS || isAdminLoggedIn;
+}) => (
+  <Routes>
+    <Route
+      path="login"
+      element={<AdminLoginPage />}
+    />
 
-  return (
-    <Routes>
-      <Route
-        path="login"
-        element={<AdminLoginPage />}
-      />
+    <Route
+      path="*"
+      element={
+        authLoading ? (
+          <div className="admin-auth-loading">
+            در حال بررسی نشست...
+          </div>
+        ) : isAdminLoggedIn ? (
+          <AdminLayout>
+            <Routes>
+              <Route
+                path="dashboard"
+                element={
+                  <Navigate to="/admin/products" />
+                }
+              />
 
-      <Route
-        path="*"
-        element={
-          authLoading && !DEV_ADMIN_BYPASS ? (
-            <div className="admin-auth-loading">
-              در حال بررسی نشست...
-            </div>
-          ) : hasAdminAccess ? (
-            <AdminLayout>
-              <Routes>
-                <Route
-                  path="dashboard"
-                  element={
-                    <Navigate
-                      to="/admin/products"
-                      replace
-                    />
-                  }
-                />
+              <Route
+                path="products"
+                element={<AdminProductsPage />}
+              />
 
-                <Route
-                  path="products"
-                  element={<AdminProductsPage />}
-                />
+              <Route
+                path="orders"
+                element={<AdminOrdersPage />}
+              />
 
-                <Route
-                  path="orders"
-                  element={<AdminOrdersPage />}
-                />
+              <Route
+                path="orders/:id"
+                element={<AdminOrderDetailPage />}
+              />
 
-                <Route
-                  path="orders/:id"
-                  element={<AdminOrderDetailPage />}
-                />
+              <Route
+                path="bulk-orders"
+                element={<AdminBulkOrdersPage />}
+              />
 
-                <Route
-                  path="bulk-orders"
-                  element={<AdminBulkOrdersPage />}
-                />
-
-                <Route
-                  path="*"
-                  element={
-                    <Navigate
-                      to="/admin/products"
-                      replace
-                    />
-                  }
-                />
-              </Routes>
-            </AdminLayout>
-          ) : (
-            <Navigate
-              to="/admin/login"
-              replace
-            />
-          )
-        }
-      />
-    </Routes>
-  );
-};
+              <Route
+                path="*"
+                element={
+                  <Navigate to="/admin/products" />
+                }
+              />
+            </Routes>
+          </AdminLayout>
+        ) : (
+          <Navigate to="/admin/login" />
+        )
+      }
+    />
+  </Routes>
+);
 
 export default App;
