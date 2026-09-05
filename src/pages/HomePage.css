@@ -1,7 +1,24 @@
 .home-page {
   min-height: 100vh;
-  padding: 0 0rem 0rem;
+
+  padding: 0;
+
   animation: aria-fade-in 0.3s ease;
+
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(7, 15, 24, 0.78) 0%,
+      rgba(7, 15, 24, 0.55) 38%,
+      rgba(7, 15, 24, 0.18) 70%,
+      rgba(7, 15, 24, 0.08) 100%
+    ),
+    url('/back.jpg');
+
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* ==========================================
@@ -10,16 +27,34 @@
 
 .home-banner {
   width: 100%;
-  background: #ffffff;
-  padding: 2rem 1rem 4rem;
+
+  min-height: 520px;
+
+  padding: 1rem 1rem;
+
   display: flex;
+  align-items: center;
   justify-content: center;
+
+  background: transparent;
 }
 
 .banner-container {
   width: 100%;
   max-width: 950px;
+
   text-align: center;
+
+  padding: 2rem;
+
+  background: transparent;
+
+  border: 0;
+
+  box-shadow: none;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* ==========================================
@@ -37,12 +72,13 @@
 
   padding: 0.8rem 1.6rem;
 
-  border: 1px solid #dbeafe;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+
   border-radius: 999px;
 
-  background: #f8fbff;
+  background: rgba(255, 255, 255, 0.1);
 
-  color: #2563eb;
+  color: #ffffff;
 
   font-size: 0.95rem;
   font-weight: 700;
@@ -52,8 +88,11 @@
   overflow: hidden;
 
   box-shadow:
-    0 4px 15px rgba(37, 99, 235, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 8px 30px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 
   transform: translateY(0);
 
@@ -63,47 +102,18 @@
     border-color 0.35s ease;
 }
 
-/* Moving shine */
-.banner-badge::before {
-  content: '';
-
-  position: absolute;
-
-  top: -20%;
-  left: -100%;
-
-  width: 55%;
-  height: 140%;
-
-  background: linear-gradient(
-    100deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.1) 35%,
-    rgba(255, 255, 255, 0.85) 50%,
-    rgba(255, 255, 255, 0.1) 65%,
-    transparent 100%
-  );
-
-  transform: skewX(-20deg);
-
-  animation: banner-badge-shine 4s ease-in-out infinite;
-
-  pointer-events: none;
-}
-
 .banner-badge:hover {
   transform: translateY(-3px) scale(1.02);
 
-  border-color: #bfdbfe;
+  border-color: rgba(255, 255, 255, 0.5);
 
   box-shadow:
-    0 10px 25px rgba(37, 99, 235, 0.14),
-    0 0 0 4px rgba(59, 130, 246, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+    0 12px 35px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 /* ==========================================
-   Badge Icon
+   BADGE ICON
 ========================================== */
 
 .badge-icon {
@@ -128,26 +138,22 @@
   transform: scale(1.12) rotate(-4deg);
 
   filter:
-    drop-shadow(0 3px 6px rgba(37, 99, 235, 0.2));
+    drop-shadow(0 3px 8px rgba(255, 255, 255, 0.25));
 }
 
 /* ==========================================
-   Badge Text
+   BADGE TEXT
 ========================================== */
 
 .banner-badge > span {
   position: relative;
   z-index: 2;
 
-  color: #2563eb;
+  color: #ffffff;
 
   transition:
     transform 0.3s ease,
     color 0.3s ease;
-}
-
-.banner-badge:hover > span {
-  transform: translateX(-2px);
 }
 
 /* ==========================================
@@ -160,17 +166,20 @@
   display: flex;
   flex-direction: column;
 
-  gap: 1rem;
+  gap: 0.8rem;
 
   line-height: 1.15;
 }
 
 .banner-title-dark {
-  color: #0f172a;
+  color: #ffffff;
 
-  font-size: 1.5rem;
+  font-size: 1.7rem;
 
   font-weight: 900;
+
+  text-shadow:
+    0 3px 15px rgba(0, 0, 0, 0.45);
 
   transition:
     transform 0.35s ease,
@@ -178,11 +187,14 @@
 }
 
 .banner-title-blue {
-  color: #2563eb;
+  color: #d4a017;
 
-  font-size: 2rem;
+  font-size: 2.4rem;
 
   font-weight: 900;
+
+  text-shadow:
+    0 3px 18px rgba(0, 0, 0, 0.5);
 
   transition:
     transform 0.35s ease,
@@ -197,7 +209,7 @@
   transform: translateY(-2px);
 
   text-shadow:
-    0 5px 20px rgba(37, 99, 235, 0.12);
+    0 5px 25px rgba(212, 160, 23, 0.3);
 }
 
 /* ==========================================
@@ -209,13 +221,16 @@
 
   margin: 2rem auto 0;
 
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.82);
 
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 
   line-height: 2;
 
   font-weight: 500;
+
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.5);
 
   transition:
     color 0.35s ease,
@@ -223,7 +238,7 @@
 }
 
 .banner-container:hover .banner-description {
-  color: #475569;
+  color: #ffffff;
 }
 
 /* ==========================================
@@ -236,7 +251,7 @@
   width: 100%;
   height: 1px;
 
-  background: #e5e7eb;
+  background: rgba(255, 255, 255, 0.2);
 
   margin: 3rem 0 2rem;
 
@@ -257,7 +272,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    #60a5fa,
+    #d4a017,
     transparent
   );
 
@@ -286,11 +301,14 @@
 
   gap: 0.55rem;
 
-  color: #475569;
+  color: rgba(255, 255, 255, 0.85);
 
   font-size: 0.8rem;
 
   font-weight: 700;
+
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.4);
 
   transition:
     transform 0.3s ease,
@@ -298,13 +316,9 @@
 }
 
 .banner-feature:hover {
-  color: #2563eb;
+  color: #ffffff;
 
   transform: translateY(-3px);
-}
-
-.banner-feature span:last-child {
-  white-space: nowrap;
 }
 
 .feature-check {
@@ -318,31 +332,24 @@
 
   border-radius: 50%;
 
-  background: #ecfdf5;
+  background: rgba(16, 185, 129, 0.18);
 
-  color: #10b981;
+  color: #34d399;
 
   font-size: 0.85rem;
 
   font-weight: bold;
 
   box-shadow:
-    0 3px 10px rgba(16, 185, 129, 0.15);
+    0 3px 12px rgba(16, 185, 129, 0.2);
 
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
 }
 
-.banner-feature:hover .feature-check {
-  transform: scale(1.15) rotate(8deg);
-
-  box-shadow:
-    0 5px 15px rgba(16, 185, 129, 0.25);
-}
-
 /* ==========================================
-   SECTIONS
+   HOME SECTIONS
 ========================================== */
 
 .home-section {
@@ -351,14 +358,9 @@
   max-width: 1200px;
 
   margin: 0 auto 3rem;
-}
 
-.home-section-banner {
-  margin-bottom: 1.5rem;
-}
-
-.home-section-banner .replacement-program-banner {
-  margin-bottom: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .section-title {
@@ -463,9 +465,9 @@
 .home-cta .btn {
   display: inline-block;
 
-  background: var(--aria-text);
+  background: #111827;
 
-  color: #fff;
+  color: #ffffff;
 
   padding: 0.8rem 1.6rem;
 
@@ -479,7 +481,9 @@
 }
 
 .home-cta .btn:hover {
-  background: #1e293b;
+  background: #d4a017;
+
+  color: #111827;
 
   transform: translateY(-2px);
 }
@@ -540,15 +544,16 @@
 ========================================== */
 
 @media (max-width: 992px) {
-  .banner-title-dark,
+  .banner-title-dark {
+    font-size: 1.6rem;
+  }
+
   .banner-title-blue {
-    font-size: 2.8rem;
+    font-size: 2.2rem;
   }
 
   .banner-description {
-    font-size: 1rem;
-
-    line-height: 1.9;
+    font-size: 0.9rem;
   }
 
   .banner-features {
@@ -562,11 +567,28 @@
 
 @media (max-width: 768px) {
   .home-page {
-    padding: 0 0 2rem;
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(7, 15, 24, 0.72) 0%,
+        rgba(7, 15, 24, 0.42) 45%,
+        rgba(7, 15, 24, 0.7) 100%
+      ),
+      url('/back.jpg');
+
+    background-position: 62% top;
+
+    background-attachment: scroll;
   }
 
   .home-banner {
+    min-height: 580px;
+
     padding: 3.5rem 1rem;
+  }
+
+  .banner-container {
+    padding: 1rem;
   }
 
   .banner-badge {
@@ -582,7 +604,12 @@
     height: 23px;
   }
 
-  .banner-title-dark,
+  .banner-title-dark {
+    font-size: 1.65rem;
+
+    line-height: 1.35;
+  }
+
   .banner-title-blue {
     font-size: 2rem;
 
@@ -592,7 +619,7 @@
   .banner-description {
     margin-top: 1.5rem;
 
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 
     line-height: 1.9;
   }
@@ -617,17 +644,24 @@
 ========================================== */
 
 @media (max-width: 480px) {
-  .banner-title-dark,
+  .home-banner {
+    min-height: 540px;
+  }
+
+  .banner-title-dark {
+    font-size: 1.4rem;
+  }
+
   .banner-title-blue {
-    font-size: 1.65rem;
+    font-size: 1.7rem;
   }
 
   .banner-description {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .banner-feature {
-    font-size: 0.92rem;
+    font-size: 0.85rem;
   }
 
   .banner-badge {

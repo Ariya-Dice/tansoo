@@ -8,17 +8,27 @@
 
   width: 100%;
 
-  background-color: var(--aria-surface);
+  background-color: #fff;
 
-  border-bottom: 1px solid var(--aria-border);
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0.2)
+    ),
+    url('/22.svg');
 
-  box-shadow: var(--aria-shadow-sm);
+  background-size: 100% auto;
+  background-position: center;
+  background-repeat: no-repeat;
 
-  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+
+  padding: 1rem 0;
 
   direction: rtl;
 
-  /* هدر همیشه بالای صفحه باقی می‌ماند */
   box-sizing: border-box;
 }
 
@@ -58,7 +68,7 @@
 
   align-items: center;
 
-  color: var(--aria-text);
+  color: #1c1c1e;
 
   font-size: 1.125rem;
 
@@ -69,6 +79,12 @@
   text-decoration: none;
 
   white-space: nowrap;
+
+  transition: color 0.2s ease;
+}
+
+.header-logo-link:hover {
+  color: #b8860b;
 }
 
 /* ==========================================
@@ -98,20 +114,22 @@
 
   line-height: 1.4;
 
-  color: var(--aria-text-secondary);
+  color: #1c1c1e;
 
   text-decoration: none;
 
-  border-radius: var(--aria-radius-xl);
+  border-radius: 0.875rem;
 
-  transition: var(--aria-transition);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .nav-link.active,
 .nav-link:hover {
-  color: var(--aria-primary);
+  color: #b8860b;
 
-  background-color: var(--aria-primary-light);
+  background-color: rgba(255, 255, 255, 0.72);
 }
 
 /* ==========================================
@@ -171,33 +189,44 @@
 
   box-sizing: border-box;
 
-  color: var(--aria-text-secondary);
+  color: #1c1c1e;
 
   text-decoration: none;
 
-  background: var(--aria-canvas);
+  background: rgba(255, 255, 255, 0.82);
 
-  border: 1px solid var(--aria-border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 
-  border-radius: var(--aria-radius-xl);
+  border-radius: 0.875rem;
 
   line-height: 0;
 
-  transition: var(--aria-transition);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .header-cart-link--active {
-  color: var(--aria-primary);
+  color: #b8860b;
 
-  background: var(--aria-primary-light);
+  background: rgba(255, 255, 255, 0.92);
 
-  border-color: #bfdbfe;
+  border-color: rgba(184, 134, 11, 0.28);
 }
 
 .header-cart-link:hover {
-  border-color: #cbd5e1;
+  color: #b8860b;
 
-  box-shadow: var(--aria-shadow-md);
+  background: rgba(255, 255, 255, 0.95);
+
+  border-color: rgba(184, 134, 11, 0.25);
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+
+  transform: translateY(-1px);
 }
 
 /* ==========================================
@@ -273,7 +302,7 @@
 
   padding: 0 0.25rem;
 
-  background: var(--aria-primary);
+  background: #b8860b;
 
   color: #fff;
 
@@ -317,28 +346,38 @@
 
   box-sizing: border-box;
 
-  border-radius: var(--aria-radius-xl);
+  border-radius: 0.875rem;
 
-  color: var(--aria-text-secondary);
+  color: #1c1c1e;
 
-  background: var(--aria-canvas);
+  background: rgba(255, 255, 255, 0.82);
 
-  border: 1px solid var(--aria-border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 
   cursor: pointer;
 
   line-height: 0;
 
-  transition: var(--aria-transition);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .header-nav-mobile button:hover {
-  background: var(--aria-primary-light);
+  background: rgba(255, 255, 255, 0.95);
 
-  color: var(--aria-primary);
+  color: #b8860b;
+
+  border-color: rgba(184, 134, 11, 0.25);
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
-/* Make menu SVG perfectly centered */
+/* ==========================================
+   Menu SVG
+========================================== */
 
 .header-nav-mobile button svg {
   display: block;
@@ -362,11 +401,19 @@
   left: 0;
   right: 0;
 
-  background: var(--aria-surface);
+  background:
+    linear-gradient(
+      rgba(255, 255, 255, 0.94),
+      rgba(255, 255, 255, 0.94)
+    ),
+    url('/2.png');
 
-  border-bottom: 1px solid var(--aria-border);
+  background-size: cover;
+  background-position: center;
 
-  box-shadow: var(--aria-shadow-xl);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 
   z-index: 100;
 }
@@ -386,24 +433,26 @@
 
   padding: 0.75rem 1rem;
 
-  color: var(--aria-text);
+  color: #1c1c1e;
 
   text-decoration: none;
 
-  border-radius: var(--aria-radius-xl);
+  border-radius: 0.875rem;
 
   font-weight: 600;
 
   line-height: 1.5;
 
-  transition: var(--aria-transition);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .mobile-menu-link.active,
 .mobile-menu-link:hover {
-  background: var(--aria-primary-light);
+  background: rgba(255, 255, 255, 0.8);
 
-  color: var(--aria-primary);
+  color: #b8860b;
 }
 
 /* ==========================================
@@ -423,10 +472,6 @@
     font-size: 1.25rem;
   }
 
-  /*
-   * ایجاد فضای هدر برای جلوگیری از قرار گرفتن
-   * محتوای صفحه زیر هدر
-   */
   body {
     padding-top: 5rem;
   }
@@ -457,9 +502,6 @@
     height: 2.5rem;
   }
 
-  /*
-   * فضای لازم برای هدر ثابت در موبایل
-   */
   body {
     padding-top: 5rem;
   }
