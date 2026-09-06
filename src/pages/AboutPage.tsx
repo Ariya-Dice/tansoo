@@ -429,8 +429,8 @@ const AboutPage: React.FC = () => {
         📞
       </span>
 
-      <a href="tel:09368013251">
-        09368013251
+      <a href="tel:09027367885">
+        09027367885
       </a>
 
     </div>

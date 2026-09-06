@@ -1,5 +1,8 @@
 import { getSupabaseAdmin } from '../_shared/supabaseAdmin.ts';
 import { zibalVerify } from '../_shared/zibal.ts';
+import {
+  zibalBulkVerify,
+} from '../_shared/bulkZibalProxy.ts';
 import { tomansToRials } from '../_shared/bulkOrderConfig.ts';
 
 function frontendBase(): string {
@@ -88,13 +91,28 @@ async function verifyBulkOrderPayment(
     return redirect(`${base}/#/payment/failed?${successQuery}&reason=track_mismatch`);
   }
 
-  const merchant = Deno.env.get('ZIBAL_MERCHANT');
-  if (!merchant) {
-    console.error(`[ BULK_PAYMENT ] VERIFY_FAIL requestId=${requestId} ZIBAL_MERCHANT missing`);
-    return redirect(`${base}/#/payment/failed?${successQuery}&reason=config`);
-  }
+  let verify;
 
-  const verify = await zibalVerify({ merchant, trackId });
+  try {
+    verify = await zibalBulkVerify(trackId, requestId);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : String(error);
+
+    console.error(
+      `[ BULK_PAYMENT ] VERIFY_FAIL requestId=${requestId} proxy`,
+      message,
+    );
+
+    const reason =
+      message.startsWith('bulk_zibal_proxy_')
+        ? 'proxy_error'
+        : 'server_error';
+
+    return redirect(`${base}/#/payment/failed?${successQuery}&reason=${reason}`);
+  }
 
   if (verify.result !== 100) {
     console.error(`[ BULK_PAYMENT ] VERIFY_FAIL requestId=${requestId} zibal`, verify.result);

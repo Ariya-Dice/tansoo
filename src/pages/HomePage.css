@@ -725,7 +725,7 @@
     background-position: 72% top;
     background-repeat: no-repeat;
 
-    background-attachment: scroll;
+    background-attachment: no scroll;
 
     background-color: #111820;
   }
@@ -826,11 +826,11 @@
      * Move the image slightly more to the right
      * on narrow screens so the faucet remains visible.
      */
-    background-position: 50% top;
+    background-position: 40% top;
   }
 
   .home-banner {
-    min-height: 250px;
+    min-height: 540px;
 
     padding: 2.5rem 0.75rem;
   }

@@ -12,15 +12,15 @@ import {
 import { STORE_NAME } from '../constants';
 import './ContactPage.css';
 
-const PHONE = '09368013251';
-const PHONE_DISPLAY = '09368013251';
+const PHONE = '09027367885';
+const PHONE_DISPLAY = '09027367885';
 
 const EMAIL = 'rbshop@gmail.com';
 
 const ADDRESS =
   'اردبیل - شهرک مخابرات - طلاییه - طلاییه شرقی ۴';
 
-const MANAGER = 'بردیا عبداللهیان';
+const MANAGER = 'بردیا';
 
 const MAP_LAT = 38.215555;
 const MAP_LNG = 48.311236;

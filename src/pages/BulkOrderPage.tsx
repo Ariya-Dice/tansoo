@@ -713,7 +713,8 @@ const BulkOrderPage: React.FC = () => {
       /*
        * ارسال سفارش به Edge Function
        */
-      await submitBulkOrderRequest(
+      const result =
+        await submitBulkOrderRequest(
         {
           name: name.trim(),
 
@@ -745,12 +746,15 @@ const BulkOrderPage: React.FC = () => {
         },
       );
 
-      navigate('/bulk-order/success', {
-        state: {
-          name: name.trim(),
-          phone: phone.trim(),
+      navigate(
+        `/bulk-order/success?bulkOrderId=${result.bulkOrderId}`,
+        {
+          state: {
+            name: name.trim(),
+            phone: phone.trim(),
+          },
         },
-      });
+      );
     } catch (error) {
       showToast(getErrorMessage(error));
     } finally {

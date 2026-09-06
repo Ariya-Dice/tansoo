@@ -1,18 +1,11 @@
 import { handleCors, corsHeaders } from '../_shared/cors.ts';
 import { getSupabaseAdmin } from '../_shared/supabaseAdmin.ts';
 import {
-  zibalRequest,
-  zibalStartUrl,
-  zibalRequestErrorMessage,
-} from '../_shared/zibal.ts';
-import {
   getBulkOrderDepositAmountTomans,
-  getPaymentExpiryMinutes,
   getRateLimitIpHours,
   getRateLimitIpMax,
   getRateLimitPhoneHours,
   getRateLimitPhoneMax,
-  tomansToRials,
 } from '../_shared/bulkOrderConfig.ts';
 
 const PHONE_RE = /^09\d{9}$/;
@@ -135,21 +128,12 @@ function orderDetailsMatch(
   );
 }
 
-function paymentResponse(
+function orderSuccessResponse(
   order: BulkOrderRow,
-  depositAmount: number,
 ) {
-  if (!order.zibal_track_id) {
-    return null;
-  }
-
   return {
     bulkOrderId: order.id,
-    trackId: order.zibal_track_id,
-    paymentUrl: zibalStartUrl(order.zibal_track_id),
-    depositAmount,
     status: order.status,
-    paymentExpiresAt: order.payment_expires_at,
   };
 }
 
@@ -294,7 +278,28 @@ async function checkRateLimits(
   return null;
 }
 
-async function findActiveUnpaidOrder(
+async function cancelLegacyPendingPaymentOrders(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  phone: string,
+  requestId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('bulk_order_requests')
+    .update({
+      status: 'cancelled',
+    })
+    .eq('phone', phone)
+    .eq('status', 'pending_payment');
+
+  if (error) {
+    console.error(
+      `[ BULK_ORDER ] CANCEL_LEGACY_PAYMENT requestId=${requestId} failed`,
+      error.message,
+    );
+  }
+}
+
+async function findRecentPendingOrder(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   phone: string,
 ): Promise<BulkOrderRow | null> {
@@ -305,11 +310,7 @@ async function findActiveUnpaidOrder(
     .from('bulk_order_requests')
     .select('*')
     .eq('phone', phone)
-    .eq('status', 'pending_payment')
-    .gt(
-      'payment_expires_at',
-      new Date().toISOString(),
-    )
+    .eq('status', 'pending')
     .order('created_at', {
       ascending: false,
     })
@@ -318,7 +319,7 @@ async function findActiveUnpaidOrder(
 
   if (error) {
     console.error(
-      '[ BULK_ORDER ] ACTIVE_ORDER_CHECK failed',
+      '[ BULK_ORDER ] RECENT_PENDING_CHECK failed',
       error.message,
     );
 
@@ -326,37 +327,6 @@ async function findActiveUnpaidOrder(
   }
 
   return (data as BulkOrderRow | null) ?? null;
-}
-
-async function cancelActiveOrder(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
-  orderId: number,
-  requestId: string,
-): Promise<boolean> {
-  const {
-    error,
-  } = await supabase
-    .from('bulk_order_requests')
-    .update({
-      status: 'cancelled',
-    })
-    .eq('id', orderId)
-    .eq('status', 'pending_payment');
-
-  if (error) {
-    console.error(
-      `[ BULK_ORDER ] CANCEL_ORDER requestId=${requestId} bulkOrderId=${orderId} failed`,
-      error.message,
-    );
-
-    return false;
-  }
-
-  console.log(
-    `[ BULK_ORDER ] ORDER_CANCELLED requestId=${requestId} bulkOrderId=${orderId}`,
-  );
-
-  return true;
 }
 
 Deno.serve(async (req) => {
@@ -404,43 +374,6 @@ Deno.serve(async (req) => {
   );
 
   try {
-    const merchant = Deno.env.get(
-      'ZIBAL_MERCHANT',
-    );
-
-    if (!merchant) {
-      console.error(
-        `[ BULK_ORDER ] CONFIG requestId=${requestId} ZIBAL_MERCHANT missing`,
-      );
-
-      return jsonResponse(
-        {
-          error:
-            'تنظیمات درگاه پرداخت کامل نیست.',
-        },
-        500,
-      );
-    }
-
-    let depositAmount: number;
-
-    try {
-      depositAmount =
-        getBulkOrderDepositAmountTomans();
-    } catch {
-      console.error(
-        `[ BULK_ORDER ] CONFIG requestId=${requestId} BULK_ORDER_DEPOSIT_AMOUNT missing`,
-      );
-
-      return jsonResponse(
-        {
-          error:
-            'تنظیمات سپرده ثبت‌نام پیکربندی نشده است.',
-        },
-        500,
-      );
-    }
-
     const name = String(
       body.name ?? '',
     ).trim();
@@ -527,17 +460,23 @@ Deno.serve(async (req) => {
     const supabase =
       getSupabaseAdmin();
 
-    const supabaseUrl =
-      Deno.env
-        .get('SUPABASE_URL')!
-        .replace(/\/+$/, '');
-
-    const callbackUrl =
-      `${supabaseUrl}/functions/v1/verify-payment`;
+    const requestedOrder: OrderDetails = {
+      name,
+      company,
+      goodsType,
+      quantity,
+      note,
+    };
 
     await expireStalePendingOrders(
       supabase,
       phone,
+    );
+
+    await cancelLegacyPendingPaymentOrders(
+      supabase,
+      phone,
+      requestId,
     );
 
     /*
@@ -567,111 +506,42 @@ Deno.serve(async (req) => {
 
         if (
           existing.status ===
-          'pending_payment'
-        ) {
-          const expiresAt =
-            existing.payment_expires_at
-              ? new Date(
-                  existing.payment_expires_at,
-                ).getTime()
-              : 0;
-
-          if (
-            expiresAt > Date.now()
-          ) {
-            const payload =
-              paymentResponse(
-                existing,
-                depositAmount,
-              );
-
-            if (payload) {
-              console.log(
-                `[ BULK_ORDER ] TOTAL requestId=${requestId} duration=${Date.now() - startedAt}ms`,
-              );
-
-              return jsonResponse({
-                success: true,
-                ...payload,
-              });
-            }
-          }
-
-          await supabase
-            .from('bulk_order_requests')
-            .update({
-              status: 'expired',
-            })
-            .eq(
-              'id',
-              existing.id,
-            )
-            .eq(
-              'status',
-              'pending_payment',
-            );
-        }
-
-        if (
-          existing.status ===
             'pending' ||
           existing.status ===
             'contacted' ||
           existing.status ===
-            'completed'
+            'completed' ||
+          existing.status ===
+            'pending_payment'
         ) {
-          return jsonResponse(
-            {
-              error:
-                'این درخواست قبلاً ثبت و پرداخت شده است.',
-            },
-            409,
-          );
-        }
-      }
-    }
+          let orderForResponse =
+            existing;
 
-    /*
-     * Check for an existing active unpaid order.
-     *
-     * If the new request contains exactly the same order data,
-     * reuse the existing payment.
-     *
-     * If the user changed the order, cancel the old unpaid order
-     * and continue with a new order.
-     */
-    const activeUnpaid =
-      await findActiveUnpaidOrder(
-        supabase,
-        phone,
-      );
+          if (
+            existing.status ===
+            'pending_payment'
+          ) {
+            const {
+              data: upgraded,
+            } = await supabase
+              .from(
+                'bulk_order_requests',
+              )
+              .update({
+                status: 'pending',
+              })
+              .eq(
+                'id',
+                existing.id,
+              )
+              .select('*')
+              .maybeSingle();
 
-    if (activeUnpaid) {
-      const requestedOrder: OrderDetails = {
-        name,
-        company,
-        goodsType,
-        quantity,
-        note,
-      };
-
-      const sameOrder =
-        orderDetailsMatch(
-          activeUnpaid,
-          requestedOrder,
-        );
-
-      if (sameOrder) {
-        const payload =
-          paymentResponse(
-            activeUnpaid,
-            depositAmount,
-          );
-
-        if (payload) {
-          console.log(
-            `[ BULK_ORDER ] REUSE_PAYMENT requestId=${requestId} bulkOrderId=${activeUnpaid.id}`,
-          );
+            if (upgraded) {
+              orderForResponse =
+                upgraded as BulkOrderRow;
+            }
+          }
 
           console.log(
             `[ BULK_ORDER ] TOTAL requestId=${requestId} duration=${Date.now() - startedAt}ms`,
@@ -679,43 +549,43 @@ Deno.serve(async (req) => {
 
           return jsonResponse({
             success: true,
-            ...payload,
+            ...orderSuccessResponse(
+              orderForResponse,
+            ),
             reused: true,
           });
         }
-
-        /*
-         * An active order without a Zibal track ID
-         * cannot be reused safely.
-         * Cancel it and allow a fresh order to be created.
-         */
-        await cancelActiveOrder(
-          supabase,
-          activeUnpaid.id,
-          requestId,
-        );
-      } else {
-        console.log(
-          `[ BULK_ORDER ] ORDER_CHANGED requestId=${requestId} oldBulkOrderId=${activeUnpaid.id}`,
-        );
-
-        const cancelled =
-          await cancelActiveOrder(
-            supabase,
-            activeUnpaid.id,
-            requestId,
-          );
-
-        if (!cancelled) {
-          return jsonResponse(
-            {
-              error:
-                'امکان اصلاح سفارش قبلی وجود ندارد. لطفاً دوباره تلاش کنید.',
-            },
-            500,
-          );
-        }
       }
+    }
+
+    /*
+     * If the same phone already has an identical pending order,
+     * return it instead of creating a duplicate row.
+     */
+    const recentPending =
+      await findRecentPendingOrder(
+        supabase,
+        phone,
+      );
+
+    if (
+      recentPending &&
+      orderDetailsMatch(
+        recentPending,
+        requestedOrder,
+      )
+    ) {
+      console.log(
+        `[ BULK_ORDER ] REUSE_PENDING requestId=${requestId} bulkOrderId=${recentPending.id}`,
+      );
+
+      return jsonResponse({
+        success: true,
+        ...orderSuccessResponse(
+          recentPending,
+        ),
+        reused: true,
+      });
     }
 
     /*
@@ -734,14 +604,6 @@ Deno.serve(async (req) => {
       return rateLimitResponse;
     }
 
-    const paymentExpiresAt =
-      new Date(
-        Date.now() +
-          getPaymentExpiryMinutes() *
-            60 *
-            1000,
-      ).toISOString();
-
     const {
       data: created,
       error: insertError,
@@ -754,11 +616,7 @@ Deno.serve(async (req) => {
         goods_type: goodsType,
         quantity,
         note,
-        status: 'pending_payment',
-        payment_amount:
-          depositAmount,
-        payment_expires_at:
-          paymentExpiresAt,
+        status: 'pending',
         client_ip: clientIp,
         idempotency_key:
           idempotencyKey,
@@ -786,38 +644,11 @@ Deno.serve(async (req) => {
             .maybeSingle();
 
           if (raced) {
-            const payload =
-              paymentResponse(
-                raced as BulkOrderRow,
-                depositAmount,
-              );
-
-            if (payload) {
-              return jsonResponse({
-                success: true,
-                ...payload,
-              });
-            }
-          }
-        }
-
-        const activeAfterRace =
-          await findActiveUnpaidOrder(
-            supabase,
-            phone,
-          );
-
-        if (activeAfterRace) {
-          const payload =
-            paymentResponse(
-              activeAfterRace,
-              depositAmount,
-            );
-
-          if (payload) {
             return jsonResponse({
               success: true,
-              ...payload,
+              ...orderSuccessResponse(
+                raced as BulkOrderRow,
+              ),
               reused: true,
             });
           }
@@ -826,7 +657,7 @@ Deno.serve(async (req) => {
         return jsonResponse(
           {
             error:
-              'یک درخواست پرداخت نشده برای این شماره تماس فعال است.',
+              'یک درخواست فعال برای این شماره تماس وجود دارد.',
           },
           409,
         );
@@ -854,121 +685,12 @@ Deno.serve(async (req) => {
     );
 
     console.log(
-      `[ BULK_ORDER ] PAYMENT_START requestId=${requestId} bulkOrderId=${order.id}`,
-    );
-
-    const amountRials =
-      tomansToRials(
-        depositAmount,
-      );
-
-    const zibal =
-      await zibalRequest({
-        merchant,
-        amount: amountRials,
-        callbackUrl,
-        description:
-          `سپرده ثبت سفارش عمده #${order.id}`,
-        orderId:
-          `bulk-${order.id}`,
-        mobile: phone,
-      });
-
-    if (
-      zibal.result !== 100 ||
-      !zibal.trackId
-    ) {
-      const zibalError =
-        zibalRequestErrorMessage(
-          zibal.result,
-          zibal.message,
-        );
-
-      console.error(
-        `[ BULK_ORDER ] PAYMENT_CREATED requestId=${requestId} failed`,
-        zibal.result,
-        zibal.message,
-      );
-
-      await supabase
-        .from(
-          'bulk_order_requests',
-        )
-        .update({
-          status: 'expired',
-        })
-        .eq(
-          'id',
-          order.id,
-        );
-
-      return jsonResponse(
-        {
-          error: zibalError,
-          zibalCode:
-            zibal.result,
-        },
-        502,
-      );
-    }
-
-    const {
-      data: updated,
-      error: updateError,
-    } = await supabase
-      .from(
-        'bulk_order_requests',
-      )
-      .update({
-        zibal_track_id:
-          zibal.trackId,
-      })
-      .eq(
-        'id',
-        order.id,
-      )
-      .eq(
-        'status',
-        'pending_payment',
-      )
-      .select('*')
-      .single();
-
-    if (
-      updateError ||
-      !updated
-    ) {
-      console.error(
-        `[ BULK_ORDER ] PAYMENT_CREATED requestId=${requestId} track update failed`,
-        updateError?.message,
-      );
-
-      return jsonResponse(
-        {
-          error:
-            'خطا در ثبت اطلاعات پرداخت.',
-        },
-        500,
-      );
-    }
-
-    console.log(
-      `[ BULK_ORDER ] PAYMENT_CREATED requestId=${requestId} bulkOrderId=${order.id} trackId=${zibal.trackId}`,
-    );
-
-    console.log(
       `[ BULK_ORDER ] TOTAL requestId=${requestId} duration=${Date.now() - startedAt}ms`,
     );
 
-    const payload =
-      paymentResponse(
-        updated as BulkOrderRow,
-        depositAmount,
-      );
-
     return jsonResponse({
       success: true,
-      ...payload,
+      ...orderSuccessResponse(order),
     });
   } catch (error) {
     console.error(

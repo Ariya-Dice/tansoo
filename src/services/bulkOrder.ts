@@ -20,9 +20,6 @@ export interface BulkOrderFormInput {
 
 export interface BulkOrderSubmitResult {
   bulkOrderId: number;
-  trackId: number;
-  paymentUrl: string;
-  depositAmount: number;
 }
 
 export interface BulkOrdersQueryParams {
@@ -132,12 +129,8 @@ export async function submitBulkOrderRequest(
   });
 
   const payload = data as {
-    paymentUrl?: string;
     bulkOrderId?: number;
-    trackId?: number;
-    depositAmount?: number;
     error?: string;
-    zibalCode?: number;
   } | null;
 
   if (payload?.error) {
@@ -148,15 +141,12 @@ export async function submitBulkOrderRequest(
     throw new Error(await extractFunctionError(error));
   }
 
-  if (!payload?.paymentUrl || payload.bulkOrderId == null || payload.trackId == null) {
-    throw new Error('آدرس درگاه پرداخت از سرور دریافت نشد.');
+  if (payload?.bulkOrderId == null) {
+    throw new Error('شناسه درخواست از سرور دریافت نشد.');
   }
 
   return {
     bulkOrderId: Number(payload.bulkOrderId),
-    trackId: Number(payload.trackId),
-    paymentUrl: payload.paymentUrl,
-    depositAmount: Number(payload.depositAmount ?? 0),
   };
 }
 
