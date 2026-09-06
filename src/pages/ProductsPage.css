@@ -1,93 +1,569 @@
+/* ==========================================
+   PRODUCTS PAGE
+========================================== */
+
 .products-page {
-  padding: 2rem 0 3rem;
+  padding: 2.5rem 0 4rem;
   min-height: 100vh;
-  animation: aria-fade-in 0.3s ease;
+
+  animation:
+    aria-fade-in
+    0.3s
+    ease;
+
+  color:
+    var(--aria-text);
 }
+
+
+/* ==========================================
+   FIXED BACKGROUND
+========================================== */
+
+.products-background {
+  position: fixed;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  z-index: 0;
+
+  overflow: hidden;
+
+  background:
+    #111820;
+
+  pointer-events:
+    none;
+}
+
+
+/* ==========================================
+   BACKGROUND LAYERS
+========================================== */
+
+.products-background-layer {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background-size:
+    cover;
+
+  background-position:
+    center top;
+
+  background-repeat:
+    no-repeat;
+
+  transform:
+    translateZ(0);
+
+  will-change:
+    opacity;
+}
+
+
+/* ==========================================
+   PREVIOUS IMAGE
+========================================== */
+
+.products-background-previous {
+  z-index:
+    1;
+
+  opacity:
+    1;
+}
+
+
+/* ==========================================
+   CURRENT IMAGE
+========================================== */
+
+.products-background-current {
+  z-index:
+    2;
+
+  opacity:
+    1;
+
+  animation:
+    products-background-fade-in
+    0.9s
+    ease-in-out;
+}
+
+
+/* ==========================================
+   FADE
+========================================== */
+
+@keyframes products-background-fade-in {
+  0% {
+    opacity:
+      0;
+  }
+
+  100% {
+    opacity:
+      1;
+  }
+}
+
+
+/* ==========================================
+   BACKGROUND OVERLAY
+========================================== */
+
+.products-background-layer::after {
+  content:
+    '';
+
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(7, 15, 24, 0.08) 0%,
+      rgba(7, 15, 24, 0.12) 50%,
+      rgba(7, 15, 24, 0.20) 100%
+    );
+
+  pointer-events:
+    none;
+}
+
+
+/* ==========================================
+   CONTENT
+========================================== */
+
+.products-page > .container {
+  position:
+    relative;
+
+  z-index:
+    1;
+}
+
+
+/* ==========================================
+   TITLE
+========================================== */
 
 .products-title {
-  font-size: 1.75rem;
-  font-weight: 900;
-  margin-bottom: 1.5rem;
-  color: var(--aria-text);
-  text-align: center;
+  font-size:
+    1.75rem;
+
+  font-weight:
+    900;
+
+  margin-bottom:
+    2rem;
+
+  color:
+    var(--aria-text);
+
+  text-align:
+    center;
 }
 
+
+/* ==========================================
+   MOBILE SEARCH BUTTON
+========================================== */
+
+.mobile-search-toggle {
+  display:
+    none;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    0.4rem;
+
+  width:
+    fit-content;
+
+  min-width:
+    92px;
+
+  margin:
+    0
+    auto
+    1rem;
+
+  padding:
+    0.5rem
+    0.9rem;
+
+  background:
+    var(--aria-surface);
+
+  border:
+    1px solid
+    var(--aria-border);
+
+  border-radius:
+    var(--aria-radius-xl);
+
+  color:
+    var(--aria-text);
+
+  font-family:
+    inherit;
+
+  font-size:
+    0.78rem;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+
+  box-shadow:
+    var(--aria-shadow-sm);
+
+  transition:
+    transform
+    0.2s
+    ease,
+
+    box-shadow
+    0.2s
+    ease;
+}
+
+.mobile-search-toggle:hover {
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    var(--aria-shadow-md);
+}
+
+.mobile-search-toggle:active {
+  transform:
+    translateY(0);
+}
+
+
+/* ==========================================
+   FILTERS
+========================================== */
+
 .products-filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: var(--aria-surface);
-  border: 1px solid var(--aria-border);
-  border-radius: var(--aria-radius-2xl);
-  box-shadow: var(--aria-shadow-sm);
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(160px, 1fr)
+    );
+
+  gap:
+    0.75rem;
+
+  margin-bottom:
+    2.75rem;
+
+  padding:
+    1rem;
+
+  background:
+    var(--aria-surface);
+
+  border:
+    1px solid
+    var(--aria-border);
+
+  border-radius:
+    var(--aria-radius-2xl);
+
+  box-shadow:
+    var(--aria-shadow-sm);
+}
+
+
+/* ==========================================
+   FILTER GROUP
+========================================== */
+
+.filter-group {
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    0.35rem;
 }
 
 .filter-group label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--aria-text-secondary);
-  text-align: right;
+  font-size:
+    0.75rem;
+
+  font-weight:
+    700;
+
+  color:
+    var(--aria-text-secondary);
+
+  text-align:
+    right;
 }
+
+
+/* ==========================================
+   SELECT / INPUT
+========================================== */
 
 .filter-group select,
 .custom-input {
-  padding: 0.5rem 0.625rem;
-  background: var(--aria-surface);
-  border: 1px solid var(--aria-border);
-  border-radius: var(--aria-radius-xl);
-  color: var(--aria-text);
-  font-size: 0.8125rem;
-  width: 100%;
+  padding:
+    0.5rem
+    0.625rem;
+
+  background:
+    var(--aria-surface);
+
+  border:
+    1px solid
+    var(--aria-border);
+
+  border-radius:
+    var(--aria-radius-xl);
+
+  color:
+    var(--aria-text);
+
+  font-size:
+    0.8125rem;
+
+  width:
+    100%;
+
+  transition:
+    border-color
+    0.2s
+    ease,
+
+    box-shadow
+    0.2s
+    ease;
 }
 
 .filter-group select:focus,
 .custom-input:focus {
-  outline: none;
-  border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  outline:
+    none;
+
+  border-color:
+    #3B82F6;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.12);
 }
+
+
+/* ==========================================
+   PRODUCTS GRID
+========================================== */
 
 .products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1.25rem;
-  align-items: stretch;
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(220px, 1fr)
+    );
+
+  gap:
+    1.5rem;
+
+  align-items:
+    stretch;
 }
 
+
+/* ==========================================
+   EMPTY STATE
+========================================== */
+
 .products-empty {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--aria-text-secondary);
+  text-align:
+    center;
+
+  padding:
+    3rem
+    1rem;
+
+  color:
+    var(--aria-text-secondary);
 }
 
 .products-empty-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  margin-bottom: 0.5rem;
-  color: var(--aria-text);
+  font-size:
+    1.25rem;
+
+  font-weight:
+    800;
+
+  margin-bottom:
+    0.5rem;
+
+  color:
+    var(--aria-text);
 }
+
+.products-empty-text {
+  color:
+    var(--aria-text-secondary);
+}
+
+
+/* ==========================================
+   LOADING
+========================================== */
 
 .loading-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 50vh;
-  gap: 1rem;
-  color: var(--aria-text-secondary);
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  min-height:
+    50vh;
+
+  gap:
+    1rem;
+
+  color:
+    var(--aria-text-secondary);
 }
 
+
+/* ==========================================
+   MOBILE
+========================================== */
+
 @media (max-width: 640px) {
+
+  .products-page {
+    padding:
+      1.25rem
+      0
+      3.5rem;
+  }
+
+
+  .products-title {
+    font-size:
+      1.45rem;
+
+    margin-bottom:
+      1rem;
+  }
+
+
+  /* Show compact search button */
+
+  .mobile-search-toggle {
+    display:
+      flex;
+  }
+
+
+  /* Hide filters by default */
+
+  .products-filters {
+    display:
+      none;
+
+    grid-template-columns:
+      1fr;
+
+    gap:
+      0.65rem;
+
+    margin-bottom:
+      2rem;
+
+    padding:
+      0.85rem;
+  }
+
+
+  /* Show filters after clicking search */
+
+  .products-filters.mobile-filters-open {
+    display:
+      grid;
+  }
+
+
+  /* More spacing between cards */
+
   .products-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+    gap:
+      1rem;
+  }
+
+
+  .products-background-layer {
+    background-position:
+      center top;
   }
 }
 
+
+/* ==========================================
+   SMALL MOBILE
+========================================== */
+
 @media (max-width: 400px) {
+
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
+
+    gap:
+      1rem;
+  }
+
+  .products-background-layer {
+    background-position:
+      center top;
   }
 }
