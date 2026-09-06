@@ -19,33 +19,33 @@ import { Search, X } from 'lucide-react';
 import './ProductsPage.css';
 
 /* ==========================================
-   BACKGROUND IMAGES
+   BACKGROUND COLORS
 ========================================== */
 
-const BACKGROUND_IMAGES = [
-  '/back.jpg',
-  '/02.jpg',
-  '/03.jpg',
-  '/04.jpg',
-  '/05.jpg',
-  '/06.jpg',
-  '/07.jpg',
-  '/08.jpg',
-  '/09.jpg',
-  '/10.jpg',
-  '/11.jpg',
-  '/12.jpg',
-  '/13.jpg',
-  '/14.jpg',
-  '/15.jpg',
-  '/16.jpg',
-  '/17.jpg',
-  '/18.jpg',
-  '/19.jpg',
-  '/20.jpg',
+const BACKGROUND_COLORS = [
+  '#0F172A',
+  '#172554',
+  '#1E3A5F',
+  '#164E63',
+  '#134E4A',
+  '#1E293B',
+  '#1F2937',
+  '#27272A',
+  '#312E81',
+  '#1E1B4B',
+  '#172554',
+  '#0C4A6E',
+  '#164E63',
+  '#334155',
+  '#374151',
+  '#27272A',
+  '#3F3F46',
+  '#1F2937',
+  '#111827',
+  '#0F172A',
 ];
 
-const PRELOAD_COUNT = 3;
+const FADE_DURATION = 900;
 
 const ProductsPage: React.FC = () => {
   const {
@@ -89,31 +89,30 @@ const ProductsPage: React.FC = () => {
   ========================================== */
 
   /*
-   * Current image shown to the user.
+   * Current background color.
    */
   const [currentBackgroundIndex, setCurrentBackgroundIndex] =
     useState<number>(0);
 
   /*
-   * Previous image stays underneath while
-   * the new image fades in.
+   * Previous background color remains visible
+   * underneath while the new color fades in.
    */
   const [previousBackgroundIndex, setPreviousBackgroundIndex] =
     useState<number | null>(null);
 
   /*
-   * Incrementing this value restarts the
-   * fade animation.
+   * Used as a React key to restart the Fade
+   * animation on every color change.
    */
   const [backgroundTransitionKey, setBackgroundTransitionKey] =
     useState<number>(0);
 
   /*
-   * The image cursor is independent from
-   * scroll direction.
+   * Global color cursor.
    *
-   * Every crossed boundary consumes one
-   * new image.
+   * This always moves forward, regardless
+   * of whether the user scrolls up or down.
    */
   const backgroundCursorRef =
     useRef<number>(0);
@@ -128,59 +127,17 @@ const ProductsPage: React.FC = () => {
   const previousScrollZoneRef =
     useRef<number>(0);
 
-  /*
-   * Prevent excessive requestAnimationFrame
-   * calls during scrolling.
-   */
   const scrollTickingRef =
     useRef<boolean>(false);
 
-  /*
-   * Clear the old image after the Fade.
-   */
   const fadeTimeoutRef =
     useRef<number | null>(null);
-
-  /* ==========================================
-     BACKGROUND PRELOAD
-  ========================================== */
-
-  const preloadImage = (
-    imagePath: string
-  ): void => {
-    const image = new Image();
-    image.src = imagePath;
-  };
-
-  const preloadBackgrounds = (
-    startIndex: number
-  ): void => {
-    const endIndex = Math.min(
-      startIndex + PRELOAD_COUNT,
-      BACKGROUND_IMAGES.length
-    );
-
-    for (
-      let index = startIndex;
-      index < endIndex;
-      index += 1
-    ) {
-      preloadImage(
-        BACKGROUND_IMAGES[index]
-      );
-    }
-  };
 
   /* ==========================================
      BACKGROUND SCROLL LOGIC
   ========================================== */
 
   useEffect(() => {
-    /*
-     * Initial preload.
-     */
-    preloadBackgrounds(0);
-
     const getScrollZone = (): number => {
       const scrollTop =
         window.scrollY;
@@ -192,20 +149,28 @@ const ProductsPage: React.FC = () => {
         window.innerHeight;
 
       const scrollableHeight =
-        documentHeight - viewportHeight;
+        documentHeight -
+        viewportHeight;
 
-      if (scrollableHeight <= 0) {
+      if (
+        scrollableHeight <= 0
+      ) {
         return 0;
       }
 
       const progress =
-        scrollTop / scrollableHeight;
+        scrollTop /
+        scrollableHeight;
 
-      if (progress < 1 / 3) {
+      if (
+        progress < 1 / 3
+      ) {
         return 0;
       }
 
-      if (progress < 2 / 3) {
+      if (
+        progress < 2 / 3
+      ) {
         return 1;
       }
 
@@ -224,69 +189,63 @@ const ProductsPage: React.FC = () => {
       const currentIndex =
         backgroundCursorRef.current;
 
-      const maxIndex =
-        BACKGROUND_IMAGES.length - 1;
+      const maximumIndex =
+        BACKGROUND_COLORS.length - 1;
 
       /*
-       * Every crossed boundary consumes
-       * one new image.
+       * Consume one new color for every
+       * crossed boundary.
        */
       const nextIndex = Math.min(
         currentIndex +
           crossedBoundaries,
-        maxIndex
+        maximumIndex
       );
 
       /*
-       * No more unused images remain.
+       * Stop once all colors have been used.
        */
       if (
-        nextIndex === currentIndex
+        nextIndex ===
+        currentIndex
       ) {
         return;
       }
 
       /*
-       * Keep current image underneath
-       * the incoming image.
+       * Keep the old color underneath.
        */
       setPreviousBackgroundIndex(
         currentIndex
       );
 
       /*
-       * Advance the global image cursor.
+       * Advance the color cursor.
        */
       backgroundCursorRef.current =
         nextIndex;
 
       /*
-       * Activate the new image.
+       * Set the new color.
        */
       setCurrentBackgroundIndex(
         nextIndex
       );
 
       /*
-       * Restart Fade animation.
+       * Restart the Fade animation.
        */
       setBackgroundTransitionKey(
         (value) => value + 1
       );
 
       /*
-       * Preload the next images.
-       */
-      preloadBackgrounds(
-        nextIndex + 1
-      );
-
-      /*
-       * Remove the previous layer after
-       * the animation has completed.
+       * Remove the old layer only after
+       * the new color has completely faded in.
        */
       if (
-        fadeTimeoutRef.current !== null
+        fadeTimeoutRef.current !==
+        null
       ) {
         window.clearTimeout(
           fadeTimeoutRef.current
@@ -301,7 +260,7 @@ const ProductsPage: React.FC = () => {
 
           fadeTimeoutRef.current =
             null;
-        }, 950);
+        }, FADE_DURATION);
     };
 
     const updateBackground = (): void => {
@@ -312,7 +271,8 @@ const ProductsPage: React.FC = () => {
         previousScrollZoneRef.current;
 
       if (
-        currentZone === previousZone
+        currentZone ===
+        previousZone
       ) {
         return;
       }
@@ -324,16 +284,10 @@ const ProductsPage: React.FC = () => {
         currentZone;
 
       /*
-       * Direction does NOT determine
-       * the image.
+       * Direction is ignored.
        *
-       * Every boundary crossing consumes
-       * another image.
-       *
-       * 0 -> 1 = +1
-       * 1 -> 2 = +1
-       * 2 -> 1 = +1
-       * 1 -> 0 = +1
+       * Every crossed boundary consumes
+       * a new color.
        */
       const crossedBoundaries =
         Math.abs(
@@ -356,12 +310,14 @@ const ProductsPage: React.FC = () => {
       scrollTickingRef.current =
         true;
 
-      window.requestAnimationFrame(() => {
-        updateBackground();
+      window.requestAnimationFrame(
+        () => {
+          updateBackground();
 
-        scrollTickingRef.current =
-          false;
-      });
+          scrollTickingRef.current =
+            false;
+        }
+      );
     };
 
     const handleResize = (): void => {
@@ -369,7 +325,7 @@ const ProductsPage: React.FC = () => {
     };
 
     /*
-     * Set the correct initial zone.
+     * Initialize the current scroll zone.
      */
     previousScrollZoneRef.current =
       getScrollZone();
@@ -377,7 +333,9 @@ const ProductsPage: React.FC = () => {
     window.addEventListener(
       'scroll',
       handleScroll,
-      { passive: true }
+      {
+        passive: true,
+      }
     );
 
     window.addEventListener(
@@ -415,87 +373,90 @@ const ProductsPage: React.FC = () => {
     useMemo(() => {
       let filtered = [...products];
 
-      /* Model */
       if (
         selectedModel !== 'همه'
       ) {
         if (
           selectedModel === 'سایر'
         ) {
-          filtered = filtered.filter(
-            (p) =>
-              !MODELS
-                .slice(0, -1)
-                .includes(p.model)
-          );
+          filtered =
+            filtered.filter(
+              (p) =>
+                !MODELS
+                  .slice(0, -1)
+                  .includes(p.model)
+            );
 
           if (customModel) {
-            filtered = filtered.filter(
-              (p) =>
-                p.model
-                  .toLowerCase()
-                  .includes(
-                    customModel.toLowerCase()
-                  )
-            );
+            filtered =
+              filtered.filter(
+                (p) =>
+                  p.model
+                    .toLowerCase()
+                    .includes(
+                      customModel.toLowerCase()
+                    )
+              );
           }
         } else {
-          filtered = filtered.filter(
-            (p) =>
-              p.model ===
-              selectedModel
-          );
+          filtered =
+            filtered.filter(
+              (p) =>
+                p.model ===
+                selectedModel
+            );
         }
       }
 
-      /* Type */
       if (
         selectedType !== 'همه'
       ) {
-        filtered = filtered.filter(
-          (p) =>
-            getProductGoodsType(p) ===
-            selectedType
-        );
+        filtered =
+          filtered.filter(
+            (p) =>
+              getProductGoodsType(p) ===
+              selectedType
+          );
       }
 
-      /* Color */
       if (
         selectedColor !== 'همه'
       ) {
-        filtered = filtered.filter(
-          (p) =>
-            p.color ===
-            selectedColor
-        );
+        filtered =
+          filtered.filter(
+            (p) =>
+              p.color ===
+              selectedColor
+          );
       }
 
-      /* Tag */
       if (
         selectedTag !== 'همه'
       ) {
-        filtered = filtered.filter(
-          (p) =>
-            p.tags.includes(
-              selectedTag
-            )
-        );
+        filtered =
+          filtered.filter(
+            (p) =>
+              p.tags.includes(
+                selectedTag
+              )
+          );
       }
 
-      /* Sorting */
       if (
         sortBy === 'price-asc'
       ) {
         filtered.sort(
           (a, b) =>
-            a.price - b.price
+            a.price -
+            b.price
         );
       } else if (
         sortBy === 'price-desc'
       ) {
         filtered.sort(
           (a, b) =>
-            b.price - a.price
+            b.price -
+            a.price
         );
       }
 
@@ -545,15 +506,10 @@ const ProductsPage: React.FC = () => {
           <div
             className="products-background-layer products-background-current"
             style={{
-              backgroundImage: `
-                linear-gradient(
-                  180deg,
-                  rgba(7, 15, 24, 0.72) 0%,
-                  rgba(7, 15, 24, 0.42) 45%,
-                  rgba(7, 15, 24, 0.70) 100%
-                ),
-                url("${BACKGROUND_IMAGES[currentBackgroundIndex]}")
-              `,
+              backgroundColor:
+                BACKGROUND_COLORS[
+                  currentBackgroundIndex
+                ],
             }}
           />
         </div>
@@ -579,7 +535,6 @@ const ProductsPage: React.FC = () => {
             </p>
           </div>
         </div>
-
       </div>
     );
   }
@@ -591,26 +546,24 @@ const ProductsPage: React.FC = () => {
   return (
     <div className="products-page">
 
-      {/* Fixed Background */}
+      {/* ======================================
+          FIXED BACKGROUND
+      ====================================== */}
 
       <div
         className="products-background"
         aria-hidden="true"
       >
+
         {previousBackgroundIndex !==
           null && (
           <div
             className="products-background-layer products-background-previous"
             style={{
-              backgroundImage: `
-                linear-gradient(
-                  180deg,
-                  rgba(7, 15, 24, 0.72) 0%,
-                  rgba(7, 15, 24, 0.42) 45%,
-                  rgba(7, 15, 24, 0.70) 100%
-                ),
-                url("${BACKGROUND_IMAGES[previousBackgroundIndex]}")
-              `,
+              backgroundColor:
+                BACKGROUND_COLORS[
+                  previousBackgroundIndex
+                ],
             }}
           />
         )}
@@ -619,31 +572,27 @@ const ProductsPage: React.FC = () => {
           key={backgroundTransitionKey}
           className="products-background-layer products-background-current"
           style={{
-            backgroundImage: `
-              linear-gradient(
-                180deg,
-                rgba(7, 15, 24, 0.72) 0%,
-                rgba(7, 15, 24, 0.42) 45%,
-                rgba(7, 15, 24, 0.70) 100%
-              ),
-              url("${BACKGROUND_IMAGES[currentBackgroundIndex]}")
-            `,
+            backgroundColor:
+              BACKGROUND_COLORS[
+                currentBackgroundIndex
+              ],
           }}
         />
+
       </div>
 
-      <div className="container">
+      {/* ======================================
+          CONTENT
+      ====================================== */}
 
-        {/* ====================================
-            TITLE
-        ==================================== */}
+      <div className="container">
 
         <h1 className="products-title">
           لیست محصولات
         </h1>
 
         {/* ====================================
-            MOBILE SEARCH
+            MOBILE SEARCH BUTTON
         ==================================== */}
 
         <button
@@ -651,7 +600,8 @@ const ProductsPage: React.FC = () => {
           className="mobile-search-toggle"
           onClick={() =>
             setIsMobileFiltersOpen(
-              (current) => !current
+              (current) =>
+                !current
             )
           }
           aria-expanded={

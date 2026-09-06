@@ -3,8 +3,15 @@
 ========================================== */
 
 .products-page {
-  padding: 2.5rem 0 4rem;
-  min-height: 100vh;
+  position: relative;
+
+  padding:
+    2.5rem
+    0
+    4rem;
+
+  min-height:
+    100vh;
 
   animation:
     aria-fade-in
@@ -22,20 +29,20 @@
 
 .products-background {
   position: fixed;
+
   inset: 0;
 
   width: 100%;
   height: 100%;
 
-  z-index: 0;
-
   overflow: hidden;
+
+  pointer-events: none;
+
+  z-index: -1;
 
   background:
     #111820;
-
-  pointer-events:
-    none;
 }
 
 
@@ -45,19 +52,11 @@
 
 .products-background-layer {
   position: absolute;
+
   inset: 0;
 
   width: 100%;
   height: 100%;
-
-  background-size:
-    cover;
-
-  background-position:
-    center top;
-
-  background-repeat:
-    no-repeat;
 
   transform:
     translateZ(0);
@@ -68,7 +67,7 @@
 
 
 /* ==========================================
-   PREVIOUS IMAGE
+   PREVIOUS COLOR
 ========================================== */
 
 .products-background-previous {
@@ -81,7 +80,7 @@
 
 
 /* ==========================================
-   CURRENT IMAGE
+   CURRENT COLOR
 ========================================== */
 
 .products-background-current {
@@ -89,56 +88,30 @@
     2;
 
   opacity:
-    1;
+    0;
 
   animation:
     products-background-fade-in
     0.9s
-    ease-in-out;
+    ease-in-out
+    forwards;
 }
 
 
 /* ==========================================
-   FADE
+   REAL FADE
 ========================================== */
 
 @keyframes products-background-fade-in {
-  0% {
+  from {
     opacity:
       0;
   }
 
-  100% {
+  to {
     opacity:
       1;
   }
-}
-
-
-/* ==========================================
-   BACKGROUND OVERLAY
-========================================== */
-
-.products-background-layer::after {
-  content:
-    '';
-
-  position:
-    absolute;
-
-  inset:
-    0;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(7, 15, 24, 0.08) 0%,
-      rgba(7, 15, 24, 0.12) 50%,
-      rgba(7, 15, 24, 0.20) 100%
-    );
-
-  pointer-events:
-    none;
 }
 
 
@@ -357,15 +330,6 @@
 
   width:
     100%;
-
-  transition:
-    border-color
-    0.2s
-    ease,
-
-    box-shadow
-    0.2s
-    ease;
 }
 
 .filter-group select:focus,
@@ -491,15 +455,11 @@
   }
 
 
-  /* Show compact search button */
-
   .mobile-search-toggle {
     display:
       flex;
   }
 
-
-  /* Hide filters by default */
 
   .products-filters {
     display:
@@ -519,15 +479,11 @@
   }
 
 
-  /* Show filters after clicking search */
-
   .products-filters.mobile-filters-open {
     display:
       grid;
   }
 
-
-  /* More spacing between cards */
 
   .products-grid {
     grid-template-columns:
