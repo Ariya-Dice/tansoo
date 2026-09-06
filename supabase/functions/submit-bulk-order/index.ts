@@ -1,7 +1,6 @@
 import { handleCors, corsHeaders } from '../_shared/cors.ts';
 import { getSupabaseAdmin } from '../_shared/supabaseAdmin.ts';
 import {
-  getBulkOrderDepositAmountTomans,
   getRateLimitIpHours,
   getRateLimitIpMax,
   getRateLimitPhoneHours,
@@ -11,7 +10,6 @@ import {
 const PHONE_RE = /^09\d{9}$/;
 
 interface BulkOrderBody {
-  action?: string;
   name?: string;
   phone?: string;
   company?: string;
@@ -31,10 +29,13 @@ interface BulkOrderRow {
   note: string;
   status: string;
   created_at: string;
+
+  // Legacy payment columns are kept for database compatibility.
   zibal_track_id: number | null;
   payment_amount: number | null;
   payment_expires_at: string | null;
   paid_at: string | null;
+
   idempotency_key: string | null;
 }
 
@@ -57,27 +58,6 @@ function jsonResponse(
       'Content-Type': 'application/json',
     },
   });
-}
-
-function depositConfigResponse(requestId: string): Response {
-  try {
-    const depositAmount = getBulkOrderDepositAmountTomans();
-
-    return jsonResponse({
-      depositAmount,
-    });
-  } catch {
-    console.error(
-      `[ BULK_ORDER ] CONFIG requestId=${requestId} deposit not configured`,
-    );
-
-    return jsonResponse(
-      {
-        error: 'تنظیمات سپرده ثبت‌نام پیکربندی نشده است.',
-      },
-      500,
-    );
-  }
 }
 
 function normalizePhone(raw: string): string | null {
@@ -108,7 +88,9 @@ function generateRequestId(): string {
   return crypto.randomUUID();
 }
 
-function normalizeOrderValue(value: string | null | undefined): string {
+function normalizeOrderValue(
+  value: string | null | undefined,
+): string {
   return String(value ?? '').trim();
 }
 
@@ -117,46 +99,24 @@ function orderDetailsMatch(
   requested: OrderDetails,
 ): boolean {
   return (
-    normalizeOrderValue(order.name) === normalizeOrderValue(requested.name) &&
+    normalizeOrderValue(order.name) ===
+      normalizeOrderValue(requested.name) &&
     normalizeOrderValue(order.company) ===
       normalizeOrderValue(requested.company) &&
     normalizeOrderValue(order.goods_type) ===
       normalizeOrderValue(requested.goodsType) &&
     normalizeOrderValue(order.quantity) ===
       normalizeOrderValue(requested.quantity) &&
-    normalizeOrderValue(order.note) === normalizeOrderValue(requested.note)
+    normalizeOrderValue(order.note) ===
+      normalizeOrderValue(requested.note)
   );
 }
 
-function orderSuccessResponse(
-  order: BulkOrderRow,
-) {
+function orderSuccessResponse(order: BulkOrderRow) {
   return {
     bulkOrderId: order.id,
     status: order.status,
   };
-}
-
-async function expireStalePendingOrders(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
-  phone?: string,
-): Promise<void> {
-  let query = supabase
-    .from('bulk_order_requests')
-    .update({
-      status: 'expired',
-    })
-    .eq('status', 'pending_payment')
-    .lt(
-      'payment_expires_at',
-      new Date().toISOString(),
-    );
-
-  if (phone) {
-    query = query.eq('phone', phone);
-  }
-
-  await query;
 }
 
 async function checkRateLimits(
@@ -278,27 +238,6 @@ async function checkRateLimits(
   return null;
 }
 
-async function cancelLegacyPendingPaymentOrders(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
-  phone: string,
-  requestId: string,
-): Promise<void> {
-  const { error } = await supabase
-    .from('bulk_order_requests')
-    .update({
-      status: 'cancelled',
-    })
-    .eq('phone', phone)
-    .eq('status', 'pending_payment');
-
-  if (error) {
-    console.error(
-      `[ BULK_ORDER ] CANCEL_LEGACY_PAYMENT requestId=${requestId} failed`,
-      error.message,
-    );
-  }
-}
-
 async function findRecentPendingOrder(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   phone: string,
@@ -339,10 +278,6 @@ Deno.serve(async (req) => {
     return cors;
   }
 
-  if (req.method === 'GET') {
-    return depositConfigResponse(requestId);
-  }
-
   if (req.method !== 'POST') {
     return jsonResponse(
       {
@@ -363,10 +298,6 @@ Deno.serve(async (req) => {
       },
       400,
     );
-  }
-
-  if (body.action === 'getConfig') {
-    return depositConfigResponse(requestId);
   }
 
   console.log(
@@ -468,17 +399,6 @@ Deno.serve(async (req) => {
       note,
     };
 
-    await expireStalePendingOrders(
-      supabase,
-      phone,
-    );
-
-    await cancelLegacyPendingPaymentOrders(
-      supabase,
-      phone,
-      requestId,
-    );
-
     /*
      * Idempotency check comes first.
      * Repeated submission of the exact same client request
@@ -504,45 +424,15 @@ Deno.serve(async (req) => {
           `[ BULK_ORDER ] IDEMPOTENT_HIT requestId=${requestId} bulkOrderId=${existing.id}`,
         );
 
+        /*
+         * Only normal order statuses are part of
+         * the current no-payment flow.
+         */
         if (
-          existing.status ===
-            'pending' ||
-          existing.status ===
-            'contacted' ||
-          existing.status ===
-            'completed' ||
-          existing.status ===
-            'pending_payment'
+          existing.status === 'pending' ||
+          existing.status === 'contacted' ||
+          existing.status === 'completed'
         ) {
-          let orderForResponse =
-            existing;
-
-          if (
-            existing.status ===
-            'pending_payment'
-          ) {
-            const {
-              data: upgraded,
-            } = await supabase
-              .from(
-                'bulk_order_requests',
-              )
-              .update({
-                status: 'pending',
-              })
-              .eq(
-                'id',
-                existing.id,
-              )
-              .select('*')
-              .maybeSingle();
-
-            if (upgraded) {
-              orderForResponse =
-                upgraded as BulkOrderRow;
-            }
-          }
-
           console.log(
             `[ BULK_ORDER ] TOTAL requestId=${requestId} duration=${Date.now() - startedAt}ms`,
           );
@@ -550,7 +440,7 @@ Deno.serve(async (req) => {
           return jsonResponse({
             success: true,
             ...orderSuccessResponse(
-              orderForResponse,
+              existing,
             ),
             reused: true,
           });
@@ -604,6 +494,13 @@ Deno.serve(async (req) => {
       return rateLimitResponse;
     }
 
+    /*
+     * Create the bulk order directly as pending.
+     *
+     * No deposit is required.
+     * No Zibal request is created.
+     * No payment tracking is created.
+     */
     const {
       data: created,
       error: insertError,
@@ -633,9 +530,7 @@ Deno.serve(async (req) => {
           const {
             data: raced,
           } = await supabase
-            .from(
-              'bulk_order_requests',
-            )
+            .from('bulk_order_requests')
             .select('*')
             .eq(
               'idempotency_key',
